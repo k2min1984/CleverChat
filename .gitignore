@@ -1,0 +1,25 @@
+# Java / Maven / Gradle
+target/
+build/
+.gradle/
+*.class
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Agent / AI local files
+.agent/
+.claude/
+.codex/
+
+# Project build output
+3.개발/cleverchat/target/

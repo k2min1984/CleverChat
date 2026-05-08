@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: cleverchat-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: cleverchat
+      POSTGRES_USER: cleverchat
+      POSTGRES_PASSWORD: cleverchat
+      TZ: Asia/Seoul
+    ports:
+      - "5433:5432"
+    volumes:
+      - cleverchat-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cleverchat -d cleverchat"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  cleverchat-pgdata:

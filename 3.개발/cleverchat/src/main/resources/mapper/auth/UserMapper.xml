@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.cleverchat.domain.auth.mapper.UserMapper">
+
+    <resultMap id="UserAccountMap" type="kr.co.cleverchat.domain.auth.model.UserAccount">
+        <id property="id" column="id"/>
+        <result property="username" column="username"/>
+        <result property="passwordHash" column="password_hash"/>
+        <result property="displayName" column="display_name"/>
+        <result property="enabled" column="enabled"/>
+        <result property="failedAttempts" column="failed_attempts"/>
+        <result property="lockedUntil" column="locked_until"/>
+        <result property="lastLoginAt" column="last_login_at"/>
+        <collection property="roles" ofType="string">
+            <result column="role_code"/>
+        </collection>
+    </resultMap>
+
+    <select id="findByUsername" resultMap="UserAccountMap">
+        SELECT
+            u.id,
+            u.username,
+            u.password_hash,
+            u.display_name,
+            u.enabled,
+            u.failed_attempts,
+            u.locked_until,
+            u.last_login_at,
+            r.code AS role_code
+        FROM users u
+        LEFT JOIN user_roles ur ON ur.user_id = u.id
+        LEFT JOIN roles r ON r.id = ur.role_id
+        WHERE u.username = #{username}
+    </select>
+
+    <select id="countByUsername" resultType="int">
+        SELECT COUNT(1)
+        FROM users
+        WHERE username = #{username}
+    </select>
+
+    <insert id="insertUser" parameterType="kr.co.cleverchat.domain.auth.model.UserAccount" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO users (
+            username,
+            password_hash,
+            display_name,
+            enabled
+        ) VALUES (
+            #{username},
+            #{passwordHash},
+            #{displayName},
+            #{enabled}
+        )
+    </insert>
+
+    <insert id="insertUserRole">
+        INSERT INTO user_roles (user_id, role_id)
+        SELECT #{userId}, id
+        FROM roles
+        WHERE code = #{roleCode}
+        ON CONFLICT DO NOTHING
+    </insert>
+
+    <update id="resetLoginSuccess">
+        UPDATE users
+        SET failed_attempts = 0,
+            locked_until = NULL,
+            last_login_at = NOW(),
+            updated_at = NOW()
+        WHERE username = #{username}
+    </update>
+
+    <update id="increaseFailedAttempt">
+        UPDATE users
+        SET failed_attempts = failed_attempts + 1,
+            updated_at = NOW()
+        WHERE username = #{username}
+    </update>
+
+    <update id="lockUser">
+        UPDATE users
+        SET locked_until = NOW() + (#{lockMinutes} * INTERVAL '1 minute'),
+            updated_at = NOW()
+        WHERE username = #{username}
+    </update>
+</mapper>

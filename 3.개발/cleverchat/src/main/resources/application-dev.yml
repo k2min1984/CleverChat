@@ -1,0 +1,27 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5433/cleverchat
+    username: cleverchat
+    password: cleverchat
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+  thymeleaf:
+    cache: false
+
+server:
+  port: 8080
+  servlet:
+    session:
+      cookie:
+        secure: false   # local http
+
+logging:
+  level:
+    root: INFO
+    kr.co.cleverchat: DEBUG
+    org.springframework.web: INFO
+    org.springframework.security: DEBUG
+    org.mybatis: DEBUG
+    jdbc.sqlonly: DEBUG

@@ -1,0 +1,43 @@
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 30
+      minimum-idle: 10
+      connection-timeout: 5000
+      leak-detection-threshold: 30000
+
+server:
+  port: ${SERVER_PORT:8080}
+  tomcat:
+    accesslog:
+      enabled: true
+      directory: /var/log/cleverchat
+      pattern: '%h %l %u %t "%r" %s %b %D'
+    threads:
+      max: 200
+      min-spare: 20
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+
+logging:
+  level:
+    root: WARN
+    kr.co.cleverchat: INFO
+  file:
+    name: /var/log/cleverchat/app.log
+  logback:
+    rollingpolicy:
+      max-file-size: 100MB
+      max-history: 90
+      total-size-cap: 20GB
