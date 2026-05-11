@@ -11,7 +11,7 @@
 | 1 | 비로그인 사용자 식별 | HttpOnly `anonymous_id` 쿠키(UUID, 1년) + 서버 세션 | 세션 만료 후에도 이력과 만족도를 연결할 수 있고 IP 기반 식별보다 개인정보 위험이 낮다. |
 | 2 | 대화 상태 저장소 | `chat_session` DB 테이블 | 단일 노드 결정과 맞고 만료, 복구, 운영 추적이 쉽다. |
 | 3 | fallback 정책 | 1차 키워드 검색 결과 카드, M4 이후 추천 시나리오 분기 | M3은 stub과 실패 로그를 남기고 검색 품질은 M4에서 고도화한다. |
-| 4 | 추천 질문 기준 | 운영자 고정 1차, 최근 사용량 2차 보강 | 초기 데이터 부족을 운영자 큐레이션으로 보완한다. |
+| 4 | 추천 질문 기준 | 운영자 고정 1차, 캐시 미사용, 최근 사용량 2차 보강 | 초기 데이터 부족을 운영자 큐레이션으로 보완하고, M3 사용자 응답은 매 요청 DB 조회로 최신 활성 상태를 반영한다. |
 | 5 | 대화 이력 보존 | 90일 | 품질 분석 기간과 개인정보 최소 보존 원칙의 균형을 둔다. |
 | 6 | 만족도 수집 | thumbs + 선택 코멘트 | 비용이 낮고 개선 단서를 확보할 수 있다. |
 | 7 | 조건식 실행 | M3 미지원 | NodeOption 단순 분기로 시작해 보안과 테스트 부담을 줄인다. |
@@ -78,6 +78,7 @@ erDiagram
         boolean reviewed
         bigint reviewed_by FK
         timestamptz reviewed_at
+        text review_comment
         timestamptz created_at
     }
     chat_recommendation {
@@ -135,7 +136,7 @@ erDiagram
 업무 제약:
 
 - `(session_id, seq)`는 UNIQUE이며 seq는 세션 내 단조 증가한다.
-- seq 충돌 방지는 동일 세션 비관적 락 또는 PostgreSQL advisory lock으로 처리한다.
+- seq 충돌 방지는 `pg_advisory_xact_lock(hashtext('chat_session:' || session_id::text))`로 단일화한다.
 - `content`는 사용자 입력 500자, 시스템/봇 출력 10,000자 이하를 서비스에서 검증한다.
 
 ### 3.3 `chat_feedback`
@@ -161,6 +162,7 @@ erDiagram
 | `reviewed` | BOOLEAN | NOT NULL DEFAULT false | 관리자 확인 여부 |
 | `reviewed_by` | BIGINT | NULL, FK `users(id)` | 확인 관리자 |
 | `reviewed_at` | TIMESTAMPTZ | NULL | 확인 시각 |
+| `review_comment` | TEXT | NULL | 관리자 검토 코멘트. 원문 PII 입력 금지, 1,000자 이하 서비스 검증 |
 | `created_at` | TIMESTAMPTZ | NOT NULL | 생성 시각 |
 
 `detail` 표준 키 사전:
@@ -202,6 +204,12 @@ erDiagram
 | `created_at` | TIMESTAMPTZ | NOT NULL | 생성 시각 |
 | `updated_at` | TIMESTAMPTZ | NOT NULL | 수정 시각 |
 
+업무 제약:
+
+- 추천 질문은 별도 캐시를 사용하지 않고 사용자 API 요청마다 DB에서 조회한다.
+- 사용자 추천 질문 조회는 `chat_recommendation.enabled=true`이고 연결 시나리오와 카테고리가 모두 활성 상태인 항목만 반환한다.
+- 카테고리 비활성화 저장 성공 시 추천 질문 응답은 즉시 제외되어야 하며, 별도 캐시 무효화는 필요하지 않다.
+
 ## 4. 필수 인덱스
 
 | 테이블 | 인덱스 | 목적 |
@@ -220,20 +228,30 @@ erDiagram
 | V4 | `V4__chat_runtime_baseline.sql` | `chat_session`, `chat_message`, `chat_feedback`, `chat_failure`, `chat_recommendation` 생성 |
 | V5 후보 | `V5__chat_runtime_retention_job_indexes.sql` | 운영 데이터 증가 후 파기 배치 보조 인덱스 조정 |
 
+## 6. 구현 검수 메모
+
+| 항목 | 검수 기준 |
+|---|---|
+| Flyway/ERD 일치 | V4 SQL, 본 ERD, MyBatis model의 컬럼은 `chat_failure.review_comment`를 포함해 동일해야 한다. |
+| BOT 피드백 제약 | `chat_feedback.message_id`는 DB FK 외에 서비스에서 `chat_message.direction='BOT'`을 재검증한다. |
+| 버전 정합 | `current_node_id`, `node_id`, `option_id`는 세션의 `version_id`에 속한 데이터만 허용한다. |
+| 원문 식별자 금지 | `anonymous_id`, IP, User-Agent, CSRF token 원문은 관리자 화면/API/로그에 노출하지 않는다. |
+| 삭제 순서 | 90일 파기는 `chat_feedback` → `chat_failure` → `chat_message` → `chat_session` 순서로 chunk 처리한다. |
+
 구현 메모:
 
 - PostgreSQL UUID 생성은 `gen_random_uuid()` 사용을 권장한다. 확장 사용 여부는 V1~V3와 충돌하지 않게 확인한다.
 - `scenario_id`/`version_id` 변경 불가는 DB 트리거 또는 서비스 정책으로 보장한다. 초기 구현은 서비스 불변 검증 + 감사 로그로 시작한다.
 - `chat_feedback.message_id`는 UNIQUE로 두어 중복 평가를 DB에서 차단한다.
 
-## 6. 보존/파기 정책
+## 7. 보존/파기 정책
 
 - `chat_session`, `chat_message`, `chat_feedback`, `chat_failure`는 `created_at` 또는 `started_at` 기준 90일 후 파기한다.
 - 파기 순서는 FK를 고려해 `chat_feedback` → `chat_failure` → `chat_message` → `chat_session` 순으로 처리한다.
 - `chat_recommendation`은 운영 설정 데이터이므로 90일 파기 대상이 아니다. 비활성 데이터 보존 기간은 M6 운영 정책에서 별도 확정한다.
 - 파기 배치는 일일 실행, 건수 상한, 검증 쿼리를 운영메모에 둔다.
 
-## 7. PR 수용 기준
+## 8. PR 수용 기준
 
 - [ ] 세션 시작/진행/종료/만료가 ERD, API, 상태전이도에서 같은 상태값으로 추적된다.
 - [ ] `anonymous_id` 쿠키 분실 시 새 세션 전환 흐름이 화면설계서에 명시된다.

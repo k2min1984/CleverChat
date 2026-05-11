@@ -18,11 +18,28 @@
 | GET | `/chat/history` | View | 본인 | 대화 이력 | M3 설계 |
 | GET | `/chat/error` | View | 전체 | 챗봇 오류/만료 안내 | M3 설계 |
 | * | `/chat/api/**` | REST | 전체/본인 | 사용자 챗봇 런타임 API | M3 설계 |
+| GET | `/chat/api/scenarios` | REST | 전체 | 활성 시나리오 목록 | M3 설계 |
+| POST | `/chat/api/sessions` | REST | 전체 | 새 챗봇 세션 시작 | M3 설계 |
+| GET | `/chat/api/sessions/{id}` | REST | 본인 | 챗봇 세션 현재 상태 | M3 설계 |
+| POST | `/chat/api/sessions/{id}/select-option` | REST | 본인 | 현재 노드 옵션 선택 진행 | M3 설계 |
+| POST | `/chat/api/sessions/{id}/free-text` | REST | 본인 | 자유 텍스트 매칭/fallback | M3 설계 |
+| GET | `/chat/api/sessions/{id}/history` | REST | 본인 | 세션 메시지 이력 | M3 설계 |
+| GET | `/chat/api/history` | REST | 본인 | anonymous_id 기준 90일 이력 목록 | M3 설계 |
+| POST | `/chat/api/sessions/{id}/end` | REST | 본인 | 사용자 세션 종료 | M3 설계 |
+| POST | `/chat/api/messages/{messageId}/feedback` | REST | 본인 | BOT 메시지 만족도 등록 | M3 설계 |
+| GET | `/chat/api/recommendations` | REST | 전체 | 운영자 고정 추천 질문 목록 | M3 설계 |
 | GET | `/admin/chat/sessions` | View | ADMIN/OPERATOR | 챗봇 세션 목록 | M3 설계 |
 | GET | `/admin/chat/sessions/{id}` | View | ADMIN/OPERATOR | 챗봇 세션 상세 | M3 설계 |
 | GET | `/admin/chat/failures` | View | ADMIN/OPERATOR | 답변 실패 큐 | M3 설계 |
 | GET | `/admin/chat/feedback` | View | ADMIN/OPERATOR | 챗봇 피드백 목록 | M3 설계 |
+| GET | `/admin/chat/recommendations` | View | ADMIN/OPERATOR | 챗봇 추천 질문 관리 | M3 설계 |
 | * | `/admin/api/chat/**` | REST | ADMIN/OPERATOR | 챗봇 운영 API | M3 설계 |
+| GET | `/admin/api/chat/sessions` | REST | ADMIN/OPERATOR | 챗봇 세션 검색 | M3 설계 |
+| GET | `/admin/api/chat/sessions/{id}` | REST | ADMIN/OPERATOR | 챗봇 세션 상세 + 메시지 트레이스 | M3 설계 |
+| GET | `/admin/api/chat/failures` | REST | ADMIN/OPERATOR | 답변 실패 큐 검색 | M3 설계 |
+| POST | `/admin/api/chat/failures/{id}/review` | REST | ADMIN/OPERATOR | 실패 큐 검토 처리 | M3 설계 |
+| GET | `/admin/api/chat/feedback` | REST | ADMIN/OPERATOR | 챗봇 피드백 검색 | M3 설계 |
+| * | `/admin/api/chat/recommendations/**` | REST | ADMIN/OPERATOR | 추천 질문 CRUD | M3 설계 |
 | GET | `/admin/scenarios` | View | ADMIN/OPERATOR | 시나리오 목록 화면 | M2 설계 |
 | GET | `/admin/scenarios/new` | View | ADMIN/OPERATOR | 시나리오 등록 화면 | M2 설계 |
 | GET | `/admin/scenarios/{id}` | View | ADMIN/OPERATOR | 시나리오 편집 화면 | M2 설계 |

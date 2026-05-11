@@ -8,7 +8,7 @@
 - 비로그인 사용자는 HttpOnly `anonymous_id` 쿠키(UUID, 1년)와 서버 세션으로 식별한다.
 - 대화 상태는 `chat_session` DB 테이블에 저장한다.
 - fallback은 M3에서 키워드 검색 결과 카드 + 안내를 반환하고, M4 검색 구현 후 추천 시나리오 분기로 강화한다.
-- 추천 질문은 운영자 고정값을 우선 노출하고, 최근 사용량 보강은 M6 통계 이후 적용한다.
+- 추천 질문은 운영자 고정값을 우선 노출하고, 캐시 없이 매 요청 DB 조회로 처리한다. 최근 사용량 보강은 M6 통계 이후 적용한다.
 - 대화 이력은 90일 보존 후 파기한다.
 - 만족도는 `UP`/`DOWN`과 선택 코멘트를 수집한다.
 - 조건식 DSL은 M3에서 실행하지 않고 `scenario_node_option` 단순 분기만 지원한다.
@@ -33,6 +33,7 @@
 | POST | `/chat/api/sessions/{id}/select-option` | 버튼 선택 진행 | 본인만 |
 | POST | `/chat/api/sessions/{id}/free-text` | 자유 텍스트 매칭/fallback | 본인만 |
 | GET | `/chat/api/sessions/{id}/history` | 대화 이력 페이지 | 본인만 |
+| GET | `/chat/api/history` | 본인 이력 목록 | 본인만 |
 | POST | `/chat/api/sessions/{id}/end` | 세션 종료 | 본인만 |
 | POST | `/chat/api/messages/{messageId}/feedback` | 만족도 등록 | 본인 메시지만 |
 | GET | `/chat/api/recommendations` | 추천 질문 | 비로그인 가능 |
@@ -311,7 +312,56 @@ FallbackSearchResult search(String text, Long currentScenarioId, UUID sessionId)
 }
 ```
 
-### 3.7 `POST /chat/api/sessions/{id}/end`
+### 3.7 `GET /chat/api/history`
+
+요청 파라미터:
+
+| 이름 | 기본 | 설명 |
+|---|---:|---|
+| `page` | 0 | 0부터 시작 |
+| `size` | 20 | 최대 50 |
+| `state` | 전체 | `ACTIVE`, `COMPLETED`, `ABANDONED`, `EXPIRED` allow-list |
+| `from` | 90일 전 | 조회 시작일. `to`와 함께 최대 90일 범위만 허용 |
+| `to` | 현재 | 조회 종료일. 현재 시각 이후 값은 현재 시각으로 보정 |
+
+응답:
+
+```json
+{
+  "success": true,
+  "data": {
+    "content": [
+      {
+        "sessionId": "7d889c37-0b7d-45de-83c7-0b2f6f71df0d",
+        "scenarioId": 10,
+        "scenarioTitle": "회원가입 안내",
+        "state": "EXPIRED",
+        "startedAt": "2026-05-08T10:00:00+09:00",
+        "lastActivityAt": "2026-05-08T10:20:00+09:00",
+        "messageCount": 6,
+        "lastBotMessageSummary": "회원가입은 우측 상단 회원가입 버튼에서 진행할 수..."
+      }
+    ],
+    "page": 0,
+    "size": 20,
+    "totalElements": 1,
+    "totalPages": 1
+  },
+  "error": null,
+  "timestamp": "2026-05-08T10:30:00+09:00"
+}
+```
+
+처리 규칙:
+
+- 정렬은 `lastActivityAt DESC`, `sessionId DESC`다.
+- `anonymous_id` 쿠키가 없으면 빈 페이지를 반환하고 새 식별자를 강제 발급하지 않는다.
+- 90일 보존 범위를 초과한 세션은 응답에서 제외한다.
+- `EXPIRED` 상태도 이력 목록에 포함한다.
+- 응답에는 IP, User-Agent, `anonymous_id` 원문을 포함하지 않는다.
+- `lastBotMessageSummary`는 최근 봇 메시지 기준 80자 이하 마스킹 요약이다.
+
+### 3.8 `POST /chat/api/sessions/{id}/end`
 
 요청:
 
@@ -335,7 +385,7 @@ FallbackSearchResult search(String text, Long currentScenarioId, UUID sessionId)
 }
 ```
 
-### 3.8 `POST /chat/api/messages/{messageId}/feedback`
+### 3.9 `POST /chat/api/messages/{messageId}/feedback`
 
 요청:
 
@@ -363,7 +413,7 @@ FallbackSearchResult search(String text, Long currentScenarioId, UUID sessionId)
 
 중복 등록은 `CHAT_FEEDBACK_DUPLICATE` 409로 반환한다.
 
-### 3.9 `GET /chat/api/recommendations`
+### 3.10 `GET /chat/api/recommendations`
 
 응답:
 
@@ -379,6 +429,13 @@ FallbackSearchResult search(String text, Long currentScenarioId, UUID sessionId)
 }
 ```
 
+처리 규칙:
+
+- 추천 질문은 캐시를 사용하지 않고 매 요청 DB에서 조회한다.
+- `chat_recommendation.enabled=true`이고 연결 시나리오가 활성 상태인 항목만 반환한다.
+- 연결 시나리오의 카테고리가 비활성화된 경우 사용자 응답에서 제외한다.
+- 정렬은 priority ASC, id ASC다.
+
 ## 4. 관리자 엔드포인트
 
 | Method | Path | 요약 | 권한 |
@@ -388,6 +445,11 @@ FallbackSearchResult search(String text, Long currentScenarioId, UUID sessionId)
 | GET | `/admin/api/chat/failures` | 답변 실패 큐 | ADMIN, OPERATOR |
 | POST | `/admin/api/chat/failures/{id}/review` | 처리 표시 + 코멘트 | ADMIN, OPERATOR |
 | GET | `/admin/api/chat/feedback` | 피드백 목록 | ADMIN, OPERATOR |
+| GET | `/admin/api/chat/recommendations` | 추천 질문 목록 | ADMIN, OPERATOR |
+| POST | `/admin/api/chat/recommendations` | 추천 질문 등록 | ADMIN, OPERATOR |
+| GET | `/admin/api/chat/recommendations/{id}` | 추천 질문 상세 | ADMIN, OPERATOR |
+| PUT | `/admin/api/chat/recommendations/{id}` | 추천 질문 수정 | ADMIN, OPERATOR |
+| DELETE | `/admin/api/chat/recommendations/{id}` | 추천 질문 삭제 | ADMIN, OPERATOR |
 
 세션 검색 필터:
 
@@ -407,6 +469,55 @@ FallbackSearchResult search(String text, Long currentScenarioId, UUID sessionId)
 ```
 
 관리자 상세 응답에는 `anonymous_id`, IP 원문, UA 원문을 포함하지 않는다.
+
+추천 질문 목록 필터:
+
+| 이름 | 설명 |
+|---|---|
+| `scenarioId` | 연결 시나리오 |
+| `enabled` | 활성 여부 |
+| `keyword` | label 부분 검색. 100자 이하 |
+| `page`, `size` | 페이징. size 최대 50 |
+
+추천 질문 등록/수정 요청:
+
+```json
+{
+  "scenarioId": 10,
+  "label": "회원가입은 어떻게 하나요?",
+  "priority": 10,
+  "enabled": true
+}
+```
+
+추천 질문 응답:
+
+```json
+{
+  "success": true,
+  "data": {
+    "recommendationId": 301,
+    "scenarioId": 10,
+    "scenarioTitle": "회원가입 안내",
+    "label": "회원가입은 어떻게 하나요?",
+    "priority": 10,
+    "enabled": true,
+    "createdAt": "2026-05-08T10:00:00+09:00",
+    "updatedAt": "2026-05-08T10:00:00+09:00"
+  },
+  "error": null,
+  "timestamp": "2026-05-08T10:00:00+09:00"
+}
+```
+
+추천 질문 처리 규칙:
+
+- label은 1~200자, priority는 0~9999만 허용한다.
+- 정렬은 priority ASC, id ASC다.
+- `enabled=false` 저장 즉시 사용자 `GET /chat/api/recommendations` 응답에서 제외한다.
+- 카테고리 비활성화 변경 저장 즉시 해당 카테고리에 속한 시나리오의 추천 질문은 사용자 `GET /chat/api/recommendations` 응답에서 제외한다.
+- 추천 질문 사용자 응답은 캐시하지 않으므로 추천 질문 CRUD나 카테고리 비활성화 시 별도 추천 질문 캐시 무효화 호출은 없다.
+- 삭제는 물리 삭제를 기본으로 하되 감사 로그에는 label 전체 대신 recommendationId, scenarioId, action만 남긴다.
 
 ## 5. 추가 에러 코드
 
@@ -437,6 +548,7 @@ FallbackSearchResult search(String text, Long currentScenarioId, UUID sessionId)
 ## 7. PR 수용 기준
 
 - [ ] 사용자/관리자 URL과 권한이 화면 목록과 일치한다.
-- [ ] select-option 정상/실패, free-text 매칭/fallback/NO_MATCH, history 페이지 응답 예시가 구현 기준으로 사용 가능하다.
+- [ ] select-option 정상/실패, free-text 매칭/fallback/NO_MATCH, session history, 본인 이력 목록 응답 예시가 구현 기준으로 사용 가능하다.
+- [ ] 추천 질문 CRUD, 캐시 미사용, `enabled=false`와 카테고리 비활성화 즉시 제외 규칙이 구현 기준으로 사용 가능하다.
 - [ ] 만료 세션은 410 + `CHAT_SESSION_EXPIRED`로 통일된다.
 - [ ] CSRF, 입력 검증, 본인 세션 검증이 비로그인 사용자에게도 적용된다.
