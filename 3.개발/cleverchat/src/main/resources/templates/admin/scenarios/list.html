@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>시나리오 | CleverChat</title>
+    <style>
+        body { margin: 0; font-family: Arial, "Noto Sans KR", sans-serif; color: #1f2937; background: #f9fafb; }
+        header { min-height: 64px; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; border-bottom: 1px solid #d1d5db; background: #fff; }
+        main { max-width: 1120px; margin: 0 auto; padding: 28px 20px; }
+        a, button { min-height: 36px; }
+        .actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .button { display: inline-flex; align-items: center; padding: 0 12px; border: 1px solid #9ca3af; border-radius: 6px; background: #fff; color: #111827; text-decoration: none; }
+        table { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid #d1d5db; }
+        th, td { padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: left; }
+        th { background: #f3f4f6; font-size: 14px; }
+        @media (max-width: 640px) { table, thead, tbody, tr, th, td { display: block; } th { display: none; } td { border-bottom: 0; } tr { border-bottom: 1px solid #d1d5db; } }
+    </style>
+</head>
+<body>
+<header>
+    <h1>시나리오</h1>
+    <nav class="actions">
+        <a class="button" th:href="@{/admin}">관리자 홈</a>
+        <a class="button" th:href="@{/admin/scenarios/new}">등록</a>
+    </nav>
+</header>
+<main>
+    <table aria-label="시나리오 목록">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>제목</th>
+            <th>카테고리</th>
+            <th>상태</th>
+            <th>수정일</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="scenario : ${scenarios}">
+            <td th:text="${scenario.id}">1</td>
+            <td><a th:href="@{/admin/scenarios/{id}(id=${scenario.id})}" th:text="${scenario.title}">제목</a></td>
+            <td th:text="${scenario.categoryName}">기본</td>
+            <td th:text="${scenario.status}">DRAFT</td>
+            <td th:text="${#temporals.format(scenario.updatedAt, 'yyyy-MM-dd HH:mm')}">2026-05-11</td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(scenarios)}">
+            <td colspan="5">등록된 시나리오가 없습니다.</td>
+        </tr>
+        </tbody>
+    </table>
+</main>
+</body>
+</html>

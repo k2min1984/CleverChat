@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.cleverchat.domain.scenario.mapper.ScenarioKeywordMapper">
+    <select id="findByScenarioId" resultType="kr.co.cleverchat.domain.scenario.model.ScenarioKeyword">
+        SELECT id, scenario_id, keyword, weight, enabled, created_at, updated_at
+        FROM scenario_keyword
+        WHERE scenario_id = #{scenarioId}
+        ORDER BY weight DESC, keyword
+    </select>
+    <select id="findEnabledByScenarioId" resultType="kr.co.cleverchat.domain.scenario.model.ScenarioKeyword">
+        SELECT id, scenario_id, keyword, weight, enabled, created_at, updated_at
+        FROM scenario_keyword
+        WHERE scenario_id = #{scenarioId}
+          AND enabled = TRUE
+        ORDER BY weight DESC, keyword
+    </select>
+    <select id="findEnabledForActiveScenarios" resultType="kr.co.cleverchat.domain.scenario.model.ScenarioKeyword">
+        SELECT k.id, k.scenario_id, k.keyword, k.weight, k.enabled, k.created_at, k.updated_at
+        FROM scenario_keyword k
+        JOIN scenario s ON s.id = k.scenario_id
+        JOIN scenario_category c ON c.id = s.category_id
+        WHERE s.status = 'ACTIVE'
+          AND s.active_version_id IS NOT NULL
+          AND c.enabled = TRUE
+          AND k.enabled = TRUE
+        ORDER BY k.scenario_id, k.weight DESC, k.keyword
+    </select>
+    <insert id="insert" parameterType="kr.co.cleverchat.domain.scenario.model.ScenarioKeyword" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO scenario_keyword (scenario_id, keyword, weight, enabled)
+        VALUES (#{scenarioId}, #{keyword}, #{weight}, #{enabled})
+    </insert>
+    <delete id="deleteByScenarioId">
+        DELETE FROM scenario_keyword
+        WHERE scenario_id = #{scenarioId}
+    </delete>
+</mapper>

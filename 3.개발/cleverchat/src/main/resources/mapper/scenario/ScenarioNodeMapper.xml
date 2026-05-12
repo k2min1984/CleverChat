@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.cleverchat.domain.scenario.mapper.ScenarioNodeMapper">
+    <select id="findByVersionId" resultType="kr.co.cleverchat.domain.scenario.model.ScenarioNode">
+        SELECT id, version_id, node_key, node_type, title, content, sort_order, metadata::text AS metadata, created_at, updated_at
+        FROM scenario_node
+        WHERE version_id = #{versionId}
+        ORDER BY sort_order, id
+    </select>
+    <select id="findById" resultType="kr.co.cleverchat.domain.scenario.model.ScenarioNode">
+        SELECT id, version_id, node_key, node_type, title, content, sort_order, metadata::text AS metadata, created_at, updated_at
+        FROM scenario_node
+        WHERE id = #{id}
+    </select>
+    <insert id="insert" parameterType="kr.co.cleverchat.domain.scenario.model.ScenarioNode" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO scenario_node (version_id, node_key, node_type, title, content, sort_order, metadata)
+        VALUES (#{versionId}, #{nodeKey}, #{nodeType}, #{title}, #{content}, #{sortOrder}, CAST(#{metadata} AS jsonb))
+    </insert>
+    <delete id="deleteByVersionId">
+        DELETE FROM scenario_node
+        WHERE version_id = #{versionId}
+    </delete>
+</mapper>

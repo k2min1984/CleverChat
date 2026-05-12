@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.cleverchat.domain.scenario.mapper.ScenarioSynonymMapper">
+    <select id="findByKeywordId" resultType="kr.co.cleverchat.domain.scenario.model.ScenarioSynonym">
+        SELECT id, keyword_id, synonym, weight, enabled, created_at, updated_at
+        FROM scenario_synonym
+        WHERE keyword_id = #{keywordId}
+        ORDER BY weight DESC, synonym
+    </select>
+    <select id="findEnabledByScenarioId" resultType="kr.co.cleverchat.domain.scenario.dto.ScenarioSynonymRow">
+        SELECT k.scenario_id, sy.keyword_id, sy.synonym, sy.weight
+        FROM scenario_synonym sy
+        JOIN scenario_keyword k ON k.id = sy.keyword_id
+        WHERE k.scenario_id = #{scenarioId}
+          AND k.enabled = TRUE
+          AND sy.enabled = TRUE
+        ORDER BY k.scenario_id, sy.weight DESC, sy.synonym
+    </select>
+    <select id="findEnabledForActiveScenarios" resultType="kr.co.cleverchat.domain.scenario.dto.ScenarioSynonymRow">
+        SELECT k.scenario_id, sy.keyword_id, sy.synonym, sy.weight
+        FROM scenario_synonym sy
+        JOIN scenario_keyword k ON k.id = sy.keyword_id
+        JOIN scenario s ON s.id = k.scenario_id
+        JOIN scenario_category c ON c.id = s.category_id
+        WHERE s.status = 'ACTIVE'
+          AND s.active_version_id IS NOT NULL
+          AND c.enabled = TRUE
+          AND k.enabled = TRUE
+          AND sy.enabled = TRUE
+        ORDER BY k.scenario_id, sy.weight DESC, sy.synonym
+    </select>
+    <insert id="insert" parameterType="kr.co.cleverchat.domain.scenario.model.ScenarioSynonym" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO scenario_synonym (keyword_id, synonym, weight, enabled)
+        VALUES (#{keywordId}, #{synonym}, #{weight}, #{enabled})
+    </insert>
+</mapper>

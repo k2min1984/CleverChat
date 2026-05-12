@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.cleverchat.domain.scenario.mapper.ScenarioCategoryMapper">
+    <select id="findAll" resultType="kr.co.cleverchat.domain.scenario.model.ScenarioCategory">
+        SELECT id, parent_id, name, sort_order, enabled, created_at, updated_at
+        FROM scenario_category
+        ORDER BY COALESCE(parent_id, 0), sort_order, id
+    </select>
+    <select id="findById" resultType="kr.co.cleverchat.domain.scenario.model.ScenarioCategory">
+        SELECT id, parent_id, name, sort_order, enabled, created_at, updated_at
+        FROM scenario_category
+        WHERE id = #{id}
+    </select>
+    <insert id="insert" parameterType="kr.co.cleverchat.domain.scenario.model.ScenarioCategory" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO scenario_category (parent_id, name, sort_order, enabled)
+        VALUES (#{parentId}, #{name}, #{sortOrder}, #{enabled})
+    </insert>
+    <update id="update" parameterType="kr.co.cleverchat.domain.scenario.model.ScenarioCategory">
+        UPDATE scenario_category
+        SET parent_id = #{parentId},
+            name = #{name},
+            sort_order = #{sortOrder},
+            enabled = #{enabled},
+            updated_at = now()
+        WHERE id = #{id}
+    </update>
+</mapper>
