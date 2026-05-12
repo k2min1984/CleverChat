@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.cleverchat.domain.chatbot.mapper.ChatFailureMapper">
+    <insert id="insert" parameterType="kr.co.cleverchat.domain.chatbot.model.ChatFailure" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO chat_failure (session_id, message_id, reason, detail, reviewed, reviewed_by, reviewed_at, review_comment)
+        VALUES (
+            #{sessionId}, #{messageId}, #{reason}, CAST(#{detail} AS jsonb),
+            #{reviewed}, #{reviewedBy}, #{reviewedAt}, #{reviewComment}
+        )
+    </insert>
+</mapper>

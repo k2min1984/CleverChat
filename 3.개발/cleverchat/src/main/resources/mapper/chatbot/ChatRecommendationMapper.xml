@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.cleverchat.domain.chatbot.mapper.ChatRecommendationMapper">
+    <select id="findEnabledForActiveScenarios" resultType="kr.co.cleverchat.domain.chatbot.model.ChatRecommendation">
+        SELECT r.id, r.scenario_id, r.label, r.priority, r.enabled, r.created_at, r.updated_at
+        FROM chat_recommendation r
+        JOIN scenario s ON s.id = r.scenario_id
+        JOIN scenario_category c ON c.id = s.category_id
+        WHERE r.enabled = TRUE
+          AND s.status = 'ACTIVE'
+          AND s.active_version_id IS NOT NULL
+          AND c.enabled = TRUE
+        ORDER BY r.priority, r.id
+    </select>
+</mapper>

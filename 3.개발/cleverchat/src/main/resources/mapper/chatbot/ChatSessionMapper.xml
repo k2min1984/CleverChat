@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.cleverchat.domain.chatbot.mapper.ChatSessionMapper">
+    <select id="findById" resultType="kr.co.cleverchat.domain.chatbot.model.ChatSession">
+        SELECT id, anonymous_id, user_id, scenario_id, version_id, current_node_id, state,
+               started_at, last_activity_at, expires_at, ip_hash, user_agent_hash, created_at
+        FROM chat_session
+        WHERE id = #{id}
+    </select>
+    <insert id="insert" parameterType="kr.co.cleverchat.domain.chatbot.model.ChatSession">
+        INSERT INTO chat_session (
+            id, anonymous_id, user_id, scenario_id, version_id, current_node_id,
+            state, expires_at, ip_hash, user_agent_hash
+        )
+        VALUES (
+            #{id}, #{anonymousId}, #{userId}, #{scenarioId}, #{versionId}, #{currentNodeId},
+            #{state}, #{expiresAt}, #{ipHash}, #{userAgentHash}
+        )
+    </insert>
+    <select id="lockSessionByAdvisoryKey" resultType="long">
+        SELECT pg_advisory_xact_lock(hashtext('chat_session:' || #{sessionId}::text))
+    </select>
+    <update id="updateCurrentNode">
+        UPDATE chat_session
+        SET current_node_id = #{currentNodeId},
+            state = #{state},
+            expires_at = #{expiresAt},
+            last_activity_at = now()
+        WHERE id = #{id}
+    </update>
+</mapper>

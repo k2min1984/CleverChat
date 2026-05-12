@@ -195,7 +195,7 @@ class ChatRuntimeServiceTest {
         service.freeText(SESSION_ID, "모르는 질문", context);
 
         verify(messageMapper, org.mockito.Mockito.times(2)).insert(messageCaptor.capture());
-        verify(failureRecorder).recordFailure(SESSION_ID, 1L, "NO_MATCH");
+        verify(failureRecorder).recordFailure(SESSION_ID, null, "NO_MATCH");
         assertThat(messageCaptor.getAllValues().get(0).getPayload()).contains("\"matched\":false", "\"matchType\":\"NONE\"");
         assertThat(messageCaptor.getAllValues().get(1).getLatencyMs()).isNotNull();
         assertThat(messageCaptor.getAllValues().get(1).getContent()).isEqualTo("질문에 맞는 답변을 찾지 못했습니다.");

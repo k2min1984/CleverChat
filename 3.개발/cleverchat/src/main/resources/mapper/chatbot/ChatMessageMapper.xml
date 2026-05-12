@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.cleverchat.domain.chatbot.mapper.ChatMessageMapper">
+    <select id="findBySessionId" resultType="kr.co.cleverchat.domain.chatbot.model.ChatMessage">
+        SELECT id, session_id, seq, direction, node_id, option_id, content, payload::text AS payload,
+               latency_ms, created_at
+        FROM chat_message
+        WHERE session_id = #{sessionId}
+        ORDER BY seq, id
+    </select>
+    <select id="selectNextSeq" resultType="int">
+        SELECT COALESCE(MAX(seq), 0) + 1
+        FROM chat_message
+        WHERE session_id = #{sessionId}
+    </select>
+    <insert id="insert" parameterType="kr.co.cleverchat.domain.chatbot.model.ChatMessage" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO chat_message (
+            session_id, seq, direction, node_id, option_id, content, payload, latency_ms
+        )
+        VALUES (
+            #{sessionId}, #{seq}, #{direction}, #{nodeId}, #{optionId}, #{content},
+            CAST(#{payload} AS jsonb), #{latencyMs}
+        )
+    </insert>
+</mapper>
