@@ -14,10 +14,19 @@
 ## 분류 기준
 - 단위 테스트: 코드 옆 `src/test/java`
 - 통합 테스트: Testcontainers 기반, 동일 위치
+- PIT(Testcontainers 통합 테스트): `@Tag("integration")` 부착 필수, 기본 `mvn test`에서 제외된다.
 - 시스템·인수 테스트: 본 디렉토리에 시나리오 문서로 정리
 - 설정·보안·운영 절차 테스트: `02.테스트케이스/`에 케이스 문서로 정리
 - 보안 테스트(OWASP/ASVS 체크리스트): `02.테스트시나리오/security/`로 별도 분리 권장
 - 접근성 테스트(WCAG): `02.테스트시나리오/accessibility/`로 별도 분리 권장
+
+## 통합 테스트 실행 기준
+
+- PostgreSQL 의존 통합 테스트는 H2로 대체하지 않고 Testcontainers(PostgreSQL 16)를 사용한다.
+- Docker 데몬이 실행 중이어야 하며, 기본 `./mvnw test`는 `integration` 태그를 제외한다.
+- 통합 테스트 포함 실행 명령은 `3.개발/cleverchat`에서 `./mvnw -Pit test`를 사용한다.
+- Windows 환경에서는 `.\mvnw.cmd test`(단위)와 `.\mvnw.cmd -Pit test`(통합)로 실행하며, 통합 테스트는 Docker Desktop 기동을 사전 조건으로 한다.
+- 대상 예: MyBatis 매퍼 XML, Flyway 마이그레이션, PostgreSQL 전용 SQL(`ON CONFLICT`, `ILIKE`, FTS, `jsonb`, `pg_trgm`) 검증.
 
 ## 결과 보고 양식
 ```

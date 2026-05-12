@@ -6,7 +6,9 @@
 
 - JDK 17
 - Maven 3.9+
-- Docker (로컬 PostgreSQL 용)
+- Docker (로컬 PostgreSQL, Testcontainers 통합 테스트용)
+
+Docker는 개발과 테스트에만 사용합니다. 운영 배포는 실행 가능 JAR, systemd, nginx HTTPS 종단, 물리 PostgreSQL을 기준으로 하며 운영용 compose 파일은 제공하지 않습니다. 상세 기준은 [docker/README.md](docker/README.md)를 참고합니다.
 
 ## 실행 (dev)
 
@@ -65,11 +67,28 @@ src/main/resources
 
 ## 테스트
 
+### 단위 테스트 (Docker 불필요)
+
 ```powershell
-./mvnw test
+.\mvnw.cmd test
 ```
 
-통합 테스트는 Testcontainers로 PostgreSQL 컨테이너를 자동 기동합니다 (Docker 필요).
+기본 테스트는 `integration` 태그를 제외하므로 Docker 없이 순수 단위 테스트만 실행합니다.
+
+### 통합 테스트 (Docker Desktop 필수)
+
+```powershell
+docker info
+.\mvnw.cmd -Pit test
+```
+
+Docker Desktop이 기동되지 않은 상태에서 통합 테스트를 실행하면 컨테이너 생성 단계에서 즉시 실패합니다. 단위 테스트만 실행할 때는 Docker 기동이 필요하지 않습니다.
+
+통합 테스트만 단독 실행할 때는 다음 명령을 사용합니다.
+
+```powershell
+.\mvnw.cmd -Pit -Dgroups=integration test
+```
 
 ## 운영 (prod 가이드)
 
