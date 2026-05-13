@@ -12,6 +12,7 @@
         <result property="failedAttempts" column="failed_attempts"/>
         <result property="lockedUntil" column="locked_until"/>
         <result property="lastLoginAt" column="last_login_at"/>
+        <result property="mustChangePassword" column="must_change_password"/>
         <collection property="roles" ofType="string">
             <result column="role_code"/>
         </collection>
@@ -27,6 +28,7 @@
             u.failed_attempts,
             u.locked_until,
             u.last_login_at,
+            u.must_change_password,
             r.code AS role_code
         FROM users u
         LEFT JOIN user_roles ur ON ur.user_id = u.id
@@ -45,12 +47,14 @@
             username,
             password_hash,
             display_name,
-            enabled
+            enabled,
+            must_change_password
         ) VALUES (
             #{username},
             #{passwordHash},
             #{displayName},
-            #{enabled}
+            #{enabled},
+            #{mustChangePassword}
         )
     </insert>
 

@@ -14,6 +14,7 @@ public class UserAccount {
     private int failedAttempts;
     private OffsetDateTime lockedUntil;
     private OffsetDateTime lastLoginAt;
+    private boolean mustChangePassword;
     private List<String> roles = new ArrayList<>();
 
     public Long getId() {
@@ -78,6 +79,14 @@ public class UserAccount {
 
     public void setLastLoginAt(OffsetDateTime lastLoginAt) {
         this.lastLoginAt = lastLoginAt;
+    }
+
+    public boolean isMustChangePassword() {
+        return mustChangePassword;
+    }
+
+    public void setMustChangePassword(boolean mustChangePassword) {
+        this.mustChangePassword = mustChangePassword;
     }
 
     public List<String> getRoles() {

@@ -66,3 +66,9 @@ cleverchat:
       username: ${CLEVERCHAT_ADMIN_SEED_USERNAME:}
       password: ${CLEVERCHAT_ADMIN_SEED_PASSWORD:}
       display-name: ${CLEVERCHAT_ADMIN_SEED_DISPLAY_NAME:Initial Admin}
+  operator:
+    seed:
+      username: ${CLEVERCHAT_OPERATOR_SEED_USERNAME:}
+      password: ${CLEVERCHAT_OPERATOR_SEED_PASSWORD:}
+      display-name: ${CLEVERCHAT_OPERATOR_SEED_DISPLAY_NAME:Initial Operator}
+      enabled: ${CLEVERCHAT_OPERATOR_SEED_ENABLED:false}
