@@ -4,12 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.util.Set;
-import java.util.stream.Collectors;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
@@ -24,12 +19,6 @@ public class AuthInterceptor implements HandlerInterceptor {
             return true;
         }
 
-        AdminSession bridgedSession = bridgeFromSecurityContext();
-        if (bridgedSession != null) {
-            request.getSession(true).setAttribute(AdminSession.SESSION_KEY, bridgedSession);
-            return true;
-        }
-
         if (isAdminApiRequest(request)) {
             writeUnauthorized(response);
             return false;
@@ -37,29 +26,6 @@ public class AuthInterceptor implements HandlerInterceptor {
 
         response.sendRedirect(request.getContextPath() + "/login");
         return false;
-    }
-
-    private AdminSession bridgeFromSecurityContext() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return null;
-        }
-        if (!(authentication.getPrincipal() instanceof AuthenticatedUser user)) {
-            return null;
-        }
-
-        Set<String> roles = user.getAuthorities().stream()
-            .map(authority -> authority.getAuthority())
-            .collect(Collectors.toCollection(java.util.LinkedHashSet::new));
-
-        return new AdminSession(
-            user.getId(),
-            user.getUsername(),
-            user.getDisplayName(),
-            roles,
-            user.isMustChangePassword(),
-            LocalDateTime.now()
-        );
     }
 
     private boolean isAdminApiRequest(HttpServletRequest request) {

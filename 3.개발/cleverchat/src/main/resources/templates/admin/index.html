@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -60,19 +60,18 @@
 <header>
     <h1>CleverChat 관리자</h1>
     <form th:action="@{/logout}" method="post">
-        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
         <button type="submit">로그아웃</button>
     </form>
 </header>
 <main>
-    <div class="grid" sec:authorize="hasRole('ADMIN')">
+    <div class="grid" th:if="${session.CLEVERCHAT_ADMIN_SESSION != null and session.CLEVERCHAT_ADMIN_SESSION.hasAnyRole('ADMIN','OPERATOR')}">
         <section class="card">
             <h2>인증 기반</h2>
             <p>로그인, 세션, 감사 로그 기반이 구성되었습니다.</p>
         </section>
         <section class="card">
             <h2>시나리오</h2>
-            <p>다음 단계에서 시나리오 관리 기능을 연결합니다.</p>
+            <p><a th:href="@{/admin/scenarios}">시나리오 관리로 이동</a></p>
         </section>
         <section class="card">
             <h2>운영 로그</h2>

@@ -22,6 +22,5 @@ logging:
     root: INFO
     kr.co.cleverchat: DEBUG
     org.springframework.web: INFO
-    org.springframework.security: DEBUG
     org.mybatis: DEBUG
     jdbc.sqlonly: DEBUG
