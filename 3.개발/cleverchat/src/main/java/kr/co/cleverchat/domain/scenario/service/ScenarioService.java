@@ -9,10 +9,12 @@ import java.util.stream.Collectors;
 import kr.co.cleverchat.common.audit.AuditTrailRecorder;
 import kr.co.cleverchat.common.error.BusinessException;
 import kr.co.cleverchat.common.error.ErrorCode;
+import kr.co.cleverchat.domain.auth.security.CurrentAdminProvider;
 import kr.co.cleverchat.domain.scenario.dto.ScenarioDtos.SaveRequest;
 import kr.co.cleverchat.domain.scenario.dto.ScenarioGraphDtos;
 import kr.co.cleverchat.domain.scenario.dto.ScenarioGraphDtos.NodeRequest;
 import kr.co.cleverchat.domain.scenario.dto.ScenarioGraphDtos.OptionRequest;
+import kr.co.cleverchat.domain.scenario.event.ScenarioMatchingCacheInvalidator;
 import kr.co.cleverchat.domain.scenario.mapper.ScenarioMapper;
 import kr.co.cleverchat.domain.scenario.mapper.ScenarioNodeMapper;
 import kr.co.cleverchat.domain.scenario.mapper.ScenarioNodeOptionMapper;
@@ -21,8 +23,6 @@ import kr.co.cleverchat.domain.scenario.model.Scenario;
 import kr.co.cleverchat.domain.scenario.model.ScenarioNode;
 import kr.co.cleverchat.domain.scenario.model.ScenarioNodeOption;
 import kr.co.cleverchat.domain.scenario.model.ScenarioVersion;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,6 +35,7 @@ public class ScenarioService {
     private final ScenarioNodeOptionMapper optionMapper;
     private final ScenarioGraphValidator graphValidator;
     private final AuditTrailRecorder auditTrailRecorder;
+    private final ScenarioMatchingCacheInvalidator matchingCacheInvalidator;
 
     public ScenarioService(
         ScenarioMapper scenarioMapper,
@@ -42,7 +43,8 @@ public class ScenarioService {
         ScenarioNodeMapper nodeMapper,
         ScenarioNodeOptionMapper optionMapper,
         ScenarioGraphValidator graphValidator,
-        AuditTrailRecorder auditTrailRecorder
+        AuditTrailRecorder auditTrailRecorder,
+        ScenarioMatchingCacheInvalidator matchingCacheInvalidator
     ) {
         this.scenarioMapper = scenarioMapper;
         this.versionMapper = versionMapper;
@@ -50,6 +52,7 @@ public class ScenarioService {
         this.optionMapper = optionMapper;
         this.graphValidator = graphValidator;
         this.auditTrailRecorder = auditTrailRecorder;
+        this.matchingCacheInvalidator = matchingCacheInvalidator;
     }
 
     public List<Scenario> findAll(String status) {
@@ -131,6 +134,7 @@ public class ScenarioService {
             "before", Map.of("status", before.getStatus()),
             "after", Map.of("status", "DELETED")
         ));
+        matchingCacheInvalidator.onScenarioChanged(id);
     }
 
     @Transactional
@@ -190,6 +194,7 @@ public class ScenarioService {
             "nodeCount", savedNodes.size(),
             "optionCount", optionCount
         ));
+        matchingCacheInvalidator.onScenarioChanged(version.getScenarioId());
     }
 
     @Transactional
@@ -203,6 +208,7 @@ public class ScenarioService {
             "before", Map.of("status", "DRAFT"),
             "after", Map.of("status", "PUBLISHED")
         ));
+        matchingCacheInvalidator.onScenarioChanged(version.getScenarioId());
     }
 
     @Transactional
@@ -220,6 +226,7 @@ public class ScenarioService {
             "before", Map.of("status", scenario.getStatus(), "activeVersionId", scenario.getActiveVersionId()),
             "after", Map.of("status", "ACTIVE", "activeVersionId", versionId)
         ));
+        matchingCacheInvalidator.onScenarioChanged(scenarioId);
     }
 
     @Transactional
@@ -233,6 +240,7 @@ public class ScenarioService {
             "before", Map.of("status", "ACTIVE"),
             "after", Map.of("status", "INACTIVE")
         ));
+        matchingCacheInvalidator.onScenarioChanged(scenarioId);
     }
 
     private ScenarioVersion draftVersion(Long versionId) {
@@ -278,8 +286,8 @@ public class ScenarioService {
     }
 
     private String currentUsername() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return authentication == null || !authentication.isAuthenticated() ? "system" : authentication.getName();
+        String username = CurrentAdminProvider.currentUsername();
+        return username == null ? "system" : username;
     }
 
     private boolean hasText(String value) {
