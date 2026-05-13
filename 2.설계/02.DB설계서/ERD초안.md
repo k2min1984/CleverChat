@@ -1,7 +1,7 @@
 # ERD 초안
 
 > 작성일: 2026-05-08
-> 변경요약: M1 인증/세션/감사 로그 테이블 기준 보완, M2/M3 상세 ERD 분리
+> 변경요약: M1 인증/세션/감사 로그 테이블 기준 보완, M2/M3/M4 상세 ERD 분리
 
 ```mermaid
 erDiagram
@@ -55,7 +55,7 @@ erDiagram
 - 초기 관리자 계정은 Flyway SQL에 BCrypt 해시를 커밋하지 않고, 부팅 시 환경변수로 1회 생성한다.
 - 세션은 Spring Session JDBC를 사용하며 테이블은 Flyway `V2__auth_session_baseline.sql`에서 관리한다.
 - 로그인 실패 잠금 정책 기본값은 5회 실패 시 30분 잠금이다.
-- `roles.code`는 Spring Security에서 `ROLE_` 접두사를 붙여 권한으로 변환한다.
+- `roles.code`는 HandlerInterceptor 권한 검사에서 `ROLE_` 접두사를 붙여 세션 VO의 권한 코드와 비교한다.
 
 ## M2 상세 설계
 
@@ -75,3 +75,10 @@ erDiagram
 - 챗봇 런타임 세션/메시지/피드백/실패 큐 ERD: `2.설계/02.DB설계서/M3_챗봇런타임ERD.md`
 - Flyway 구현 대상: `V4__chat_runtime_baseline.sql`
 - 대화 이력 보존 기간: 90일
+
+## M4 상세 설계
+
+- 검색 generated column, 검색 로그, 차단 로그, 인기 검색어 ERD: `2.설계/02.DB설계서/M4_검색ERD.md`
+- Flyway 구현 대상: `V5__search_baseline.sql`
+- PostgreSQL 확장: `pg_trgm`, `unaccent`
+- 검색 로그 보존 기간: 90일

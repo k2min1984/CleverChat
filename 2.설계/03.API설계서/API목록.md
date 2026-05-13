@@ -1,13 +1,13 @@
 # API/엔드포인트 목록
 
 > 작성일: 2026-05-08
-> 변경요약: M1 인증 엔드포인트, M2 시나리오 API, M3 챗봇 런타임 API 설계 추가
+> 변경요약: M1 인증 엔드포인트, M2 시나리오 API, M3 챗봇 런타임 API, M4 검색 API 설계 추가
 
 | Method | Path | 유형 | 권한 | 설명 | 상태 |
 |---|---|---|---|---|---|
 | GET | `/` | View | 전체 | 홈 | 구현 |
 | GET | `/login` | View | 전체 | 관리자 로그인 화면 | 구현 |
-| POST | `/login` | Form | 전체 | Spring Security 로그인 처리 | 구현 |
+| POST | `/login` | Form | 전체 | 자체 LoginController 폼 처리 (HandlerInterceptor + 세션 VO) | 구현 |
 | POST | `/logout` | Form | 인증 사용자 | 로그아웃 | 구현 |
 | GET | `/admin` | View | ADMIN/OPERATOR | 관리자 대시보드 | M2 보완 |
 | GET | `/admin/password-change` | View | 인증 사용자 | 최초 로그인 비밀번호 변경 화면 | M2 설계 |
@@ -40,6 +40,16 @@
 | POST | `/admin/api/chat/failures/{id}/review` | REST | ADMIN/OPERATOR | 실패 큐 검토 처리 | M3 설계 |
 | GET | `/admin/api/chat/feedback` | REST | ADMIN/OPERATOR | 챗봇 피드백 검색 | M3 설계 |
 | * | `/admin/api/chat/recommendations/**` | REST | ADMIN/OPERATOR | 추천 질문 CRUD | M3 설계 |
+| GET | `/admin/search/logs` | View | ADMIN/OPERATOR | 검색 로그 조회 | M4 설계 |
+| GET | `/admin/search/blocks` | View | ADMIN/OPERATOR | PII 차단 검색 조회 | M4 설계 |
+| GET | `/admin/search/popular` | View | ADMIN/OPERATOR | 인기 검색어 조회 | M4 설계 |
+| * | `/admin/api/search/**` | REST | ADMIN/OPERATOR | 검색 운영 API | M4 설계 |
+| GET | `/admin/api/search/logs` | REST | ADMIN/OPERATOR | 검색 로그 조회 | M4 설계 |
+| GET | `/admin/api/search/blocks` | REST | ADMIN/OPERATOR | PII 차단 검색 로그 조회 | M4 설계 |
+| GET | `/admin/api/search/popular` | REST | ADMIN/OPERATOR | 인기 검색어 조회 | M4 설계 |
+| POST | `/admin/api/search/test` | REST | ADMIN/OPERATOR | 관리자 검색 테스트 | M4 설계 |
+| POST | `/admin/api/search/popular/rebuild` | REST | ADMIN/OPERATOR | 인기 검색어 재집계 | M4 설계 |
+| DELETE | `/admin/api/search/logs/expired` | REST | ADMIN/OPERATOR | 보존 기간 초과 검색 로그 파기 | M4 설계 |
 | GET | `/admin/scenarios` | View | ADMIN/OPERATOR | 시나리오 목록 화면 | M2 설계 |
 | GET | `/admin/scenarios/new` | View | ADMIN/OPERATOR | 시나리오 등록 화면 | M2 설계 |
 | GET | `/admin/scenarios/{id}` | View | ADMIN/OPERATOR | 시나리오 편집 화면 | M2 설계 |
@@ -52,6 +62,7 @@
 - `2.설계/03.API설계서/공통응답에러코드.md`
 - `2.설계/03.API설계서/M2_시나리오API.md`
 - `2.설계/03.API설계서/M3_챗봇런타임API.md`
+- `2.설계/03.API설계서/M4_검색API.md`
 
 ## 공통 보안
 
@@ -61,3 +72,4 @@
 - 세션성 식별 쿠키는 `SameSite=Lax`, `Secure=true`, `HttpOnly=true`를 기본값으로 한다. CSRF 토큰 쿠키만 `HttpOnly=false` 예외다.
 - 프록시 헤더 처리는 `server.forward-headers-strategy=framework`를 기준으로 하며, 부팅 경고 로그는 prod 프로파일에서만 출력한다.
 - M3 키워드/유사어 매칭 캐시 TTL 기본값은 300초로 둔다.
+- M4 검색어는 1~200자로 제한하고, PII 차단 시 원문을 검색 로그에 저장하지 않는다.

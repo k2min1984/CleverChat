@@ -17,7 +17,7 @@
 ## 2. 공통 규칙
 
 - 비로그인 사용 가능 API도 CSRF 쿠키 토큰을 검증한다.
-- 상태 변경 요청은 `X-CSRF-TOKEN` 또는 Spring Security 기본 CSRF 헤더를 사용한다.
+- 상태 변경 요청은 `X-CSRF-TOKEN` 헤더(자체 CSRF 인터셉터 기준)를 사용한다.
 - 본인 세션 검증은 `anonymous_id` 쿠키와 `chat_session.anonymous_id` 일치로 처리한다. 로그인 사용자는 `user_id`도 보조 검증한다.
 - 만료 세션은 410 Gone과 `CHAT_SESSION_EXPIRED`를 반환한다.
 - 모든 입력은 `입력검증표준.md`를 따르며 free-text 500자, feedback comment 1,000자 이하로 제한한다.
