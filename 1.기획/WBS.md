@@ -25,7 +25,7 @@
 
 ### 1.1 환경 구성
 - [ ] JDK / Gradle(or Maven) 버전 확정
-- [ ] Spring Boot 프로젝트 생성 (Web, Security, JPA, Thymeleaf, Validation, Actuator)
+- [ ] Spring Boot 프로젝트 생성 (Web, Thymeleaf, Validation, Actuator, MyBatis)
 - [ ] PostgreSQL 로컬 인스턴스 준비 (Docker Compose 권장)
 - [ ] `application.yml` → `application-dev.yml` / `application-stage.yml` / `application-prod.yml` 분리
 - [ ] 프로파일별 시크릿 외부화 정책 정의 (env var / Vault)
@@ -49,20 +49,20 @@
 - [x] 사용자/운영자/관리자 권한 분리 베이스 설계
 
 ### 2.2 인증
-- [x] Spring Security 폼 로그인 (관리자)
+- [x] HandlerInterceptor + 세션 VO 기반 폼 로그인 (관리자)
 - [x] 비밀번호 해시 (BCrypt) 저장
 - [x] 세션 만료/동시 로그인 정책
 - [x] 로그인 성공/실패 이력 저장
 - [x] 로그인 실패 5회/30분 잠금 기본 정책
 
 ### 2.3 인가
-- [x] URL 기반 접근 제어 (`HttpSecurity` 매핑)
-- [ ] 메서드 보안 (`@PreAuthorize`)
-- [x] 권한별 메뉴 노출 제어 (Thymeleaf sec:authorize) 베이스
+- [x] URL 기반 접근 제어 (HandlerInterceptor 매핑)
+- [ ] 서비스 계층 권한 검증 헬퍼
+- [x] 권한별 메뉴 노출 제어 (세션 권한/모델 속성) 베이스
 
 ### 2.4 감사
 - [x] 관리자 작업 감사 로그 인터셉터/AOP 베이스
-- [ ] 데이터 수정 이력 (Hibernate Envers 또는 자체 트리거)
+- [ ] 데이터 수정 이력 (감사 테이블 또는 자체 트리거)
 
 ---
 
@@ -163,7 +163,7 @@
 ## 8. M7 — 보안·접근성·성능
 
 ### 8.1 보안 (OWASP / ASVS / 전자정부)
-- [ ] CSRF (Spring 기본 + AJAX 토큰 처리)
+- [ ] CSRF (인터셉터 기반 폼/AJAX 토큰 처리)
 - [ ] XSS (출력 이스케이프, CSP 헤더)
 - [ ] SQL Injection (파라미터 바인딩 강제, MyBatis `${}` 금지)
 - [ ] 파일 업로드 검증 (MIME, 확장자, 크기, 백신 스캔 권장)
