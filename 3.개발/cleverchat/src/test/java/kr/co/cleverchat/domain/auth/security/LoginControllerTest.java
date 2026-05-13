@@ -1,0 +1,149 @@
+package kr.co.cleverchat.domain.auth.security;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.Set;
+import kr.co.cleverchat.domain.auth.mapper.UserMapper;
+import kr.co.cleverchat.domain.auth.model.UserAccount;
+import kr.co.cleverchat.domain.auth.service.LoginAuditService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpSession;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+@ExtendWith(MockitoExtension.class)
+class LoginControllerTest {
+
+    @Mock
+    private UserMapper userMapper;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private LoginAuditService loginAuditService;
+
+    private LoginController controller;
+
+    @BeforeEach
+    void setUp() {
+        controller = new LoginController(userMapper, passwordEncoder, loginAuditService);
+    }
+
+    @Test
+    void loginPageRedirectsWhenAlreadyAuthenticated() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        MockHttpSession session = new MockHttpSession();
+        session.setAttribute(AdminSession.SESSION_KEY, adminSession());
+        request.setSession(session);
+
+        String view = controller.login(request);
+
+        assertThat(view).isEqualTo("redirect:/admin");
+    }
+
+    @Test
+    void loginPageReturnsLoginViewWithoutSession() {
+        String view = controller.login(new MockHttpServletRequest());
+
+        assertThat(view).isEqualTo("login");
+    }
+
+    @Test
+    void authenticateCreatesAdminSessionOnSuccess() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        UserAccount account = account();
+        when(userMapper.findByUsername("admin")).thenReturn(account);
+        when(passwordEncoder.matches("password", "hash")).thenReturn(true);
+
+        String view = controller.authenticate("admin", "password", request);
+
+        assertThat(view).isEqualTo("redirect:/admin");
+        assertThat(request.getSession(false).getAttribute(AdminSession.SESSION_KEY))
+            .isInstanceOfSatisfying(AdminSession.class, session -> {
+                assertThat(session.getUsername()).isEqualTo("admin");
+                assertThat(session.getDisplayName()).isEqualTo("관리자");
+                assertThat(session.hasRole("ADMIN")).isTrue();
+                assertThat(session.isMustChangePassword()).isTrue();
+            });
+        verify(loginAuditService).recordSuccess("admin", request);
+    }
+
+    @Test
+    void authenticateRecordsFailureForMissingUser() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        when(userMapper.findByUsername("missing")).thenReturn(null);
+
+        String view = controller.authenticate("missing", "password", request);
+
+        assertThat(view).isEqualTo("redirect:/login?error");
+        assertThat(request.getSession(false)).isNull();
+        verify(loginAuditService).recordFailure("missing", "사용자를 찾을 수 없습니다.", request);
+        verify(passwordEncoder, never()).matches("password", "hash");
+    }
+
+    @Test
+    void authenticateRecordsFailureForLockedUser() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        UserAccount account = account();
+        account.setLockedUntil(OffsetDateTime.now().plusMinutes(5));
+        when(userMapper.findByUsername("admin")).thenReturn(account);
+
+        String view = controller.authenticate("admin", "password", request);
+
+        assertThat(view).isEqualTo("redirect:/login?error");
+        verify(loginAuditService).recordFailure("admin", "계정이 잠겨 있습니다.", request);
+        verify(passwordEncoder, never()).matches("password", "hash");
+    }
+
+    @Test
+    void authenticateRecordsFailureForInvalidPassword() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        UserAccount account = account();
+        when(userMapper.findByUsername("admin")).thenReturn(account);
+        when(passwordEncoder.matches("wrong", "hash")).thenReturn(false);
+
+        String view = controller.authenticate("admin", "wrong", request);
+
+        assertThat(view).isEqualTo("redirect:/login?error");
+        verify(loginAuditService).recordFailure("admin", "비밀번호가 일치하지 않습니다.", request);
+    }
+
+    @Test
+    void logoutInvalidatesSession() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        MockHttpSession session = new MockHttpSession();
+        request.setSession(session);
+
+        String view = controller.logout(request);
+
+        assertThat(view).isEqualTo("redirect:/login?logout");
+        assertThat(session.isInvalid()).isTrue();
+    }
+
+    private UserAccount account() {
+        UserAccount account = new UserAccount();
+        account.setId(1L);
+        account.setUsername("admin");
+        account.setDisplayName("관리자");
+        account.setPasswordHash("hash");
+        account.setEnabled(true);
+        account.setMustChangePassword(true);
+        account.setRoles(List.of("ADMIN"));
+        return account;
+    }
+
+    private AdminSession adminSession() {
+        return new AdminSession(1L, "admin", "관리자", Set.of("ADMIN"), false, LocalDateTime.now());
+    }
+}
