@@ -13,21 +13,21 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/admin/api/scenarios/{scenarioId}/keywords")
-public class ScenarioKeywordApiController {
+public class AdmScenarioKeywordController {
 
     private final ScenarioKeywordService keywordService;
 
-    public ScenarioKeywordApiController(ScenarioKeywordService keywordService) {
+    public AdmScenarioKeywordController(ScenarioKeywordService keywordService) {
         this.keywordService = keywordService;
     }
 
     @GetMapping
-    public ApiResponse<?> list(@PathVariable Long scenarioId) {
+    public ApiResponse<?> scenarioKeywordList(@PathVariable Long scenarioId) {
         return ApiResponse.ok(keywordService.findKeywords(scenarioId));
     }
 
     @PutMapping
-    public ApiResponse<Void> replace(@PathVariable Long scenarioId, @Valid @RequestBody ScenarioKeywordDtos.ReplaceRequest request) {
+    public ApiResponse<Void> scenarioKeywordModifyProc(@PathVariable Long scenarioId, @Valid @RequestBody ScenarioKeywordDtos.ReplaceRequest request) {
         keywordService.replace(scenarioId, request);
         return ApiResponse.ok();
     }

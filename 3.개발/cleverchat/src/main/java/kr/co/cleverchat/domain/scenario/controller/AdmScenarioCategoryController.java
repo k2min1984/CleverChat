@@ -15,26 +15,26 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/admin/api/scenario-categories")
-public class ScenarioCategoryApiController {
+public class AdmScenarioCategoryController {
 
     private final ScenarioCategoryService categoryService;
 
-    public ScenarioCategoryApiController(ScenarioCategoryService categoryService) {
+    public AdmScenarioCategoryController(ScenarioCategoryService categoryService) {
         this.categoryService = categoryService;
     }
 
     @GetMapping
-    public ApiResponse<?> list() {
+    public ApiResponse<?> scenarioCategoryList() {
         return ApiResponse.ok(categoryService.findAll());
     }
 
     @PostMapping
-    public ApiResponse<ScenarioCategory> create(@Valid @RequestBody ScenarioCategoryDtos.SaveRequest request) {
+    public ApiResponse<ScenarioCategory> scenarioCategoryRegistProc(@Valid @RequestBody ScenarioCategoryDtos.SaveRequest request) {
         return ApiResponse.ok(categoryService.create(request));
     }
 
     @PutMapping("/{id}")
-    public ApiResponse<ScenarioCategory> update(@PathVariable Long id, @Valid @RequestBody ScenarioCategoryDtos.SaveRequest request) {
+    public ApiResponse<ScenarioCategory> scenarioCategoryModifyProc(@PathVariable Long id, @Valid @RequestBody ScenarioCategoryDtos.SaveRequest request) {
         return ApiResponse.ok(categoryService.update(id, request));
     }
 }

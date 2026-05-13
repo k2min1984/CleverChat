@@ -18,65 +18,65 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/admin/api/scenarios")
-public class ScenarioApiController {
+public class AdmScenarioApiController {
 
     private final ScenarioService scenarioService;
 
-    public ScenarioApiController(ScenarioService scenarioService) {
+    public AdmScenarioApiController(ScenarioService scenarioService) {
         this.scenarioService = scenarioService;
     }
 
     @GetMapping
-    public ApiResponse<?> list(String status) {
+    public ApiResponse<?> scenarioList(String status) {
         return ApiResponse.ok(scenarioService.findAll(status));
     }
 
     @GetMapping("/{id}")
-    public ApiResponse<Scenario> detail(@PathVariable Long id) {
+    public ApiResponse<Scenario> scenarioView(@PathVariable Long id) {
         return ApiResponse.ok(scenarioService.get(id));
     }
 
     @PostMapping
-    public ApiResponse<Scenario> create(@Valid @RequestBody ScenarioDtos.SaveRequest request) {
+    public ApiResponse<Scenario> scenarioRegistProc(@Valid @RequestBody ScenarioDtos.SaveRequest request) {
         return ApiResponse.ok(scenarioService.create(request));
     }
 
     @PutMapping("/{id}")
-    public ApiResponse<Scenario> update(@PathVariable Long id, @Valid @RequestBody ScenarioDtos.SaveRequest request) {
+    public ApiResponse<Scenario> scenarioModifyProc(@PathVariable Long id, @Valid @RequestBody ScenarioDtos.SaveRequest request) {
         return ApiResponse.ok(scenarioService.update(id, request));
     }
 
     @DeleteMapping("/{id}")
-    public ApiResponse<Void> delete(@PathVariable Long id) {
+    public ApiResponse<Void> scenarioDeleteProc(@PathVariable Long id) {
         scenarioService.delete(id);
         return ApiResponse.ok();
     }
 
     @PostMapping("/{id}/versions")
-    public ApiResponse<ScenarioVersion> createVersion(@PathVariable Long id) {
+    public ApiResponse<ScenarioVersion> scenarioVersionRegistProc(@PathVariable Long id) {
         return ApiResponse.ok(scenarioService.createVersion(id));
     }
 
     @PutMapping("/versions/{versionId}/graph")
-    public ApiResponse<Void> saveGraph(@PathVariable Long versionId, @Valid @RequestBody ScenarioGraphDtos.SaveRequest request) {
+    public ApiResponse<Void> scenarioGraphModifyProc(@PathVariable Long versionId, @Valid @RequestBody ScenarioGraphDtos.SaveRequest request) {
         scenarioService.saveGraph(versionId, request);
         return ApiResponse.ok();
     }
 
     @PostMapping("/versions/{versionId}/publish")
-    public ApiResponse<Void> publish(@PathVariable Long versionId) {
+    public ApiResponse<Void> scenarioPublishProc(@PathVariable Long versionId) {
         scenarioService.publish(versionId);
         return ApiResponse.ok();
     }
 
     @PostMapping("/{id}/activate/{versionId}")
-    public ApiResponse<Void> activate(@PathVariable Long id, @PathVariable Long versionId) {
+    public ApiResponse<Void> scenarioActivateProc(@PathVariable Long id, @PathVariable Long versionId) {
         scenarioService.activate(id, versionId);
         return ApiResponse.ok();
     }
 
     @PostMapping("/{id}/deactivate")
-    public ApiResponse<Void> deactivate(@PathVariable Long id) {
+    public ApiResponse<Void> scenarioDeactivateProc(@PathVariable Long id) {
         scenarioService.deactivate(id);
         return ApiResponse.ok();
     }

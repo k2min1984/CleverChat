@@ -23,13 +23,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 @RequestMapping("/admin/scenarios")
-public class ScenarioPageController {
+public class AdmScenarioController {
 
     private final ScenarioService scenarioService;
     private final ScenarioCategoryService categoryService;
     private final ScenarioKeywordService keywordService;
 
-    public ScenarioPageController(
+    public AdmScenarioController(
         ScenarioService scenarioService,
         ScenarioCategoryService categoryService,
         ScenarioKeywordService keywordService
@@ -40,21 +40,21 @@ public class ScenarioPageController {
     }
 
     @GetMapping
-    public String list(@RequestParam(required = false) String status, Model model) {
+    public String scenarioList(@RequestParam(required = false) String status, Model model) {
         model.addAttribute("scenarios", scenarioService.findAll(status));
         model.addAttribute("status", status);
         return "admin/scenarios/list";
     }
 
     @GetMapping("/new")
-    public String createForm(Model model) {
+    public String scenarioRegist(Model model) {
         model.addAttribute("scenarioForm", new ScenarioForm());
         model.addAttribute("categories", categoryService.findAll());
         return "admin/scenarios/form";
     }
 
     @PostMapping
-    public String create(@Valid @ModelAttribute("scenarioForm") ScenarioForm form, BindingResult bindingResult, Model model) {
+    public String scenarioRegistProc(@Valid @ModelAttribute("scenarioForm") ScenarioForm form, BindingResult bindingResult, Model model) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("categories", categoryService.findAll());
             return "admin/scenarios/form";
@@ -64,7 +64,7 @@ public class ScenarioPageController {
     }
 
     @GetMapping("/{id}")
-    public String detail(@PathVariable Long id, Model model) {
+    public String scenarioView(@PathVariable Long id, Model model) {
         model.addAttribute("scenario", scenarioService.get(id));
         model.addAttribute("versions", scenarioService.versions(id));
         model.addAttribute("keywords", keywordService.findKeywords(id));
@@ -72,7 +72,7 @@ public class ScenarioPageController {
     }
 
     @GetMapping("/{id}/edit")
-    public String editForm(@PathVariable Long id, Model model) {
+    public String scenarioModify(@PathVariable Long id, Model model) {
         var scenario = scenarioService.get(id);
         ScenarioForm form = new ScenarioForm();
         form.setCategoryId(scenario.getCategoryId());
@@ -85,7 +85,7 @@ public class ScenarioPageController {
     }
 
     @PostMapping("/{id}")
-    public String update(@PathVariable Long id, @Valid @ModelAttribute("scenarioForm") ScenarioForm form, BindingResult bindingResult, Model model) {
+    public String scenarioModifyProc(@PathVariable Long id, @Valid @ModelAttribute("scenarioForm") ScenarioForm form, BindingResult bindingResult, Model model) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("scenario", scenarioService.get(id));
             model.addAttribute("categories", categoryService.findAll());
@@ -96,31 +96,31 @@ public class ScenarioPageController {
     }
 
     @PostMapping("/{id}/versions")
-    public String createVersion(@PathVariable Long id) {
+    public String scenarioVersionRegistProc(@PathVariable Long id) {
         scenarioService.createVersion(id);
         return "redirect:/admin/scenarios/" + id;
     }
 
     @PostMapping("/versions/{versionId}/publish")
-    public String publish(@PathVariable Long versionId, @RequestParam Long scenarioId) {
+    public String scenarioPublishProc(@PathVariable Long versionId, @RequestParam Long scenarioId) {
         scenarioService.publish(versionId);
         return "redirect:/admin/scenarios/" + scenarioId;
     }
 
     @PostMapping("/{id}/activate")
-    public String activate(@PathVariable Long id, @RequestParam Long versionId) {
+    public String scenarioActivateProc(@PathVariable Long id, @RequestParam Long versionId) {
         scenarioService.activate(id, versionId);
         return "redirect:/admin/scenarios/" + id;
     }
 
     @PostMapping("/{id}/deactivate")
-    public String deactivate(@PathVariable Long id) {
+    public String scenarioDeactivateProc(@PathVariable Long id) {
         scenarioService.deactivate(id);
         return "redirect:/admin/scenarios/" + id;
     }
 
     @GetMapping("/versions/{versionId}/preview")
-    public String preview(@PathVariable Long versionId, @RequestParam(required = false) Long nodeId, Model model) {
+    public String scenarioPreviewLayer(@PathVariable Long versionId, @RequestParam(required = false) Long nodeId, Model model) {
         ScenarioVersion version = scenarioService.version(versionId);
         var nodes = scenarioService.nodes(versionId);
         ScenarioNode current = nodeId == null && version.getStartNodeId() != null
