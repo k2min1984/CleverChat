@@ -101,34 +101,60 @@ style2/
 
 ## 5. 복사 범위
 
-후속 복사 작업의 허용 범위는 다음과 같다.
+본 절은 1.A-⑨ 최종 복사 대상 확정 결과를 반영한다. 이전 단계의 "허용/조건부 허용/제외" 3분류를 "도입 확정/보류/추가 확인 필요/복사 금지" 4분류로 재정렬하며, 분류 근거는 §6, 부록 B-1, 부록 C, 부록 D에 기반한다. 이번 단계에서도 코드 수정, 리소스 복사, 파일 이동은 수행하지 않는다.
 
-허용:
+### 5.1 도입 확정
 
 - `style2/css/admin-layout.css`
-  - CSS 내부 `url(...)` 참조: 1건, 인라인 SVG `data:` URI이므로 별도 외부 자산 복사 대상 없음.
-  - `@font-face` 참조: 0건.
-- `style2/css/sub.css`
-  - CSS 내부 `url(...)`/`@font-face` 외부 자산 종속: `../font/Inter-Regular.woff2`, `../font/Inter-Medium.woff2`, `../font/Inter-SemiBold.woff2`, `../font/Inter-Bold.woff2`, `../font/Inter-ExtraBold.woff2`, `../font/NotoSansKR-Regular.ttf`, `../font/NotoSansKR-Medium.ttf`, `../font/NotoSansKR-SemiBold.ttf`, `../font/NotoSansKR-Bold.ttf`.
-  - 인라인 SVG `data:` URI 2건은 CSS 내장 값이므로 별도 image 복사 대상 없음.
+  - 부록 B-1 기준 외부 자산 종속 0건이다. 라인 109의 `url(...)`은 인라인 SVG `data:` URI이므로 별도 image 복사 대상이 아니다.
+  - 부록 C 기준 기존 CleverChat 정적 리소스 충돌 0건이다.
+  - 부록 D 1번 기준 8소스 내부 자체 작성으로 추정되며, 도입 시 PR 설명에 출처(8소스 저장소)를 표기한다.
 - `style2/js/ADM.Common.js`
-- `style2/font/` 하위 9개 폰트 파일
-  - `sub.css` 기준 상대 경로 `../font/` 유지를 위해 `style2/css/`와 `style2/font/`의 상대 위치를 함께 유지한다.
-- 화면 또는 CSS에서 파일 단위 참조가 확인된 image 파일
+  - 부록 C 기준 기존 CleverChat 정적 리소스 충돌 0건이다.
+  - 부록 D 3번 기준 8소스 내부 자체 작성으로 추정되며, 도입 시 PR 설명에 출처(8소스 저장소)를 표기한다.
 
-조건부 허용:
+### 5.2 보류
 
-- `style2/js/ADM.FileUpload.js`: scenario 화면에 파일 업로드 UI가 실제 존재하고 참조가 확인된 경우
-- `style2/js/ADM.TreeList.js`: scenario 화면에 트리 UI가 실제 존재하고 참조가 확인된 경우
-- `style2/js/lib/chart.umd.min.js`: scenario 화면에 Chart.js 기반 차트가 실제 존재하고 참조가 확인된 경우
-- `style2/css/login.css`: scenario 화면이 아닌 로그인 화면 작업 범위에서만 별도 검토
+- `style2/css/sub.css`
+  - 부록 B-1 기준 `../font/Inter-*.woff2` 5건 및 `../font/NotoSansKR-*.ttf` 4건, 합계 폰트 9건에 종속된다.
+  - 부록 D 4·5번 기준 Inter/NotoSansKR OFL 1.1 사본이 확보되지 않았으므로 단독 도입 시 `@font-face` 참조가 깨진다.
+  - 보류 해제 조건: Inter/NotoSansKR OFL 1.1 사본 동봉 또는 PR 설명 내 공식 출처 URL 확보, 그리고 `style2/css/`와 `style2/font/`의 상대 위치를 유지할 수 있는 배치 경로 확정.
+- `style2/js/lib/chart.umd.min.js`
+  - 부록 D 6번 기준 Chart.js MIT 라이선스가 minified 파일 상단 헤더 주석에 명시되어 있다.
+  - §4 매트릭스 기준 scenario 화면 외부 JS 참조 0건으로 현재 화면 참조는 확인되지 않았다.
+  - scenario 또는 후속 화면에서 Chart.js 참조가 확인되면 도입 후보로 유지한다.
+  - 도입 시 minify 재처리, 헤더 제거, 재포맷을 금지하고 헤더 주석 원본을 보존한다.
+- `style2/js/ADM.FileUpload.js`
+  - §4 매트릭스 기준 외부 JS 참조 0건이며, scenario 화면에서 파일 업로드 UI가 관찰되지 않았다.
+  - 보류 해제 조건: 화면에 업로드 UI 참조가 확인되는 경우.
+- `style2/js/ADM.TreeList.js`
+  - §4 매트릭스 기준 외부 JS 참조 0건이며, scenario 화면에서 트리 UI가 관찰되지 않았다.
+  - 보류 해제 조건: 화면에 트리 UI 참조가 확인되는 경우.
 
-제외:
+### 5.3 추가 확인 필요
 
-- 실파일이 없는 `ADM.Form.js`
-- 참조가 확인되지 않은 `style2` 하위 전체 파일
-- `asset/admmgr` 전체
-- `asset` 전체
+- `style2/images/`
+  - §3 표 A4 및 부록 C image 행 기준 8소스 `admmgr/style2/images/` 실디렉터리가 부재한다.
+  - §4 매트릭스 기준 scenario 화면 image 참조는 0건이다.
+  - 후보 a: 후속 화면에서 image 참조가 신규 발생하면 8소스 외부 공식 자산 또는 공개 아이콘 세트 등에서 자산을 확보하고 별도 출처로 명시한다.
+  - 후보 b: 8소스 내 `style2` 외 디렉터리(`style1`, `common`, 다른 모듈 등)에서 동일 역할 image 자산을 발굴한 뒤 도입 여부를 재판정한다.
+  - 후보 c: image 디렉터리를 도입하지 않고 인라인 SVG/`data:` URI 정책을 유지한다. 부록 B-1의 `admin-layout.css` 라인 109, `sub.css` 라인 717·1382 패턴을 기준으로 삼는다.
+  - 결정 시점: 1.A-① scenario 화면 적용 시 image 참조 신규 발생 여부가 확인되는 시점.
+
+### 5.4 복사 금지
+
+- Inter family 5건(`Inter-Regular.woff2`, `Inter-Medium.woff2`, `Inter-SemiBold.woff2`, `Inter-Bold.woff2`, `Inter-ExtraBold.woff2`)
+  - 부록 D 4번 기준 OFL 1.1 추정이나 사본이 미동봉되어 있다.
+  - 해제 조건: 공식 배포처(rsms/inter 또는 Google Fonts) OFL 본문 및 출처 URL을 `docs/licenses/Inter-OFL.txt`(가칭) 또는 PR 설명에 첨부.
+- NotoSansKR family 4건(`NotoSansKR-Regular.ttf`, `NotoSansKR-Medium.ttf`, `NotoSansKR-SemiBold.ttf`, `NotoSansKR-Bold.ttf`)
+  - 부록 D 5번 기준 OFL 1.1 추정이나 사본이 미동봉되어 있다.
+  - 해제 조건: 공식 배포처(Google Fonts Noto Sans KR) OFL 본문 및 출처 URL을 `docs/licenses/NotoSansKR-OFL.txt`(가칭) 또는 PR 설명에 첨부.
+- `style2/css/login.css`
+  - scenario 범위 외 자산이므로 별도 로그인 화면 트랙에서 평가한다.
+- `style2/js/ADM.Form.js`
+  - 8소스 `style2/js/` 하위 실파일이 확인되지 않았다.
+- 본 4분류에 명시되지 않은 `style2` 하위 모든 파일, `asset/admmgr` 전체, `asset` 전체
+  - §10 금지 범위를 그대로 적용한다.
 
 ## 6. 라이선스 확인
 
@@ -264,19 +290,19 @@ rg -n "../font/|url\\(" <target-static-root>/css/sub.css
 
 ## 부록 A. 초기 인벤토리 후보
 
-| 구분 | 파일/디렉터리 | 상태 | 처리 |
-| --- | --- | --- | --- |
-| CSS | `style2/css/admin-layout.css` | 존재 | 후보 |
-| CSS | `style2/css/sub.css` | 존재 | 후보 |
-| CSS | `style2/css/login.css` | 존재 | scenario 범위 제외 |
-| JS | `style2/js/ADM.Common.js` | 존재 | 후보 |
-| JS | `style2/js/ADM.FileUpload.js` | 존재 | 조건부 |
-| JS | `style2/js/ADM.TreeList.js` | 존재 | 조건부 |
-| JS | `style2/js/lib/chart.umd.min.js` | 존재 | 조건부, 라이선스 확인 |
-| JS | `style2/js/ADM.Form.js` | 부재 | 보류 |
-| image | `style2/images/` | 부재 | 후속 결정 |
-| font | `style2/font/Inter-*.woff2` | 존재 | `sub.css`와 동시 후보 |
-| font | `style2/font/NotoSansKR-*.ttf` | 존재 | `sub.css`와 동시 후보 |
+| 구분 | 파일/디렉터리 | 상태 | 최종 분류 | 근거 |
+| --- | --- | --- | --- | --- |
+| CSS | `style2/css/admin-layout.css` | 존재 | **도입 확정** | 부록 B-1 외부 자산 0건, 부록 C 충돌 0건, 부록 D 1번 |
+| CSS | `style2/css/sub.css` | 존재 | **보류** | 부록 B-1 폰트 9건 종속, 부록 D 4·5번 OFL 사본 미확보 |
+| CSS | `style2/css/login.css` | 존재 | **복사 금지** | scenario 범위 외, 별도 로그인 화면 트랙 |
+| JS | `style2/js/ADM.Common.js` | 존재 | **도입 확정** | 부록 C 충돌 0건, 부록 D 3번 자체 작성 추정 |
+| JS | `style2/js/ADM.FileUpload.js` | 존재 | **보류** | §4 화면 참조 미관찰 |
+| JS | `style2/js/ADM.TreeList.js` | 존재 | **보류** | §4 화면 참조 미관찰 |
+| JS | `style2/js/lib/chart.umd.min.js` | 존재 | **보류** | 부록 D 6번 MIT 헤더 명시, 화면 참조 미확인. 헤더 주석 보존 조건으로 도입 후보 유지 |
+| JS | `style2/js/ADM.Form.js` | 부재 | **복사 금지** | 실파일 부재 |
+| image | `style2/images/` | 부재 | **추가 확인 필요** | §3 A4 및 부록 C 기준 8소스 `admmgr/style2/images/` 부재. 후보 a/b/c 중 후속 결정 |
+| font | `style2/font/Inter-*.woff2` 5건 | 존재 | **복사 금지** | 부록 D 4번. OFL 사본 확보 전 복사 제외 |
+| font | `style2/font/NotoSansKR-*.ttf` 4건 | 존재 | **복사 금지** | 부록 D 5번. OFL 사본 확보 전 복사 제외 |
 
 ## 부록 B. 후속 작업 체크리스트
 
@@ -285,8 +311,8 @@ rg -n "../font/|url\\(" <target-static-root>/css/sub.css
 - [x] CSS 내부 `url()` 참조 확인(`admin-layout.css` 1건, `sub.css` 11건; 외부 image 참조 0건, 폰트 9건)
 - [x] `sub.css`의 `../font/` 상대 경로 유지 가능 여부 확인(`style2/css/`와 `style2/font/` 상대 위치 유지 시 가능)
 - [x] 기존 CleverChat 정적 리소스 중복 여부 확인(`static/` 하위 파일 0건, 충돌 0건. 상세: 부록 C)
-- [ ] 폰트 및 외부 라이브러리 라이선스 확인
-- [ ] 최종 복사 대상 파일 목록 확정
+- [x] 폰트 및 외부 라이브러리 라이선스 확인(부록 D 1차 정리, OFL 사본 확보·`chart.umd.min.js` 헤더 보존 명문화 시 완전 충족)
+- [x] 최종 복사 대상 파일 목록 확정(1.A-⑨, §5 4분류 결과 반영)
 - [ ] 금지 범위 위반 여부 확인
 - [ ] 브라우저 네트워크 404 검증
 
@@ -422,7 +448,7 @@ find '8.소스/OverseasNPP_20260511/src/main/webapp/asset/admmgr/style2' -maxdep
 
 ## 부록 D. 1.A-⑧ 라이선스 확인 결과
 
-본 절은 §6 라이선스 확인 기준에 따라 §3 Baseline 5종 및 §5 조건부 허용 1종, 합계 6개 항목의 라이선스 확인 결과를 일괄 정리한 기록이다. 본 검수에서 보정한 부록 B-1의 라인 번호 7~12, 14~18 및 fontawesome 메모를 입력으로 삼는다. 이번 작업에서는 코드 수정, 리소스 복사, 파일 이동, 라이선스 사본 추가를 수행하지 않는다.
+본 절은 §6 라이선스 확인 기준에 따라 §3 Baseline 5종 및 §5 보류 항목 중 외부 라이브러리 식별이 명확한 1종, 합계 6개 항목의 라이선스 확인 결과를 일괄 정리한 기록이다. 본 검수에서 보정한 부록 B-1의 라인 번호 7~12, 14~18 및 fontawesome 메모를 입력으로 삼는다. 이번 작업에서는 코드 수정, 리소스 복사, 파일 이동, 라이선스 사본 추가를 수행하지 않는다.
 
 확인 기준일: 2026-05-14
 
@@ -430,7 +456,7 @@ find '8.소스/OverseasNPP_20260511/src/main/webapp/asset/admmgr/style2' -maxdep
 
 - §3 Baseline 5종 중 자산 식별이 가능한 4종(`admin-layout.css`, `sub.css`, `ADM.Common.js`, `font/`)
 - §3 Baseline 중 `font/`는 Inter family와 NotoSansKR family 두 항목으로 분리하여 집계한다. (`images/`는 8소스 디렉터리 부재로 본 절 대상 외)
-- §5 조건부 허용 항목 중 외부 라이브러리 식별이 명확한 `chart.umd.min.js` 1종
+- §5 보류 항목 중 외부 라이브러리 식별이 명확한 `chart.umd.min.js` 1종
 
 | 번호 | 항목 | 출처 | 라이선스 판정 | 사본/근거 | 복사 도입 결정 |
 | ---: | --- | --- | --- | --- | --- |
@@ -439,7 +465,7 @@ find '8.소스/OverseasNPP_20260511/src/main/webapp/asset/admmgr/style2' -maxdep
 | 3 | `ADM.Common.js` | 8소스 `style2/js/ADM.Common.js` | 8소스 내부 자체 작성으로 추정. minified 외부 라이브러리 식별 단서 없음. | 별도 라이선스 사본 불필요. 출처: 8소스 저장소 자체. | 신규 도입 후보 유지. PR 설명에 출처 표기. |
 | 4 | Inter family (`Inter-Regular.woff2`, `Inter-Medium.woff2`, `Inter-SemiBold.woff2`, `Inter-Bold.woff2`, `Inter-ExtraBold.woff2`) 5건 | 8소스 `style2/font/Inter-*.woff2` (부록 B-1 라인 7~11) | SIL Open Font License 1.1 추정. 8소스에 OFL 사본 미동봉. 공식 배포처(rsms/inter, Google Fonts) 확인 절차 미완료. | 사본 미확보. 공식 배포처 OFL 1.1 본문 및 출처 URL 확보 후 PR 설명/`docs/licenses/`에 첨부 필요. | **OFL 사본 확보 전 복사 대상 제외.** `sub.css` 도입 시점에 OFL 사본이 함께 확보되지 않으면 `sub.css`도 후속 결정으로 보류한다. |
 | 5 | NotoSansKR family (`NotoSansKR-Regular.ttf`, `NotoSansKR-Medium.ttf`, `NotoSansKR-SemiBold.ttf`, `NotoSansKR-Bold.ttf`) 4건 | 8소스 `style2/font/NotoSansKR-*.ttf` (부록 B-1 라인 14~17) | SIL Open Font License 1.1 추정. 8소스에 OFL 사본 미동봉. 공식 배포처(Google Fonts Noto Sans KR) 확인 절차 미완료. | 사본 미확보. 공식 배포처 OFL 1.1 본문 및 출처 URL 확보 후 PR 설명/`docs/licenses/`에 첨부 필요. | **OFL 사본 확보 전 복사 대상 제외.** `sub.css` 도입 시점에 OFL 사본이 함께 확보되지 않으면 `sub.css`도 후속 결정으로 보류한다. |
-| 6 | `chart.umd.min.js` | 8소스 `style2/js/lib/chart.umd.min.js` | Chart.js MIT License로 추정. minified 파일 상단 `/*! Chart.js ... | (c) ... | MIT License */` 헤더 주석에 라이선스 명시. | 헤더 주석 자체가 MIT 고지 역할. 별도 LICENSE 파일 동봉은 운영 정책에 따라 추가 검토. | **헤더 주석 보존 조건으로 도입 후보 승격 가능.** scenario 화면에 Chart.js 기반 차트 참조가 확인되는 시점에 §5 조건부 허용에서 허용으로 전환한다. minify 재처리·헤더 제거·재포맷 금지. |
+| 6 | `chart.umd.min.js` | 8소스 `style2/js/lib/chart.umd.min.js` | Chart.js MIT License로 추정. minified 파일 상단 `/*! Chart.js ... | (c) ... | MIT License */` 헤더 주석에 라이선스 명시. | 헤더 주석 자체가 MIT 고지 역할. 별도 LICENSE 파일 동봉은 운영 정책에 따라 추가 검토. | **헤더 주석 보존 조건으로 도입 후보 유지.** scenario 화면에 Chart.js 기반 차트 참조가 확인되는 시점에 §5 보류에서 도입 확정 후보로 재판정한다. minify 재처리·헤더 제거·재포맷 금지. |
 
 집계:
 
@@ -449,7 +475,7 @@ find '8.소스/OverseasNPP_20260511/src/main/webapp/asset/admmgr/style2' -maxdep
 
 후속 작업 연계:
 
-- 부록 B 후속 작업 체크리스트의 "폰트 및 외부 라이브러리 라이선스 확인" 항목은 본 부록 D를 근거로 1차 정리되었으나, OFL 사본 확보 및 `chart.umd.min.js` 헤더 주석 보존 조건 명시가 완료될 때까지 미체크 상태로 둔다.
-- §5 복사 범위의 `style2/font/` 9건 항목은 본 부록 D 4·5번 결정에 따라 OFL 사본 확보 전까지 복사 보류로 운영한다. 동일 사유로 §5의 `sub.css` 항목도 단독 도입을 권장하지 않는다.
-- §5 조건부 허용의 `chart.umd.min.js` 항목은 본 부록 D 6번 결정에 따라 화면 참조 확인 시 헤더 주석 보존 조건과 함께 허용으로 승격한다.
+- 부록 B 후속 작업 체크리스트의 "폰트 및 외부 라이브러리 라이선스 확인" 항목은 본 부록 D를 근거로 1차 정리 완료로 체크한다. 단, OFL 사본 확보는 후속 구현 전 남은 선행 작업으로 유지한다.
+- §5 복사 범위의 `style2/font/` 9건 항목은 본 부록 D 4·5번 결정에 따라 OFL 사본 확보 전까지 복사 금지로 운영한다. 동일 사유로 §5의 `sub.css` 항목은 단독 도입하지 않고 보류한다.
+- §5의 `chart.umd.min.js` 항목은 본 부록 D 6번 결정에 따라 화면 참조 확인 시 헤더 주석 보존 조건과 함께 도입 후보로 유지한다.
 - fontawesome 등 외부 아이콘 폰트 라이브러리는 부록 B-1 라인 12·18 메모 기준 미사용으로 확인되었으므로 별도 라이선스 확인 대상에서 제외한다. 후속 화면 작업에서 fontawesome 도입이 새로 요구될 경우 본 부록과 별도 항목으로 추가 확인한다.
