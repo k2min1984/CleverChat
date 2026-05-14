@@ -79,7 +79,7 @@ NotoSansKR 파일은 `Asset`, `Source-Primary`, `Source-License`, `Related-Inven
 2. OFL 1.1 원문 파일 또는 공식 ZIP 내부의 OFL/LICENSE 파일을 찾는다.
 3. 해당 원문이 "SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007"을 포함하는지 확인한다.
 4. 원문 상단의 copyright, reserved font name, license notice를 삭제하지 않고 보존한다.
-5. `docs/licenses/` 디렉터리를 준비하고 산출물 2건을 생성한다.
+5. `3.개발/cleverchat/docs/licenses/` 디렉터리를 준비하고 산출물 2건을 생성한다.
 6. 각 산출물 상단에 META 블록을 추가한다.
 7. 본문에는 OFL 1.1 영문 원문을 줄바꿈과 문구 변경 없이 붙인다.
 8. 인코딩, BOM, 핵심 키워드, 출처 URL 기록 여부를 검증한다.
@@ -121,8 +121,8 @@ foreach ($file in $files) {
 
 | 번호 | 해제 조건 | 판정 기준 |
 | --- | --- | --- |
-| B1 | Inter OFL 사본 확보 | `docs/licenses/Inter-OFL.txt` 존재 및 검증 통과 |
-| B2 | NotoSansKR OFL 사본 확보 | `docs/licenses/NotoSansKR-OFL.txt` 존재 및 검증 통과 |
+| B1 | Inter OFL 사본 확보 | `3.개발/cleverchat/docs/licenses/Inter-OFL.txt` 존재 및 검증 통과 |
+| B2 | NotoSansKR OFL 사본 확보 | `3.개발/cleverchat/docs/licenses/NotoSansKR-OFL.txt` 존재 및 검증 통과 |
 | B3 | 공식 출처 URL 기록 | 각 산출물 META 블록에 `Source-Primary`, `Source-License`, `Source-Checked-Date` 기록 |
 | B4 | `sub.css`와 `font/` 상대 경로 배치 확정 | `sub.css`의 `../font/` 참조를 깨지 않는 도입 경로가 작업지시서에 명시됨 |
 | B5 | 복사 범위 재판정 | 1.A-③ §5 또는 후속 WBS에 Inter/NotoSansKR 복사 금지 해제 근거가 기록됨 |
@@ -132,7 +132,7 @@ foreach ($file in $files) {
 - OFL 사본 없이 Inter/NotoSansKR 폰트 파일만 먼저 복사하지 않는다.
 - OFL 사본 없이 `sub.css`를 먼저 도입하지 않는다.
 - `@font-face` 라인을 삭제하거나 폰트 파일명을 바꾸는 방식으로 블로커를 우회하지 않는다.
-- PR 설명에 URL만 남기고 `docs/licenses/` 산출물을 생략하지 않는다.
+- PR 설명에 URL만 남기고 `3.개발/cleverchat/docs/licenses/` 산출물을 생략하지 않는다.
 
 차단 범위:
 
@@ -141,8 +141,8 @@ foreach ($file in $files) {
 
 ## 8. 산출물 체크리스트
 
-- [ ] `docs/licenses/Inter-OFL.txt` 생성
-- [ ] `docs/licenses/NotoSansKR-OFL.txt` 생성
+- [ ] `3.개발/cleverchat/docs/licenses/Inter-OFL.txt` 생성
+- [ ] `3.개발/cleverchat/docs/licenses/NotoSansKR-OFL.txt` 생성
 - [ ] Inter 공식 출처 URL 기록
 - [ ] NotoSansKR 공식 출처 URL 기록
 - [ ] OFL 1.1 영문 원문 제목 확인
