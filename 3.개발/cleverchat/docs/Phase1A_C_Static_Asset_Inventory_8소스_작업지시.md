@@ -308,19 +308,21 @@ rg -n "url\\(|@font-face|src:" \
 | CSS | 라인 | 종류 | 참조 | 외부 자산 |
 | --- | ---: | --- | --- | --- |
 | `admin-layout.css` | 109 | `url()` | 인라인 SVG `data:` URI | 없음 |
-| `sub.css` | 6 | `@font-face` | `../font/Inter-Regular.woff2` | `Inter-Regular.woff2` |
-| `sub.css` | 7 | `@font-face` | `../font/Inter-Medium.woff2` | `Inter-Medium.woff2` |
-| `sub.css` | 8 | `@font-face` | `../font/Inter-SemiBold.woff2` | `Inter-SemiBold.woff2` |
-| `sub.css` | 9 | `@font-face` | `../font/Inter-Bold.woff2` | `Inter-Bold.woff2` |
-| `sub.css` | 10 | `@font-face` | `../font/Inter-ExtraBold.woff2` | `Inter-ExtraBold.woff2` |
-| `sub.css` | 11 | `@font-face` | `../font/NotoSansKR-Regular.ttf` | `NotoSansKR-Regular.ttf` |
-| `sub.css` | 12 | `@font-face` | `../font/NotoSansKR-Medium.ttf` | `NotoSansKR-Medium.ttf` |
-| `sub.css` | 13 | `@font-face` | `../font/NotoSansKR-SemiBold.ttf` | `NotoSansKR-SemiBold.ttf` |
-| `sub.css` | 14 | `@font-face` | `../font/NotoSansKR-Bold.ttf` | `NotoSansKR-Bold.ttf` |
+| `sub.css` | 7 | `@font-face` | `../font/Inter-Regular.woff2` | `Inter-Regular.woff2` |
+| `sub.css` | 8 | `@font-face` | `../font/Inter-Medium.woff2` | `Inter-Medium.woff2` |
+| `sub.css` | 9 | `@font-face` | `../font/Inter-SemiBold.woff2` | `Inter-SemiBold.woff2` |
+| `sub.css` | 10 | `@font-face` | `../font/Inter-Bold.woff2` | `Inter-Bold.woff2` |
+| `sub.css` | 11 | `@font-face` | `../font/Inter-ExtraBold.woff2` | `Inter-ExtraBold.woff2` |
+| `sub.css` | 12 | (메모) | fontawesome 등 외부 아이콘 폰트 import 0건 확인 (Inter 블록 종료부) | 없음 |
+| `sub.css` | 14 | `@font-face` | `../font/NotoSansKR-Regular.ttf` | `NotoSansKR-Regular.ttf` |
+| `sub.css` | 15 | `@font-face` | `../font/NotoSansKR-Medium.ttf` | `NotoSansKR-Medium.ttf` |
+| `sub.css` | 16 | `@font-face` | `../font/NotoSansKR-SemiBold.ttf` | `NotoSansKR-SemiBold.ttf` |
+| `sub.css` | 17 | `@font-face` | `../font/NotoSansKR-Bold.ttf` | `NotoSansKR-Bold.ttf` |
+| `sub.css` | 18 | (메모) | fontawesome 등 외부 아이콘 폰트 import 0건 확인 (NotoSansKR 블록 종료부) | 없음 |
 | `sub.css` | 717 | `url()` | 인라인 SVG `data:` URI | 없음 |
 | `sub.css` | 1382 | `url()` | 인라인 SVG `data:` URI | 없음 |
 
-요약: `admin-layout.css` 외부 자산 종속은 0건이며, `sub.css` 외부 자산 종속은 폰트 9건이다. 두 CSS 모두 `images/` 디렉터리 또는 외부 image 파일 참조는 확인되지 않았다.
+요약: `admin-layout.css` 외부 자산 종속은 0건이며, `sub.css` 외부 자산 종속은 폰트 9건이다. 본 검수에서 sub.css의 `@font-face` 라인 범위를 7~12(Inter 5건 + 메모) 및 14~18(NotoSansKR 4건 + 메모)로 보정했으며, fontawesome 등 외부 아이콘 폰트 라이브러리 import는 두 CSS 모두에서 확인되지 않았다. `images/` 디렉터리 또는 외부 image 파일 참조도 확인되지 않았다.
 
 ## 부록 B-2. 변경 출처 및 커밋 분리 기준
 
@@ -417,3 +419,37 @@ find '8.소스/OverseasNPP_20260511/src/main/webapp/asset/admmgr/style2' -maxdep
 - `ADM.FileUpload.js`, `ADM.TreeList.js`, `chart.umd.min.js`, `login.css`는 scenario 화면의 실제 참조 또는 UI 필요성이 확인될 때만 후보로 승격한다.
 - `style2/images/`는 8소스 `admmgr/style2` 기준 실디렉터리가 없으므로 후속 화면 참조 실측 전까지 복사 대상에서 제외한다.
 - 폰트 9건과 `chart.umd.min.js`는 라이선스와 재배포 가능 여부 확인 전까지 실제 복사 또는 도입을 보류한다.
+
+## 부록 D. 1.A-⑧ 라이선스 확인 결과
+
+본 절은 §6 라이선스 확인 기준에 따라 §3 Baseline 5종 및 §5 조건부 허용 1종, 합계 6개 항목의 라이선스 확인 결과를 일괄 정리한 기록이다. 본 검수에서 보정한 부록 B-1의 라인 번호 7~12, 14~18 및 fontawesome 메모를 입력으로 삼는다. 이번 작업에서는 코드 수정, 리소스 복사, 파일 이동, 라이선스 사본 추가를 수행하지 않는다.
+
+확인 기준일: 2026-05-14
+
+확인 범위:
+
+- §3 Baseline 5종 중 자산 식별이 가능한 4종(`admin-layout.css`, `sub.css`, `ADM.Common.js`, `font/`)
+- §3 Baseline 중 `font/`는 Inter family와 NotoSansKR family 두 항목으로 분리하여 집계한다. (`images/`는 8소스 디렉터리 부재로 본 절 대상 외)
+- §5 조건부 허용 항목 중 외부 라이브러리 식별이 명확한 `chart.umd.min.js` 1종
+
+| 번호 | 항목 | 출처 | 라이선스 판정 | 사본/근거 | 복사 도입 결정 |
+| ---: | --- | --- | --- | --- | --- |
+| 1 | `admin-layout.css` | 8소스 `style2/css/admin-layout.css` | 8소스 내부 자체 작성으로 추정. 외부 라이브러리 식별 단서 없음. fontawesome 등 외부 아이콘 폰트 import 0건(부록 B-1). | 별도 라이선스 사본 불필요. 출처: 8소스 저장소 자체. | 신규 도입 후보 유지. PR 설명에 출처 표기. |
+| 2 | `sub.css` | 8소스 `style2/css/sub.css` | 8소스 내부 자체 작성으로 추정. 외부 라이브러리 식별 단서 없음. fontawesome 등 외부 아이콘 폰트 import 0건(부록 B-1, 라인 12·18 메모). | 별도 라이선스 사본 불필요. 출처: 8소스 저장소 자체. | 신규 도입 후보 유지. PR 설명에 출처 표기. |
+| 3 | `ADM.Common.js` | 8소스 `style2/js/ADM.Common.js` | 8소스 내부 자체 작성으로 추정. minified 외부 라이브러리 식별 단서 없음. | 별도 라이선스 사본 불필요. 출처: 8소스 저장소 자체. | 신규 도입 후보 유지. PR 설명에 출처 표기. |
+| 4 | Inter family (`Inter-Regular.woff2`, `Inter-Medium.woff2`, `Inter-SemiBold.woff2`, `Inter-Bold.woff2`, `Inter-ExtraBold.woff2`) 5건 | 8소스 `style2/font/Inter-*.woff2` (부록 B-1 라인 7~11) | SIL Open Font License 1.1 추정. 8소스에 OFL 사본 미동봉. 공식 배포처(rsms/inter, Google Fonts) 확인 절차 미완료. | 사본 미확보. 공식 배포처 OFL 1.1 본문 및 출처 URL 확보 후 PR 설명/`docs/licenses/`에 첨부 필요. | **OFL 사본 확보 전 복사 대상 제외.** `sub.css` 도입 시점에 OFL 사본이 함께 확보되지 않으면 `sub.css`도 후속 결정으로 보류한다. |
+| 5 | NotoSansKR family (`NotoSansKR-Regular.ttf`, `NotoSansKR-Medium.ttf`, `NotoSansKR-SemiBold.ttf`, `NotoSansKR-Bold.ttf`) 4건 | 8소스 `style2/font/NotoSansKR-*.ttf` (부록 B-1 라인 14~17) | SIL Open Font License 1.1 추정. 8소스에 OFL 사본 미동봉. 공식 배포처(Google Fonts Noto Sans KR) 확인 절차 미완료. | 사본 미확보. 공식 배포처 OFL 1.1 본문 및 출처 URL 확보 후 PR 설명/`docs/licenses/`에 첨부 필요. | **OFL 사본 확보 전 복사 대상 제외.** `sub.css` 도입 시점에 OFL 사본이 함께 확보되지 않으면 `sub.css`도 후속 결정으로 보류한다. |
+| 6 | `chart.umd.min.js` | 8소스 `style2/js/lib/chart.umd.min.js` | Chart.js MIT License로 추정. minified 파일 상단 `/*! Chart.js ... | (c) ... | MIT License */` 헤더 주석에 라이선스 명시. | 헤더 주석 자체가 MIT 고지 역할. 별도 LICENSE 파일 동봉은 운영 정책에 따라 추가 검토. | **헤더 주석 보존 조건으로 도입 후보 승격 가능.** scenario 화면에 Chart.js 기반 차트 참조가 확인되는 시점에 §5 조건부 허용에서 허용으로 전환한다. minify 재처리·헤더 제거·재포맷 금지. |
+
+집계:
+
+- 신규 도입 후보 유지(자체): 3건 — `admin-layout.css`, `sub.css`, `ADM.Common.js`
+- 복사 대상 제외(사본 확보 전): 9건 — Inter `*.woff2` 5건 + NotoSansKR `*.ttf` 4건 (Baseline 표 기준 2개 항목)
+- 조건부 승격 가능(헤더 주석 보존 조건): 1건 — `chart.umd.min.js`
+
+후속 작업 연계:
+
+- 부록 B 후속 작업 체크리스트의 "폰트 및 외부 라이브러리 라이선스 확인" 항목은 본 부록 D를 근거로 1차 정리되었으나, OFL 사본 확보 및 `chart.umd.min.js` 헤더 주석 보존 조건 명시가 완료될 때까지 미체크 상태로 둔다.
+- §5 복사 범위의 `style2/font/` 9건 항목은 본 부록 D 4·5번 결정에 따라 OFL 사본 확보 전까지 복사 보류로 운영한다. 동일 사유로 §5의 `sub.css` 항목도 단독 도입을 권장하지 않는다.
+- §5 조건부 허용의 `chart.umd.min.js` 항목은 본 부록 D 6번 결정에 따라 화면 참조 확인 시 헤더 주석 보존 조건과 함께 허용으로 승격한다.
+- fontawesome 등 외부 아이콘 폰트 라이브러리는 부록 B-1 라인 12·18 메모 기준 미사용으로 확인되었으므로 별도 라이선스 확인 대상에서 제외한다. 후속 화면 작업에서 fontawesome 도입이 새로 요구될 경우 본 부록과 별도 항목으로 추가 확인한다.
