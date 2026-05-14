@@ -68,13 +68,27 @@ style2/
 
 ## 4. CleverChat Scenario 화면 매트릭스
 
-정적 리소스 인벤토리는 화면 단위로 실제 참조 여부를 기록한다. 1차 매트릭스는 다음 형식을 사용한다.
+정적 리소스 인벤토리는 화면 단위로 실제 참조 여부를 기록한다.
 
-| 화면/템플릿 | CSS | JS | image | font | 판단 |
-| --- | --- | --- | --- | --- | --- |
-| scenario 목록 | `admin-layout.css`, `sub.css` | `ADM.Common.js` | 확인 필요 | `font/` | 후보 |
-| scenario 상세 | `admin-layout.css`, `sub.css` | `ADM.Common.js` | 확인 필요 | `font/` | 후보 |
-| scenario 등록/수정 | `admin-layout.css`, `sub.css` | `ADM.Common.js` | 확인 필요 | `font/` | 후보 |
+조사 범위:
+
+- 기준일: 2026-05-13
+- 대상: `src/main/resources/templates/` 및 `src/main/webapp/` 하위 JSP/HTML/Thymeleaf 템플릿
+- 결과: scenario 관련 화면은 Thymeleaf 템플릿 4건이며, JSP 0건, 순수 HTML 0건이다. `src/main/webapp/` 디렉터리는 확인되지 않았다.
+
+실측 요약:
+
+- 외부 CSS 참조(`<link rel="stylesheet">`): 0건. 4개 화면 모두 인라인 `<style>` 블록만 사용한다.
+- 외부 JS 참조(`<script src=...>`): 0건.
+- image 참조(`<img src=...>`, CSS `url(...)`): 0건.
+- font 파일 참조(`@font-face`): 0건. 인라인 `font-family: Arial, "Noto Sans KR", sans-serif` 폰트 스택만 사용한다.
+
+| 화면/템플릿 | 실파일 경로 | 외부 CSS 참조 | 외부 JS 참조 | image 참조 | font 참조 | style2 매핑 필요 |
+| --- | --- | --- | --- | --- | --- | --- |
+| scenario 목록 | `3.개발/cleverchat/src/main/resources/templates/admin/scenarios/list.html` | 0건, 인라인 `<style>` 사용 | 0건 | 0건 | 0건, OS fallback 폰트 스택 | 필요 |
+| scenario 상세 | `3.개발/cleverchat/src/main/resources/templates/admin/scenarios/detail.html` | 0건, 인라인 `<style>` 사용 | 0건 | 0건 | 0건, OS fallback 폰트 스택 | 필요 |
+| scenario 등록/수정 | `3.개발/cleverchat/src/main/resources/templates/admin/scenarios/form.html` | 0건, 인라인 `<style>` 사용 | 0건 | 0건 | 0건, OS fallback 폰트 스택 | 필요 |
+| scenario 미리보기 | `3.개발/cleverchat/src/main/resources/templates/admin/scenarios/preview.html` | 0건, 인라인 `<style>` 사용 | 0건 | 0건 | 0건, OS fallback 폰트 스택 | 필요 |
 
 화면별 판단 기준:
 
@@ -82,6 +96,8 @@ style2/
 - CSS 내부 상대 경로 참조는 CSS 파일 기준으로 역추적한다.
 - 화면에서 직접 참조하지 않더라도 CSS 내부에서 필수로 참조하는 폰트는 종속 자산으로 포함한다.
 - image 자산은 현재 기준 디렉터리가 없으므로 화면 또는 CSS에서 구체 파일명이 확인되기 전까지 복사 대상에서 제외한다.
+- scenario 4개 화면은 모두 인라인 스타일 상태이므로 후속 단계에서 8소스 `style2/css/admin-layout.css` 및 `style2/css/sub.css` 매핑 대상이다.
+- `sub.css` 도입 시 `style2/font/Inter-*.woff2` 및 `style2/font/NotoSansKR-*.ttf`는 CSS 종속 자산으로 함께 검토한다.
 
 ## 5. 복사 범위
 
@@ -90,9 +106,14 @@ style2/
 허용:
 
 - `style2/css/admin-layout.css`
+  - CSS 내부 `url(...)` 참조: 1건, 인라인 SVG `data:` URI이므로 별도 외부 자산 복사 대상 없음.
+  - `@font-face` 참조: 0건.
 - `style2/css/sub.css`
+  - CSS 내부 `url(...)`/`@font-face` 외부 자산 종속: `../font/Inter-Regular.woff2`, `../font/Inter-Medium.woff2`, `../font/Inter-SemiBold.woff2`, `../font/Inter-Bold.woff2`, `../font/Inter-ExtraBold.woff2`, `../font/NotoSansKR-Regular.ttf`, `../font/NotoSansKR-Medium.ttf`, `../font/NotoSansKR-SemiBold.ttf`, `../font/NotoSansKR-Bold.ttf`.
+  - 인라인 SVG `data:` URI 2건은 CSS 내장 값이므로 별도 image 복사 대상 없음.
 - `style2/js/ADM.Common.js`
 - `style2/font/` 하위 9개 폰트 파일
+  - `sub.css` 기준 상대 경로 `../font/` 유지를 위해 `style2/css/`와 `style2/font/`의 상대 위치를 함께 유지한다.
 - 화면 또는 CSS에서 파일 단위 참조가 확인된 image 파일
 
 조건부 허용:
@@ -259,12 +280,140 @@ rg -n "../font/|url\\(" <target-static-root>/css/sub.css
 
 ## 부록 B. 후속 작업 체크리스트
 
-- [ ] CleverChat scenario 화면 파일 위치 확인
-- [ ] 화면별 CSS/JS 직접 참조 확인
-- [ ] CSS 내부 `url()` 참조 확인
-- [ ] `sub.css`의 `../font/` 상대 경로 유지 가능 여부 확인
-- [ ] 기존 CleverChat 정적 리소스 중복 여부 확인
+- [x] CleverChat scenario 화면 파일 위치 확인(Thymeleaf 4건: `list.html`, `detail.html`, `form.html`, `preview.html`)
+- [x] 화면별 CSS/JS 직접 참조 확인(외부 CSS 0건, 외부 JS 0건, 각 화면 인라인 `<style>` 1건)
+- [x] CSS 내부 `url()` 참조 확인(`admin-layout.css` 1건, `sub.css` 11건; 외부 image 참조 0건, 폰트 9건)
+- [x] `sub.css`의 `../font/` 상대 경로 유지 가능 여부 확인(`style2/css/`와 `style2/font/` 상대 위치 유지 시 가능)
+- [x] 기존 CleverChat 정적 리소스 중복 여부 확인(`static/` 하위 파일 0건, 충돌 0건. 상세: 부록 C)
 - [ ] 폰트 및 외부 라이브러리 라이선스 확인
 - [ ] 최종 복사 대상 파일 목록 확정
 - [ ] 금지 범위 위반 여부 확인
 - [ ] 브라우저 네트워크 404 검증
+
+## 부록 B-1. CSS 내부 url() / @font-face 실측 결과
+
+대상 파일:
+
+- `8.소스/OverseasNPP_20260511/src/main/webapp/asset/admmgr/style2/css/admin-layout.css`
+- `8.소스/OverseasNPP_20260511/src/main/webapp/asset/admmgr/style2/css/sub.css`
+
+실측 명령:
+
+```bash
+rg -n "url\\(|@font-face|src:" \
+  "8.소스/OverseasNPP_20260511/src/main/webapp/asset/admmgr/style2/css/admin-layout.css" \
+  "8.소스/OverseasNPP_20260511/src/main/webapp/asset/admmgr/style2/css/sub.css"
+```
+
+| CSS | 라인 | 종류 | 참조 | 외부 자산 |
+| --- | ---: | --- | --- | --- |
+| `admin-layout.css` | 109 | `url()` | 인라인 SVG `data:` URI | 없음 |
+| `sub.css` | 6 | `@font-face` | `../font/Inter-Regular.woff2` | `Inter-Regular.woff2` |
+| `sub.css` | 7 | `@font-face` | `../font/Inter-Medium.woff2` | `Inter-Medium.woff2` |
+| `sub.css` | 8 | `@font-face` | `../font/Inter-SemiBold.woff2` | `Inter-SemiBold.woff2` |
+| `sub.css` | 9 | `@font-face` | `../font/Inter-Bold.woff2` | `Inter-Bold.woff2` |
+| `sub.css` | 10 | `@font-face` | `../font/Inter-ExtraBold.woff2` | `Inter-ExtraBold.woff2` |
+| `sub.css` | 11 | `@font-face` | `../font/NotoSansKR-Regular.ttf` | `NotoSansKR-Regular.ttf` |
+| `sub.css` | 12 | `@font-face` | `../font/NotoSansKR-Medium.ttf` | `NotoSansKR-Medium.ttf` |
+| `sub.css` | 13 | `@font-face` | `../font/NotoSansKR-SemiBold.ttf` | `NotoSansKR-SemiBold.ttf` |
+| `sub.css` | 14 | `@font-face` | `../font/NotoSansKR-Bold.ttf` | `NotoSansKR-Bold.ttf` |
+| `sub.css` | 717 | `url()` | 인라인 SVG `data:` URI | 없음 |
+| `sub.css` | 1382 | `url()` | 인라인 SVG `data:` URI | 없음 |
+
+요약: `admin-layout.css` 외부 자산 종속은 0건이며, `sub.css` 외부 자산 종속은 폰트 9건이다. 두 CSS 모두 `images/` 디렉터리 또는 외부 image 파일 참조는 확인되지 않았다.
+
+## 부록 B-2. 변경 출처 및 커밋 분리 기준
+
+본 절은 1.A-⑤ 작업 이후 본 문서에 누적된 변경을 8소스 CSS 실측 범위와 CleverChat 화면 실측 범위로 구분하기 위한 기록이다. 코드 수정, 리소스 복사, 파일 이동은 이 기준의 대상이 아니다.
+
+WBS 기준 작업 범위:
+
+- 1.A-⑤: 8소스 CSS `url()`/`@font-face` 종속 자산 실측 반영. 본 문서의 직접 대상은 §5, 부록 B 체크리스트 3·4번, 부록 B-1이다.
+- 1.A-⑥: CleverChat scenario 화면 4건 정적 참조 실측 매트릭스 반영. 본 문서의 직접 대상은 §4와 부록 B 체크리스트 1·2번이다.
+
+변경 출처 분류:
+
+| 변경 위치 | 변경 내용 | 출처 판정 |
+| --- | --- | --- |
+| §4 조사 범위 | 기준일, 대상 템플릿 경로, scenario Thymeleaf 4건 확인 | CleverChat 화면 실측 결과 |
+| §4 실측 요약 | 외부 CSS/JS/image/font 참조 0건 및 인라인 스타일 확인 | CleverChat 화면 실측 결과 |
+| §4 매트릭스 본문 | `list.html`, `detail.html`, `form.html`, `preview.html` 4건별 참조 현황 | CleverChat 화면 실측 결과 |
+| §4 화면별 판단 기준 마지막 2줄 | `admin-layout.css`, `sub.css` 매핑 대상 및 `sub.css` 폰트 종속 검토 | 1.A-⑤ CSS 실측의 §4 파생 반영 |
+| §5 복사 범위 | `admin-layout.css`, `sub.css`의 `url()`/`@font-face` 종속 자산과 상대 경로 유지 조건 | 1.A-⑤ CSS 실측 직접 결과 |
+| 부록 B 체크리스트 1, 2번 | scenario 화면 파일 위치 및 화면별 CSS/JS 직접 참조 확인 | CleverChat 화면 실측 결과 |
+| 부록 B 체크리스트 3, 4번 | CSS 내부 `url()` 및 `sub.css` `../font/` 상대 경로 확인 | 1.A-⑤ CSS 실측 직접 결과 |
+| 부록 B-1 | CSS 내부 `url()`/`@font-face` 라인별 실측 표 | 1.A-⑤ CSS 실측 직접 결과 |
+
+판정:
+
+- §4의 조사 범위, 실측 요약, 매트릭스 본문은 1.A-⑤ CSS `url()`/font 참조 실측의 직접 결과가 아니다. 측정 대상이 `src/main/resources/templates/admin/scenarios/*.html` 화면 4건이고, 측정 항목도 화면의 외부 CSS/JS/image/font 직접 참조 여부이므로 별도 화면 실측 결과로 본다.
+- §4 화면별 판단 기준의 마지막 2줄은 예외적으로 1.A-⑤ CSS 실측의 파생 반영이다. `sub.css`의 Inter/NotoSansKR 폰트 종속 9건은 부록 B-1 실측 없이는 확정할 수 없기 때문이다.
+- §4 변경은 이전 작업 잔여로 분류하지 않는다. 현재 diff는 7b2932c에서 작업지시서가 추가된 뒤 동일 워킹트리에 누적된 변경이며, 파일 추가 이전부터 남아 있던 미완료 작업 잔여로 판단할 근거는 없다.
+
+커밋 분리 권고:
+
+| 권고 커밋 | 포함 범위 | 권고 메시지 |
+| --- | --- | --- |
+| A | §5 CSS 종속 자산 표기, 부록 B-1, 부록 B 체크리스트 3·4번, §4 화면별 판단 기준 마지막 2줄 | `docs(phase1a): 8소스 CSS url()/@font-face 종속 자산 실측 반영` |
+| B | §4 조사 범위·실측 요약·매트릭스 본문, 부록 B 체크리스트 1·2번 | `docs(phase1a): scenario 화면 4건 정적 참조 실측 매트릭스 반영` |
+
+부록 B-2 자체는 변경 출처와 분리 근거를 남기는 메타 기록이므로 커밋 A에 동봉하거나 별도 문서 커밋으로 분리한다. §4 안에 1.A-⑤ 파생 반영 2줄과 1.A-⑥ 화면 실측 본문이 함께 있으므로 `git add -p`로 hunk를 분리한다. 커밋 순서는 A 다음 B를 권고한다.
+
+분리 이유: 1.A-⑤는 8소스 CSS 파일의 `url()`/`@font-face` 라인 스캔이고, 화면 실측은 CleverChat Thymeleaf 템플릿의 외부 참조 여부 스캔이다. 두 변경을 한 커밋에 묶으면 CSS 종속 자산 실측만 회수하거나 재검증할 때 §4 화면 매트릭스까지 함께 영향을 받는다.
+
+## 부록 C. 1.A-⑦ 기존 CleverChat 정적 리소스 중복 스캔 결과
+
+본 절은 8소스 `style2` 자산과 기존 CleverChat 정적 리소스의 동일 파일명 및 동일 역할 자산 존재 여부를 확인한 기록이다. 이번 작업에서는 코드 수정, 리소스 복사, 파일 이동을 수행하지 않는다.
+
+실측 기준:
+
+- 기준일: 2026-05-14
+- CleverChat 정적 리소스 루트: `3.개발/cleverchat/src/main/resources/static/`
+- 8소스 기준 루트: `8.소스/OverseasNPP_20260511/src/main/webapp/asset/admmgr/style2/`
+
+실측 명령:
+
+```bash
+find '3.개발/cleverchat/src/main/resources/static' -mindepth 1 -maxdepth 5 -print | sort
+find '3.개발/cleverchat' -type f \( -iname '*.css' -o -iname '*.js' -o -iname '*.woff' -o -iname '*.woff2' -o -iname '*.ttf' -o -iname '*.otf' -o -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.gif' -o -iname '*.svg' -o -iname '*.ico' -o -iname '*.webp' \) | sort
+find '8.소스/OverseasNPP_20260511/src/main/webapp/asset/admmgr/style2' -maxdepth 3 -type f | sort
+```
+
+실측 결과:
+
+- `3.개발/cleverchat/src/main/resources/static/` 하위 파일 및 서브디렉터리: 0건
+- `3.개발/cleverchat` 전체의 CSS/JS/font/image 계열 파일: 0건
+- scenario Thymeleaf 4건은 외부 CSS/JS/image/font 파일 참조 없이 인라인 `<style>`만 사용한다.
+- 따라서 기존 CleverChat 정적 리소스와 8소스 `style2` 자산 사이의 동일 파일명 충돌 및 동일 역할 파일 충돌은 확인되지 않았다.
+
+8소스 `style2` 자산별 충돌 매트릭스:
+
+| 구분 | 8소스 자산 | 동일 파일명 CleverChat 측 | 동일 역할 CleverChat 측 | 충돌 여부 | 분류/판정 |
+| --- | --- | --- | --- | --- | --- |
+| CSS | `style2/css/admin-layout.css` | 없음 | 없음. scenario 화면은 인라인 스타일만 사용 | 없음 | 신규 도입 후보 |
+| CSS | `style2/css/sub.css` | 없음 | 없음. scenario 화면은 인라인 스타일만 사용 | 없음 | 신규 도입 후보 |
+| CSS | `style2/css/login.css` | 없음 | 없음 | 없음 | scenario 범위 외, 본 스캔 비대상 |
+| JS | `style2/js/ADM.Common.js` | 없음 | 없음 | 없음 | 신규 도입 후보 |
+| JS | `style2/js/ADM.FileUpload.js` | 없음 | 없음 | 없음 | 조건부 후보 |
+| JS | `style2/js/ADM.TreeList.js` | 없음 | 없음 | 없음 | 조건부 후보 |
+| JS | `style2/js/lib/chart.umd.min.js` | 없음 | 없음 | 없음 | 조건부 후보, 라이선스 확인 필요 |
+| font | `style2/font/Inter-*.woff2` 5건 | 없음 | 없음. 기존 font 파일 0건 | 없음 | `sub.css` 종속 후보, 라이선스 확인 필요 |
+| font | `style2/font/NotoSansKR-*.ttf` 4건 | 없음 | 없음. 기존 font 파일 0건 | 없음 | `sub.css` 종속 후보, 라이선스 확인 필요 |
+| image | `style2/images/` | 없음 | 없음. 기존 image 파일 0건 | 없음 | 추가 확인 필요. 8소스 `admmgr/style2/images/` 부재 |
+
+4분류 매핑:
+
+| 분류 | 해당 자산 | 판단 |
+| --- | --- | --- |
+| 유지 | 없음 | 기존 CleverChat 정적 리소스가 0건이므로 유지 대상으로 분류할 기존 파일이 없다. |
+| 교체 | 없음 | 동일 파일명 또는 동일 역할 충돌이 없어 교체 대상이 없다. |
+| 병합 | 없음 | 기존 자산과 8소스 자산을 합쳐야 하는 케이스가 없다. |
+| 추가 확인 필요 | `style2/images/`, 인라인 스타일과 신규 CSS 적용 우선순위, `Inter-*.woff2`, `NotoSansKR-*.ttf`, `chart.umd.min.js` | `style2/images/`는 8소스 `admmgr/style2` 기준 디렉터리가 부재한다. 인라인 스타일과 신규 CSS 적용 우선순위는 화면 적용 단계에서 확인한다. 폰트와 Chart.js 파일은 복사 전 라이선스 확인이 필요하다. |
+
+권장 처리 방안:
+
+- `admin-layout.css`, `sub.css`, `ADM.Common.js`, `font/`는 기존 CleverChat 정적 리소스와 충돌하지 않으므로 후속 도입 시 신규 추가 후보로 유지한다.
+- 도입 경로는 CSS의 `../font/` 상대 참조가 깨지지 않도록 `static/asset/admmgr/style2/css/`, `static/asset/admmgr/style2/font/`처럼 8소스의 `style2` 구조를 보존하는 방안을 우선 검토한다.
+- `ADM.FileUpload.js`, `ADM.TreeList.js`, `chart.umd.min.js`, `login.css`는 scenario 화면의 실제 참조 또는 UI 필요성이 확인될 때만 후보로 승격한다.
+- `style2/images/`는 8소스 `admmgr/style2` 기준 실디렉터리가 없으므로 후속 화면 참조 실측 전까지 복사 대상에서 제외한다.
+- 폰트 9건과 `chart.umd.min.js`는 라이선스와 재배포 가능 여부 확인 전까지 실제 복사 또는 도입을 보류한다.
