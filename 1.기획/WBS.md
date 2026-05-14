@@ -81,6 +81,9 @@
 - [ ] 키워드/유사어 관리
 - [ ] 미리보기 (실제 챗봇 화면 재사용)
 - [x] M2 API 초안 작성 (`2.설계/03.API설계서/M2_시나리오API.md`)
+- [x] 1.A-⑤ 8소스 CSS `url()`/`@font-face` 종속 자산 실측 반영 (`3.개발/cleverchat/docs/Phase1A_C_Static_Asset_Inventory_8소스_작업지시.md` 부록 B-1)
+- [x] 1.A-⑥ CleverChat scenario 화면 4건 정적 참조 실측 매트릭스 반영 (`3.개발/cleverchat/docs/Phase1A_C_Static_Asset_Inventory_8소스_작업지시.md` §4)
+- [x] 1.A-⑨ 최종 복사 대상 확정 (도입 확정 2 / 보류 4 / 추가 확인 1 / 복사 금지 4그룹 11건) (2026-05-14, `3.개발/cleverchat/docs/Phase1A_C_Static_Asset_Inventory_8소스_작업지시.md` §5)
 
 ### 3.3 구현 지시
 - [x] M2 작업지시서 작성 (`3.개발/작업지시서/M2_시나리오_작업지시서.md`)
