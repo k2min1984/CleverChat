@@ -84,6 +84,7 @@
 - [x] 1.A-⑤ 8소스 CSS `url()`/`@font-face` 종속 자산 실측 반영 (`3.개발/cleverchat/docs/Phase1A_C_Static_Asset_Inventory_8소스_작업지시.md` 부록 B-1)
 - [x] 1.A-⑥ CleverChat scenario 화면 4건 정적 참조 실측 매트릭스 반영 (`3.개발/cleverchat/docs/Phase1A_C_Static_Asset_Inventory_8소스_작업지시.md` §4)
 - [x] 1.A-⑨ 최종 복사 대상 확정 (도입 확정 2 / 보류 4 / 추가 확인 1 / 복사 금지 4그룹 11건) (2026-05-14, `3.개발/cleverchat/docs/Phase1A_C_Static_Asset_Inventory_8소스_작업지시.md` §5) — 후속 절차: `3.개발/cleverchat/docs/Phase1A_D_OFL_Acquire_Inter_NotoSansKR_작업지시.md` §7
+  - 후속 절차(연계): `3.개발/cleverchat/docs/Phase1A_E_Static_Asset_Blocker_B3_B4_B5_작업지시.md` §3.2 B4 최종 배치 경로 1안(`static/asset/admmgr/style2/{css,font}/`) 채택 완료 결과 동시 참조 (2026-05-19)
 - [x] 1.A-E B4 최종 배치 경로 1안 채택 완료: `static/asset/admmgr/style2/{css,font}/` (Phase1A_E §3.2 권고안 1안). Phase1A_C §5.2·§5.4의 B4 경로 표기 정합화 완료(2026-05-19). B5 Inter/NotoSansKR 복사 금지 해제는 본 경로 기준을 따른다. (`3.개발/cleverchat/docs/Phase1A_E_Static_Asset_Blocker_B3_B4_B5_작업지시.md` §3.2/§3.3)
   - 역링크: `3.개발/cleverchat/docs/Phase1A_E_Static_Asset_Blocker_B3_B4_B5_작업지시.md` §3.2 점검란 '최종 배치 경로 1안 채택 기록 [x] 완료'
   - 역링크: `3.개발/cleverchat/docs/Phase1A_C_Static_Asset_Inventory_8소스_작업지시.md` §5.2(`sub.css` 보류) `static/asset/admmgr/style2/{css,font}/`, §5.4(폰트 복사 금지) `static/asset/admmgr/style2/font/` 표기 정합화 완료
