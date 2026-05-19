@@ -145,10 +145,10 @@ style2/
 
 - Inter family 5건(`Inter-Regular.woff2`, `Inter-Medium.woff2`, `Inter-SemiBold.woff2`, `Inter-Bold.woff2`, `Inter-ExtraBold.woff2`)
   - 부록 D 4번 기준 OFL 1.1 추정이나 사본이 미동봉되어 있다.
-  - 해제 조건: 공식 배포처(rsms/inter 또는 Google Fonts) OFL 본문 및 출처 URL을 `docs/licenses/Inter-OFL.txt`(가칭) 또는 PR 설명에 첨부.
+  - 해제 조건: 공식 배포처(rsms/inter 또는 Google Fonts) OFL 본문 및 출처 URL을 `3.개발/cleverchat/docs/licenses/Inter-OFL.txt`(가칭) 또는 PR 설명에 첨부.
 - NotoSansKR family 4건(`NotoSansKR-Regular.ttf`, `NotoSansKR-Medium.ttf`, `NotoSansKR-SemiBold.ttf`, `NotoSansKR-Bold.ttf`)
   - 부록 D 5번 기준 OFL 1.1 추정이나 사본이 미동봉되어 있다.
-  - 해제 조건: 공식 배포처(Google Fonts Noto Sans KR) OFL 본문 및 출처 URL을 `docs/licenses/NotoSansKR-OFL.txt`(가칭) 또는 PR 설명에 첨부.
+  - 해제 조건: 공식 배포처(Google Fonts Noto Sans KR) OFL 본문 및 출처 URL을 `3.개발/cleverchat/docs/licenses/NotoSansKR-OFL.txt`(가칭) 또는 PR 설명에 첨부.
 - `style2/css/login.css`
   - scenario 범위 외 자산이므로 별도 로그인 화면 트랙에서 평가한다.
 - `style2/js/ADM.Form.js`
@@ -463,8 +463,8 @@ find '8.소스/OverseasNPP_20260511/src/main/webapp/asset/admmgr/style2' -maxdep
 | 1 | `admin-layout.css` | 8소스 `style2/css/admin-layout.css` | 8소스 내부 자체 작성으로 추정. 외부 라이브러리 식별 단서 없음. fontawesome 등 외부 아이콘 폰트 import 0건(부록 B-1). | 별도 라이선스 사본 불필요. 출처: 8소스 저장소 자체. | 신규 도입 후보 유지. PR 설명에 출처 표기. |
 | 2 | `sub.css` | 8소스 `style2/css/sub.css` | 8소스 내부 자체 작성으로 추정. 외부 라이브러리 식별 단서 없음. fontawesome 등 외부 아이콘 폰트 import 0건(부록 B-1, 라인 12·18 메모). | 별도 라이선스 사본 불필요. 출처: 8소스 저장소 자체. | 신규 도입 후보 유지. PR 설명에 출처 표기. |
 | 3 | `ADM.Common.js` | 8소스 `style2/js/ADM.Common.js` | 8소스 내부 자체 작성으로 추정. minified 외부 라이브러리 식별 단서 없음. | 별도 라이선스 사본 불필요. 출처: 8소스 저장소 자체. | 신규 도입 후보 유지. PR 설명에 출처 표기. |
-| 4 | Inter family (`Inter-Regular.woff2`, `Inter-Medium.woff2`, `Inter-SemiBold.woff2`, `Inter-Bold.woff2`, `Inter-ExtraBold.woff2`) 5건 | 8소스 `style2/font/Inter-*.woff2` (부록 B-1 라인 7~11) | SIL Open Font License 1.1 추정. 8소스에 OFL 사본 미동봉. 공식 배포처(rsms/inter, Google Fonts) 확인 절차 미완료. | 사본 미확보. 공식 배포처 OFL 1.1 본문 및 출처 URL 확보 후 PR 설명/`docs/licenses/`에 첨부 필요. | **OFL 사본 확보 전 복사 대상 제외.** `sub.css` 도입 시점에 OFL 사본이 함께 확보되지 않으면 `sub.css`도 후속 결정으로 보류한다. |
-| 5 | NotoSansKR family (`NotoSansKR-Regular.ttf`, `NotoSansKR-Medium.ttf`, `NotoSansKR-SemiBold.ttf`, `NotoSansKR-Bold.ttf`) 4건 | 8소스 `style2/font/NotoSansKR-*.ttf` (부록 B-1 라인 14~17) | SIL Open Font License 1.1 추정. 8소스에 OFL 사본 미동봉. 공식 배포처(Google Fonts Noto Sans KR) 확인 절차 미완료. | 사본 미확보. 공식 배포처 OFL 1.1 본문 및 출처 URL 확보 후 PR 설명/`docs/licenses/`에 첨부 필요. | **OFL 사본 확보 전 복사 대상 제외.** `sub.css` 도입 시점에 OFL 사본이 함께 확보되지 않으면 `sub.css`도 후속 결정으로 보류한다. |
+| 4 | Inter family (`Inter-Regular.woff2`, `Inter-Medium.woff2`, `Inter-SemiBold.woff2`, `Inter-Bold.woff2`, `Inter-ExtraBold.woff2`) 5건 | 8소스 `style2/font/Inter-*.woff2` (부록 B-1 라인 7~11) | SIL Open Font License 1.1 추정. 8소스에 OFL 사본 미동봉. 공식 배포처(rsms/inter, Google Fonts) 확인 절차 미완료. | 사본 미확보. 공식 배포처 OFL 1.1 본문 및 출처 URL 확보 후 PR 설명/`3.개발/cleverchat/docs/licenses/`에 첨부 필요. | **OFL 사본 확보 전 복사 대상 제외.** `sub.css` 도입 시점에 OFL 사본이 함께 확보되지 않으면 `sub.css`도 후속 결정으로 보류한다. |
+| 5 | NotoSansKR family (`NotoSansKR-Regular.ttf`, `NotoSansKR-Medium.ttf`, `NotoSansKR-SemiBold.ttf`, `NotoSansKR-Bold.ttf`) 4건 | 8소스 `style2/font/NotoSansKR-*.ttf` (부록 B-1 라인 14~17) | SIL Open Font License 1.1 추정. 8소스에 OFL 사본 미동봉. 공식 배포처(Google Fonts Noto Sans KR) 확인 절차 미완료. | 사본 미확보. 공식 배포처 OFL 1.1 본문 및 출처 URL 확보 후 PR 설명/`3.개발/cleverchat/docs/licenses/`에 첨부 필요. | **OFL 사본 확보 전 복사 대상 제외.** `sub.css` 도입 시점에 OFL 사본이 함께 확보되지 않으면 `sub.css`도 후속 결정으로 보류한다. |
 | 6 | `chart.umd.min.js` | 8소스 `style2/js/lib/chart.umd.min.js` | Chart.js MIT License로 추정. minified 파일 상단 `/*! Chart.js ... | (c) ... | MIT License */` 헤더 주석에 라이선스 명시. | 헤더 주석 자체가 MIT 고지 역할. 별도 LICENSE 파일 동봉은 운영 정책에 따라 추가 검토. | **헤더 주석 보존 조건으로 도입 후보 유지.** scenario 화면에 Chart.js 기반 차트 참조가 확인되는 시점에 §5 보류에서 도입 확정 후보로 재판정한다. minify 재처리·헤더 제거·재포맷 금지. |
 
 집계:
