@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>시나리오 | CleverChat</title>
+    <link rel="stylesheet" th:href="@{/asset/admmgr/style2/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/asset/admmgr/style2/css/sub.css}">
+    <script th:src="@{/asset/admmgr/style2/js/ADM.Common.js}" defer></script>
+</head>
+<body>
+<div class="admin-wrap">
+    <div th:replace="~{common/fragments :: adminSidebar}"></div>
+    <div class="admin-container">
+        <div th:replace="~{common/fragments :: adminHeader}"></div>
+        <div th:replace="~{common/fragments :: adminNavigation}"></div>
+        <main class="admin-content">
+            <header>
+                <h1>시나리오</h1>
+                <nav class="actions">
+                    <a class="button" th:href="@{/admin}">관리자 홈</a>
+                    <a class="button" th:href="@{/admin/scenarios/new}">등록</a>
+                </nav>
+            </header>
+            <table aria-label="시나리오 목록">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>제목</th>
+                    <th>카테고리</th>
+                    <th>상태</th>
+                    <th>수정일</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="scenario : ${scenarios}">
+                    <td th:text="${scenario.id}">1</td>
+                    <td><a th:href="@{/admin/scenarios/{id}(id=${scenario.id})}" th:text="${scenario.title}">제목</a></td>
+                    <td th:text="${scenario.categoryName}">기본</td>
+                    <td th:text="${scenario.status}">DRAFT</td>
+                    <td th:text="${#temporals.format(scenario.updatedAt, 'yyyy-MM-dd HH:mm')}">2026-05-11</td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(scenarios)}">
+                    <td colspan="5">등록된 시나리오가 없습니다.</td>
+                </tr>
+                </tbody>
+            </table>
+        </main>
+        <div th:replace="~{common/fragments :: adminFooter}"></div>
+    </div>
+</div>
+</body>
+</html>

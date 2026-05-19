@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>시나리오 상세 | CleverChat</title>
+    <link rel="stylesheet" th:href="@{/asset/admmgr/style2/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/asset/admmgr/style2/css/sub.css}">
+    <script th:src="@{/asset/admmgr/style2/js/ADM.Common.js}" defer></script>
+</head>
+<body>
+<div class="admin-wrap">
+    <div th:replace="~{common/fragments :: adminSidebar}"></div>
+    <div class="admin-container">
+        <div th:replace="~{common/fragments :: adminHeader}"></div>
+        <div th:replace="~{common/fragments :: adminNavigation}"></div>
+        <main class="admin-content">
+            <header>
+                <h1 th:text="${scenario.title}">시나리오</h1>
+                <nav class="actions">
+                    <a class="button" th:href="@{/admin/scenarios}">목록</a>
+                    <a class="button" th:href="@{/admin/scenarios/{id}/edit(id=${scenario.id})}">수정</a>
+                </nav>
+            </header>
+            <section>
+                <h2>기본 정보</h2>
+                <p><strong>상태</strong> <span th:text="${scenario.status}">DRAFT</span></p>
+                <p><strong>카테고리</strong> <span th:text="${scenario.categoryName}">기본</span></p>
+                <p th:text="${scenario.description}">설명</p>
+                <form th:if="${scenario.status == 'ACTIVE'}" th:action="@{/admin/scenarios/{id}/deactivate(id=${scenario.id})}" method="post">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <button type="submit">비활성화</button>
+                </form>
+            </section>
+            <section>
+                <div class="actions">
+                    <h2>버전</h2>
+                    <form th:action="@{/admin/scenarios/{id}/versions(id=${scenario.id})}" method="post">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                        <button type="submit">새 초안</button>
+                    </form>
+                </div>
+                <table aria-label="버전 목록">
+                    <thead><tr><th>버전</th><th>상태</th><th>시작 노드</th><th>작업</th></tr></thead>
+                    <tbody>
+                    <tr th:each="version : ${versions}">
+                        <td th:text="${version.versionNo}">1</td>
+                        <td th:text="${version.status}">DRAFT</td>
+                        <td th:text="${version.startNodeId}">-</td>
+                        <td class="actions">
+                            <a class="button" th:href="@{/admin/scenarios/versions/{id}/preview(id=${version.id})}">미리보기</a>
+                            <form th:if="${version.status == 'DRAFT'}" th:action="@{/admin/scenarios/versions/{id}/publish(id=${version.id})}" method="post">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                                <input type="hidden" name="scenarioId" th:value="${scenario.id}">
+                                <button type="submit">게시</button>
+                            </form>
+                            <form th:if="${version.status == 'PUBLISHED' and scenario.status != 'ACTIVE'}" th:action="@{/admin/scenarios/{id}/activate(id=${scenario.id})}" method="post">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                                <input type="hidden" name="versionId" th:value="${version.id}">
+                                <button type="submit">활성화</button>
+                            </form>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </section>
+            <section>
+                <h2>키워드</h2>
+                <ul>
+                    <li th:each="keyword : ${keywords}" th:text="${keyword.keyword + ' (' + keyword.weight + ')'}">키워드</li>
+                    <li th:if="${#lists.isEmpty(keywords)}">등록된 키워드가 없습니다.</li>
+                </ul>
+            </section>
+        </main>
+        <div th:replace="~{common/fragments :: adminFooter}"></div>
+    </div>
+</div>
+</body>
+</html>

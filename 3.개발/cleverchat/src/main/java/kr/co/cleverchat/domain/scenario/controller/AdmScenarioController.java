@@ -43,21 +43,21 @@ public class AdmScenarioController {
     public String scenarioList(@RequestParam(required = false) String status, Model model) {
         model.addAttribute("scenarios", scenarioService.findAll(status));
         model.addAttribute("status", status);
-        return "admin/scenarios/list";
+        return "admmgr/scenario/scenarioList";
     }
 
     @GetMapping("/new")
     public String scenarioRegist(Model model) {
         model.addAttribute("scenarioForm", new ScenarioForm());
         model.addAttribute("categories", categoryService.findAll());
-        return "admin/scenarios/form";
+        return "admmgr/scenario/scenarioRegist";
     }
 
     @PostMapping
     public String scenarioRegistProc(@Valid @ModelAttribute("scenarioForm") ScenarioForm form, BindingResult bindingResult, Model model) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("categories", categoryService.findAll());
-            return "admin/scenarios/form";
+            return "admmgr/scenario/scenarioRegist";
         }
         Long id = scenarioService.create(new ScenarioDtos.SaveRequest(form.getCategoryId(), form.getTitle(), form.getDescription())).getId();
         return "redirect:/admin/scenarios/" + id;
@@ -68,7 +68,7 @@ public class AdmScenarioController {
         model.addAttribute("scenario", scenarioService.get(id));
         model.addAttribute("versions", scenarioService.versions(id));
         model.addAttribute("keywords", keywordService.findKeywords(id));
-        return "admin/scenarios/detail";
+        return "admmgr/scenario/scenarioView";
     }
 
     @GetMapping("/{id}/edit")
@@ -81,7 +81,7 @@ public class AdmScenarioController {
         model.addAttribute("scenario", scenario);
         model.addAttribute("scenarioForm", form);
         model.addAttribute("categories", categoryService.findAll());
-        return "admin/scenarios/form";
+        return "admmgr/scenario/scenarioRegist";
     }
 
     @PostMapping("/{id}")
@@ -89,7 +89,7 @@ public class AdmScenarioController {
         if (bindingResult.hasErrors()) {
             model.addAttribute("scenario", scenarioService.get(id));
             model.addAttribute("categories", categoryService.findAll());
-            return "admin/scenarios/form";
+            return "admmgr/scenario/scenarioRegist";
         }
         scenarioService.update(id, new ScenarioDtos.SaveRequest(form.getCategoryId(), form.getTitle(), form.getDescription()));
         return "redirect:/admin/scenarios/" + id;
@@ -132,7 +132,7 @@ public class AdmScenarioController {
         model.addAttribute("version", version);
         model.addAttribute("current", current);
         model.addAttribute("options", current == null ? java.util.List.<ScenarioNodeOption>of() : scenarioService.options(current.getId()));
-        return "admin/scenarios/preview";
+        return "admmgr/scenario/scenarioPreviewLayer";
     }
 
     public static class ScenarioForm {
