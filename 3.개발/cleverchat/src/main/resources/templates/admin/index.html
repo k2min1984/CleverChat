@@ -1,83 +1,39 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>관리자 | CleverChat</title>
-    <style>
-        :root {
-            font-family: Arial, "Noto Sans KR", sans-serif;
-            color: #1f2937;
-            background: #f9fafb;
-        }
-        body {
-            margin: 0;
-        }
-        header {
-            min-height: 64px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            padding: 0 24px;
-            border-bottom: 1px solid #d1d5db;
-            background: #ffffff;
-        }
-        h1 {
-            margin: 0;
-            font-size: 20px;
-        }
-        main {
-            max-width: 1080px;
-            margin: 0 auto;
-            padding: 32px 24px;
-        }
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 16px;
-        }
-        .card {
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-            background: #ffffff;
-            padding: 20px;
-            min-height: 96px;
-        }
-        form {
-            margin: 0;
-        }
-        button {
-            min-height: 40px;
-            border: 1px solid #9ca3af;
-            border-radius: 6px;
-            background: #ffffff;
-            cursor: pointer;
-        }
-    </style>
-</head>
+<head th:replace="~{admmgr/common/head :: adminHead('관리자 | CleverChat')}"></head>
 <body>
-<header>
-    <h1>CleverChat 관리자</h1>
-    <form th:action="@{/logout}" method="post">
-        <button type="submit">로그아웃</button>
-    </form>
-</header>
-<main>
-    <div class="grid" th:if="${session.CLEVERCHAT_ADMIN_SESSION != null and session.CLEVERCHAT_ADMIN_SESSION.hasAnyRole('ADMIN','OPERATOR')}">
-        <section class="card">
-            <h2>인증 기반</h2>
-            <p>로그인, 세션, 감사 로그 기반이 구성되었습니다.</p>
-        </section>
-        <section class="card">
-            <h2>시나리오</h2>
-            <p><a th:href="@{/admin/scenarios}">시나리오 관리로 이동</a></p>
-        </section>
-        <section class="card">
-            <h2>운영 로그</h2>
-            <p>로그인 성공/실패 이력이 DB에 저장됩니다.</p>
-        </section>
+<div class="admin-wrap">
+    <div th:replace="~{admmgr/common/sidebar :: adminSidebar}"></div>
+    <div class="admin-container">
+        <div th:replace="~{admmgr/common/header :: adminHeader}"></div>
+        <div th:replace="~{admmgr/common/navigation :: adminNavigation}"></div>
+        <main class="admin-content">
+            <header>
+                <h1>CleverChat 관리자</h1>
+                <nav class="actions">
+                    <form th:action="@{/logout}" method="post">
+                        <button type="submit">로그아웃</button>
+                    </form>
+                </nav>
+            </header>
+            <section class="grid"
+                     th:if="${session.CLEVERCHAT_ADMIN_SESSION != null and session.CLEVERCHAT_ADMIN_SESSION.hasAnyRole('ADMIN','OPERATOR')}">
+                <article class="card">
+                    <h2>인증 기반</h2>
+                    <p>로그인, 세션, 감사 로그 기반이 구성되었습니다.</p>
+                </article>
+                <article class="card">
+                    <h2>시나리오</h2>
+                    <p><a th:href="@{/admin/scenarios}">시나리오 관리로 이동</a></p>
+                </article>
+                <article class="card">
+                    <h2>운영 로그</h2>
+                    <p>로그인 성공/실패 이력이 DB에 저장됩니다.</p>
+                </article>
+            </section>
+        </main>
+        <div th:replace="~{admmgr/common/footer :: adminFooter}"></div>
     </div>
-</main>
+</div>
 </body>
 </html>
