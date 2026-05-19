@@ -87,8 +87,8 @@ public class ChatRuntimeService {
             .orElseThrow(() -> new BusinessException(ErrorCode.STATE_CONFLICT, "시작 노드를 찾을 수 없습니다."));
 
         ChatSession session = new ChatSession();
-        session.setId(UUID.randomUUID());
-        session.setAnonymousId(context.anonymousId());
+        session.setId(UUID.randomUUID().toString());
+        session.setAnonymousId(context.anonymousId().toString());
         session.setScenarioId(scenario.getId());
         session.setVersionId(version.getId());
         session.setCurrentNodeId(startNode.getId());
@@ -104,15 +104,17 @@ public class ChatRuntimeService {
 
     @Transactional(readOnly = true)
     public SessionResponse get(UUID sessionId, ChatRequestContext context) {
-        ChatSession session = findSession(sessionId);
+        String sid = sessionId.toString();
+        ChatSession session = findSession(sid);
         validateOwner(session, context);
-        return response(sessionId);
+        return response(sid);
     }
 
     @Transactional
     public SessionResponse selectOption(UUID sessionId, Long optionId, ChatRequestContext context) {
-        sessionMapper.lockSessionByAdvisoryKey(sessionId);
-        ChatSession session = findSession(sessionId);
+        String sid = sessionId.toString();
+        sessionMapper.lockSessionByAdvisoryKey(sid);
+        ChatSession session = findSession(sid);
         validateOwnerAndActive(session, context);
 
         ScenarioNodeOption option = optionMapper.findEnabledByNodeId(session.getCurrentNodeId()).stream()
@@ -121,28 +123,29 @@ public class ChatRuntimeService {
             .orElseThrow(() -> {
                 Map<String, Object> detail = new LinkedHashMap<>();
                 detail.put("requestedOptionId", optionId);
-                failureRecorder.recordFailure(sessionId, null, "INVALID_OPTION", detail);
+                failureRecorder.recordFailure(sid, null, "INVALID_OPTION", detail);
                 return new BusinessException(ErrorCode.VALIDATION_ERROR, "선택할 수 없는 옵션입니다.");
             });
 
-        int seq = messageMapper.selectNextSeq(sessionId);
-        insertUserMessage(sessionId, seq, session.getCurrentNodeId(), option.getId(), option.getLabel(), "{}", null);
+        int seq = messageMapper.selectNextSeq(sid);
+        insertUserMessage(sid, seq, session.getCurrentNodeId(), option.getId(), option.getLabel(), "{}", null);
         advance(session, option.getNextNodeId(), seq + 1);
-        return response(sessionId);
+        return response(sid);
     }
 
     @Transactional
     public SessionResponse freeText(UUID sessionId, String text, ChatRequestContext context) {
-        sessionMapper.lockSessionByAdvisoryKey(sessionId);
-        ChatSession session = findSession(sessionId);
+        String sid = sessionId.toString();
+        sessionMapper.lockSessionByAdvisoryKey(sid);
+        ChatSession session = findSession(sid);
         validateOwnerAndActive(session, context);
 
         long startedAt = System.nanoTime();
         Optional<ScenarioMatchingService.MatchResult> match = matchingService.match(session.getScenarioId(), session.getCurrentNodeId(), text);
         int latencyMs = latencyMsSince(startedAt);
-        int seq = messageMapper.selectNextSeq(sessionId);
-        ChatMessage userMessage = insertUserMessage(
-            sessionId,
+        int seq = messageMapper.selectNextSeq(sid);
+        insertUserMessage(
+            sid,
             seq,
             session.getCurrentNodeId(),
             null,
@@ -151,21 +154,21 @@ public class ChatRuntimeService {
             null
         );
         if (match.isEmpty()) {
-            failureRecorder.recordFailure(sessionId, null, "NO_MATCH");
-            insertBotMessage(sessionId, seq + 1, null, "질문에 맞는 답변을 찾지 못했습니다.", latencyMs);
-            return response(sessionId);
+            failureRecorder.recordFailure(sid, null, "NO_MATCH");
+            insertBotMessage(sid, seq + 1, null, "질문에 맞는 답변을 찾지 못했습니다.", latencyMs);
+            return response(sid);
         }
 
         ScenarioMatchingService.MatchResult result = match.get();
         if (result.nextNodeId() != null) {
             advance(session, result.nextNodeId(), seq + 1, latencyMs);
-            return response(sessionId);
+            return response(sid);
         }
 
         Scenario scenario = Optional.ofNullable(scenarioMapper.findById(result.scenarioId()))
             .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND));
-        insertBotMessage(sessionId, seq + 1, null, scenario.getTitle(), latencyMs);
-        return response(sessionId);
+        insertBotMessage(sid, seq + 1, null, scenario.getTitle(), latencyMs);
+        return response(sid);
     }
 
     @Transactional(readOnly = true)
@@ -192,7 +195,7 @@ public class ChatRuntimeService {
         insertBotMessage(session.getId(), botSeq, nextNode, nextNode.getContent() == null ? nextNode.getTitle() : nextNode.getContent(), latencyMs);
     }
 
-    private ChatMessage insertUserMessage(UUID sessionId, int seq, Long nodeId, Long optionId, String content, String payload, Integer latencyMs) {
+    private ChatMessage insertUserMessage(String sessionId, int seq, Long nodeId, Long optionId, String content, String payload, Integer latencyMs) {
         ChatMessage message = new ChatMessage();
         message.setSessionId(sessionId);
         message.setSeq(seq);
@@ -206,11 +209,11 @@ public class ChatRuntimeService {
         return message;
     }
 
-    private ChatMessage insertBotMessage(UUID sessionId, int seq, ScenarioNode node, String content) {
+    private ChatMessage insertBotMessage(String sessionId, int seq, ScenarioNode node, String content) {
         return insertBotMessage(sessionId, seq, node, content, null);
     }
 
-    private ChatMessage insertBotMessage(UUID sessionId, int seq, ScenarioNode node, String content, Integer latencyMs) {
+    private ChatMessage insertBotMessage(String sessionId, int seq, ScenarioNode node, String content, Integer latencyMs) {
         ChatMessage message = new ChatMessage();
         message.setSessionId(sessionId);
         message.setSeq(seq);
@@ -223,7 +226,7 @@ public class ChatRuntimeService {
         return message;
     }
 
-    private SessionResponse response(UUID sessionId) {
+    private SessionResponse response(String sessionId) {
         ChatSession session = findSession(sessionId);
         List<MessageResponse> messages = messageMapper.findBySessionId(sessionId).stream()
             .map(this::toMessageResponse)
@@ -232,7 +235,7 @@ public class ChatRuntimeService {
             ? optionMapper.findEnabledByNodeId(session.getCurrentNodeId()).stream().map(this::toOptionResponse).toList()
             : List.of();
         return new SessionResponse(
-            session.getId(),
+            UUID.fromString(session.getId()),
             session.getScenarioId(),
             session.getVersionId(),
             session.getCurrentNodeId(),
@@ -243,7 +246,7 @@ public class ChatRuntimeService {
         );
     }
 
-    private ChatSession findSession(UUID sessionId) {
+    private ChatSession findSession(String sessionId) {
         return sessionMapper.findById(sessionId)
             .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "채팅 세션을 찾을 수 없습니다."));
     }
@@ -260,7 +263,7 @@ public class ChatRuntimeService {
     }
 
     private void validateOwner(ChatSession session, ChatRequestContext context) {
-        if (!session.getAnonymousId().equals(context.anonymousId())) {
+        if (!session.getAnonymousId().equals(context.anonymousId().toString())) {
             throw new BusinessException(ErrorCode.ACCESS_DENIED);
         }
     }

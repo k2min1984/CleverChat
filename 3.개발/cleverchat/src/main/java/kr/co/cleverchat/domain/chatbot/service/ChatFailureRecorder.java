@@ -3,7 +3,6 @@ package kr.co.cleverchat.domain.chatbot.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Map;
-import java.util.UUID;
 import kr.co.cleverchat.domain.chatbot.mapper.ChatFailureMapper;
 import kr.co.cleverchat.domain.chatbot.model.ChatFailure;
 import org.springframework.stereotype.Component;
@@ -22,12 +21,12 @@ public class ChatFailureRecorder {
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void recordFailure(UUID sessionId, Long messageId, String reason) {
+    public void recordFailure(String sessionId, Long messageId, String reason) {
         recordFailure(sessionId, messageId, reason, Map.of());
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void recordFailure(UUID sessionId, Long messageId, String reason, Map<String, ?> detail) {
+    public void recordFailure(String sessionId, Long messageId, String reason, Map<String, ?> detail) {
         ChatFailure failure = new ChatFailure();
         failure.setSessionId(sessionId);
         failure.setMessageId(messageId);

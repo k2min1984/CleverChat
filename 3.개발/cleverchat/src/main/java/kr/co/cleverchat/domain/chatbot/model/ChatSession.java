@@ -1,12 +1,11 @@
 package kr.co.cleverchat.domain.chatbot.model;
 
 import java.time.OffsetDateTime;
-import java.util.UUID;
 
 public class ChatSession {
 
-    private UUID id;
-    private UUID anonymousId;
+    private String id;
+    private String anonymousId;
     private Long userId;
     private Long scenarioId;
     private Long versionId;
@@ -19,10 +18,10 @@ public class ChatSession {
     private String userAgentHash;
     private OffsetDateTime createdAt;
 
-    public UUID getId() { return id; }
-    public void setId(UUID id) { this.id = id; }
-    public UUID getAnonymousId() { return anonymousId; }
-    public void setAnonymousId(UUID anonymousId) { this.anonymousId = anonymousId; }
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
+    public String getAnonymousId() { return anonymousId; }
+    public void setAnonymousId(String anonymousId) { this.anonymousId = anonymousId; }
     public Long getUserId() { return userId; }
     public void setUserId(Long userId) { this.userId = userId; }
     public Long getScenarioId() { return scenarioId; }

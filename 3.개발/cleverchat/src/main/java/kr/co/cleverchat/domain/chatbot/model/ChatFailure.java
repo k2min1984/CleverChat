@@ -1,12 +1,11 @@
 package kr.co.cleverchat.domain.chatbot.model;
 
 import java.time.OffsetDateTime;
-import java.util.UUID;
 
 public class ChatFailure {
 
     private Long id;
-    private UUID sessionId;
+    private String sessionId;
     private Long messageId;
     private String reason;
     private String detail;
@@ -18,8 +17,8 @@ public class ChatFailure {
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
-    public UUID getSessionId() { return sessionId; }
-    public void setSessionId(UUID sessionId) { this.sessionId = sessionId; }
+    public String getSessionId() { return sessionId; }
+    public void setSessionId(String sessionId) { this.sessionId = sessionId; }
     public Long getMessageId() { return messageId; }
     public void setMessageId(Long messageId) { this.messageId = messageId; }
     public String getReason() { return reason; }

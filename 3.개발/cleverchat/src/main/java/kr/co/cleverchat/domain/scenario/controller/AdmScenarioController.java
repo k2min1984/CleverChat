@@ -49,6 +49,7 @@ public class AdmScenarioController {
     @GetMapping("/new")
     public String scenarioRegist(Model model) {
         model.addAttribute("scenarioForm", new ScenarioForm());
+        model.addAttribute("formAction", "/admin/scenarios");
         model.addAttribute("categories", categoryService.findAll());
         return "admmgr/scenario/scenarioRegist";
     }
@@ -56,6 +57,7 @@ public class AdmScenarioController {
     @PostMapping
     public String scenarioRegistProc(@Valid @ModelAttribute("scenarioForm") ScenarioForm form, BindingResult bindingResult, Model model) {
         if (bindingResult.hasErrors()) {
+            model.addAttribute("formAction", "/admin/scenarios");
             model.addAttribute("categories", categoryService.findAll());
             return "admmgr/scenario/scenarioRegist";
         }
@@ -80,6 +82,7 @@ public class AdmScenarioController {
         form.setDescription(scenario.getDescription());
         model.addAttribute("scenario", scenario);
         model.addAttribute("scenarioForm", form);
+        model.addAttribute("formAction", "/admin/scenarios/" + scenario.getId());
         model.addAttribute("categories", categoryService.findAll());
         return "admmgr/scenario/scenarioRegist";
     }
@@ -88,6 +91,7 @@ public class AdmScenarioController {
     public String scenarioModifyProc(@PathVariable Long id, @Valid @ModelAttribute("scenarioForm") ScenarioForm form, BindingResult bindingResult, Model model) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("scenario", scenarioService.get(id));
+            model.addAttribute("formAction", "/admin/scenarios/" + id);
             model.addAttribute("categories", categoryService.findAll());
             return "admmgr/scenario/scenarioRegist";
         }
