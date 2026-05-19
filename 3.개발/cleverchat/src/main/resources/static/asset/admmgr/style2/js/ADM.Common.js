@@ -14,6 +14,15 @@
  **************************************************/
 var ADM = ADM || {};
 
+/**[공통]컨텍스트 패스 기반 URL 조립 (head.html meta[name=ctx] 기준)**/
+ADM.url = function(path){
+    var meta = document.querySelector('meta[name="ctx"]');
+    var ctx  = (meta && meta.content) ? meta.content : '/';
+    if( ctx.charAt(ctx.length - 1) !== '/' ) ctx += '/';
+    if( path && path.charAt(0) === '/' ) path = path.substring(1);
+    return ctx + (path || '');
+};
+
 /**[공통]페이지 이동 (Thymeleaf 페이징 공통 함수)**/
 function fn_GoPage(page){
     var frm = document.getElementById('frm');
@@ -231,7 +240,7 @@ ADM.ajaxPost = function(url, data, onSuccess, onError){
         ADM.updateCsrfMeta(xhr);
         if( xhr.status === 401 ){
             alert('세션이 만료되었습니다.\n다시 로그인해 주세요.');
-            location.href = '/admmgr/index.do';
+            location.href = ADM.url('login');
             return;
         }
         if( xhr.status === 403 ){
@@ -354,7 +363,7 @@ ADM.Modal = ADM.Modal || {
             ADM.updateCsrfMeta(xhr);
             if( xhr.status === 401 ){
                 alert('세션이 만료되었습니다.\n다시 로그인해 주세요.');
-                location.href = '/admmgr/index.do';
+                location.href = ADM.url('login');
                 return;
             }
             if( xhr.status === 403 ){
