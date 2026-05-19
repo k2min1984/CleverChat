@@ -145,10 +145,10 @@ style2/
 
 - Inter family 5건(`Inter-Regular.woff2`, `Inter-Medium.woff2`, `Inter-SemiBold.woff2`, `Inter-Bold.woff2`, `Inter-ExtraBold.woff2`)
   - 부록 D 4번 기준 OFL 1.1 추정이나 사본이 미동봉되어 있다.
-  - 해제 조건: 공식 배포처(rsms/inter 또는 Google Fonts) OFL 본문 및 출처 URL을 `3.개발/cleverchat/docs/licenses/Inter-OFL.txt`(가칭) 또는 PR 설명에 첨부.
+  - 해제 조건: 공식 배포처(rsms/inter 또는 Google Fonts) OFL 본문 및 출처 URL을 `3.개발/cleverchat/docs/licenses/Inter-OFL.txt`(Phase1A_D 확정) 또는 PR 설명에 첨부.
 - NotoSansKR family 4건(`NotoSansKR-Regular.ttf`, `NotoSansKR-Medium.ttf`, `NotoSansKR-SemiBold.ttf`, `NotoSansKR-Bold.ttf`)
   - 부록 D 5번 기준 OFL 1.1 추정이나 사본이 미동봉되어 있다.
-  - 해제 조건: 공식 배포처(Google Fonts Noto Sans KR) OFL 본문 및 출처 URL을 `3.개발/cleverchat/docs/licenses/NotoSansKR-OFL.txt`(가칭) 또는 PR 설명에 첨부.
+  - 해제 조건: 공식 배포처(Google Fonts Noto Sans KR) OFL 본문 및 출처 URL을 `3.개발/cleverchat/docs/licenses/NotoSansKR-OFL.txt`(Phase1A_D 확정) 또는 PR 설명에 첨부.
 - `style2/css/login.css`
   - scenario 범위 외 자산이므로 별도 로그인 화면 트랙에서 평가한다.
 - `style2/js/ADM.Form.js`
