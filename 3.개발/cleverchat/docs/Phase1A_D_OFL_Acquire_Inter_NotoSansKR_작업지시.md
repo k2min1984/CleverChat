@@ -115,6 +115,40 @@ foreach ($file in $files) {
 - NotoSansKR 산출물에는 Google Fonts, Noto, 또는 Noto Sans KR 공식 출처가 확인되어야 한다.
 - OFL 본문 내 조항 번호 1~5와 TERMINATION, DISCLAIMER 절이 누락되지 않아야 한다.
 
+### 6.1 OFL 사본 재확보 후 PowerShell 검증 명령
+
+OFL 원문 재확보(WebFetch 기반 덮어쓰기) 직후, 산출물 2건의 존재·META 헤더·해시·git 상태를 다음 4종 명령으로 확인한다. 모두 리포지터리 루트(`C:\02.Project\02.자바\01.WorkSpace\CLEVERCHAT`)에서 실행한다.
+
+```powershell
+# 1) 파일 존재 및 크기 확인
+Get-ChildItem "3.개발/cleverchat/docs/licenses/Inter-OFL.txt", "3.개발/cleverchat/docs/licenses/NotoSansKR-OFL.txt"
+
+# 2) 각 파일 상단 META 블록 6줄 확인 (META ~ END META)
+Get-Content "3.개발/cleverchat/docs/licenses/Inter-OFL.txt" -TotalCount 6
+Get-Content "3.개발/cleverchat/docs/licenses/NotoSansKR-OFL.txt" -TotalCount 6
+
+# 3) SHA-256 해시 산출 (재확보 시점 해시를 PR 로그 또는 본 문서 6.1 절에 기록)
+Get-FileHash -Algorithm SHA256 "3.개발/cleverchat/docs/licenses/Inter-OFL.txt"
+Get-FileHash -Algorithm SHA256 "3.개발/cleverchat/docs/licenses/NotoSansKR-OFL.txt"
+
+# 4) 라이선스 디렉터리 git 변경 범위 확인 (M 2건 외 다른 변경이 없는지)
+git status --short -- "3.개발/cleverchat/docs/licenses"
+```
+
+판정 기준:
+
+- (1) 두 파일이 모두 출력되고 길이가 4KB 이상이어야 한다.
+- (2) 각 파일 첫 6줄이 `META` 로 시작해 `END META` 로 끝나야 한다.
+- (3) Get-FileHash SHA256 결과를 본 문서 또는 PR 설명에 기록해 향후 회귀 시 비교 기준으로 삼는다.
+- (4) `git status --short` 결과는 다음 둘 중 하나여야 하며, 라이선스 디렉터리 외의 경로가 함께 출력되면 안 된다.
+  - 디렉터리 자체가 아직 git 추적 전인 경우(현재 상태): `?? 3.개발/cleverchat/docs/licenses/` 단일 줄.
+  - 두 파일이 이미 git에 등록된 이후 재확보한 경우: `M 3.개발/cleverchat/docs/licenses/Inter-OFL.txt` 와 `M 3.개발/cleverchat/docs/licenses/NotoSansKR-OFL.txt` 2줄.
+
+2026-05-19 재확보 시점 SHA-256:
+
+- `Inter-OFL.txt`: `2C72538F834BE4066DE60A63C740C7D841C7FFB78E7455AE6685E22E3188BBEB`
+- `NotoSansKR-OFL.txt`: `A05DB8A2FFCB63CC033F84027EEB97240EB40F1569C2D1C0FF5EF36D614FCD7C`
+
 ## 7. 1.A-① 착수 전 블로커 조건
 
 1.A-① scenario 화면 적용 또는 관리자 레이아웃 착수 전에 다음 5개 조건이 모두 해제되어야 한다.
