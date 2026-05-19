@@ -14,7 +14,7 @@
 - Inter와 NotoSansKR은 OFL 1.1 사본이 프로젝트에 동봉되기 전까지 복사 금지 상태를 유지한다.
 - 확보 대상은 OFL 1.1 영문 원문이다. 번역본, 요약본, 블로그 설명, 패키지 매니저 메타데이터만으로는 대체하지 않는다.
 - 공식 출처 URL과 확인일을 라이선스 사본 상단 META 블록에 기록한다.
-- 산출물은 `docs/licenses/Inter-OFL.txt`, `docs/licenses/NotoSansKR-OFL.txt` 2건으로 고정한다.
+- 산출물은 `3.개발/cleverchat/docs/licenses/Inter-OFL.txt`, `3.개발/cleverchat/docs/licenses/NotoSansKR-OFL.txt` 2건으로 고정한다.
 - 본 작업은 라이선스 사본 확보 작업지시이며, 폰트 파일 복사 또는 `sub.css` 도입을 승인하지 않는다.
 
 ## 2. 대상 자산
@@ -180,4 +180,4 @@ foreach ($file in $files) {
 | 1.A-① | scenario 화면 적용 기준 정리 | OFL 사본 미확보 시 `sub.css` 및 폰트 도입 착수 차단 |
 | 1.A-③ | 정적 리소스 인벤토리 및 최종 복사 대상 확정 | 부록 D 4·5번의 복사 금지 해제 조건을 본 문서가 구체화 |
 | 1.A-⑨ | 최종 복사 대상 확정 | 도입 확정 2, 보류 4, 추가 확인 1, 복사 금지 4그룹 11건 기준 유지 |
-| 1.A-D | Inter/NotoSansKR OFL 사본 확보 | `docs/licenses/` 산출물 2건 확보 후 후속 복사 재판정 가능 |
+| 1.A-D | Inter/NotoSansKR OFL 사본 확보 | `3.개발/cleverchat/docs/licenses/` 산출물 2건 확보 후 후속 복사 재판정 가능 |
