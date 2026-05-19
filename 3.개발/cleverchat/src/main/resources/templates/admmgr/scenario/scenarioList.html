@@ -1,19 +1,12 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>시나리오 | CleverChat</title>
-    <link rel="stylesheet" th:href="@{/asset/admmgr/style2/css/admin-layout.css}">
-    <link rel="stylesheet" th:href="@{/asset/admmgr/style2/css/sub.css}">
-    <script th:src="@{/asset/admmgr/style2/js/ADM.Common.js}" defer></script>
-</head>
+<head th:replace="~{admmgr/common/head :: adminHead('시나리오 | CleverChat')}"></head>
 <body>
 <div class="admin-wrap">
-    <div th:replace="~{common/fragments :: adminSidebar}"></div>
+    <div th:replace="~{admmgr/common/sidebar :: adminSidebar}"></div>
     <div class="admin-container">
-        <div th:replace="~{common/fragments :: adminHeader}"></div>
-        <div th:replace="~{common/fragments :: adminNavigation}"></div>
+        <div th:replace="~{admmgr/common/header :: adminHeader}"></div>
+        <div th:replace="~{admmgr/common/navigation :: adminNavigation}"></div>
         <main class="admin-content">
             <header>
                 <h1>시나리오</h1>
@@ -46,7 +39,7 @@
                 </tbody>
             </table>
         </main>
-        <div th:replace="~{common/fragments :: adminFooter}"></div>
+        <div th:replace="~{admmgr/common/footer :: adminFooter}"></div>
     </div>
 </div>
 </body>
