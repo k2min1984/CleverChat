@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpSession;
 import java.util.List;
 import kr.co.cleverchat.domain.auth.security.AdminSession;
 import kr.co.cleverchat.domain.auth.security.AuthInterceptor;
+import kr.co.cleverchat.domain.auth.security.CsrfInterceptor;
 import kr.co.cleverchat.domain.auth.security.CurrentUser;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.MethodParameter;
@@ -19,14 +20,18 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class WebMvcConfig implements WebMvcConfigurer {
 
     private final AuthInterceptor authInterceptor;
+    private final CsrfInterceptor csrfInterceptor;
 
-    public WebMvcConfig(AuthInterceptor authInterceptor) {
+    public WebMvcConfig(AuthInterceptor authInterceptor, CsrfInterceptor csrfInterceptor) {
         this.authInterceptor = authInterceptor;
+        this.csrfInterceptor = csrfInterceptor;
     }
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(authInterceptor)
+            .addPathPatterns("/admin/**");
+        registry.addInterceptor(csrfInterceptor)
             .addPathPatterns("/admin/**");
     }
 
