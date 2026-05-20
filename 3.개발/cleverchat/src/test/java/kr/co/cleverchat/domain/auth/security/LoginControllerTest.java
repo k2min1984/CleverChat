@@ -33,11 +33,13 @@ class LoginControllerTest {
     @Mock
     private LoginAuditService loginAuditService;
 
+    private CsrfTokenIssuer csrfTokenIssuer;
     private LoginController controller;
 
     @BeforeEach
     void setUp() {
-        controller = new LoginController(userMapper, passwordEncoder, loginAuditService);
+        csrfTokenIssuer = new CsrfTokenIssuer();
+        controller = new LoginController(userMapper, passwordEncoder, loginAuditService, csrfTokenIssuer);
     }
 
     @Test
@@ -76,7 +78,42 @@ class LoginControllerTest {
                 assertThat(session.hasRole("ADMIN")).isTrue();
                 assertThat(session.isMustChangePassword()).isTrue();
             });
+        assertThat((String) request.getSession(false).getAttribute(CsrfTokenIssuer.CSRF_TOKEN_SESSION_ATTRIBUTE))
+            .hasSize(43)
+            .matches("[A-Za-z0-9_-]+");
+        assertThat((String) request.getSession(false).getAttribute(CsrfTokenIssuer.CSRF_FORM_ID_SESSION_ATTRIBUTE))
+            .hasSize(22)
+            .matches("[A-Za-z0-9_-]+");
         verify(loginAuditService).recordSuccess("admin", request);
+    }
+
+    @Test
+    void authenticateReplacesExistingSessionAttributesWithoutInvalidatingSession() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        MockHttpSession existingSession = new MockHttpSession();
+        existingSession.setAttribute(AdminSession.SESSION_KEY, adminSession());
+        existingSession.setAttribute(CsrfTokenIssuer.CSRF_TOKEN_SESSION_ATTRIBUTE, "old-token");
+        existingSession.setAttribute(CsrfTokenIssuer.CSRF_FORM_ID_SESSION_ATTRIBUTE, "old-form-id");
+        request.setSession(existingSession);
+        UserAccount account = account();
+        when(userMapper.findByUsername("admin")).thenReturn(account);
+        when(passwordEncoder.matches("password", "hash")).thenReturn(true);
+
+        String view = controller.authenticate("admin", "password", request);
+
+        assertThat(view).isEqualTo("redirect:/admin");
+        assertThat(existingSession.isInvalid()).isFalse();
+        assertThat(request.getSession(false)).isSameAs(existingSession);
+        assertThat(existingSession.getAttribute(AdminSession.SESSION_KEY))
+            .isInstanceOf(AdminSession.class);
+        assertThat((String) existingSession.getAttribute(CsrfTokenIssuer.CSRF_TOKEN_SESSION_ATTRIBUTE))
+            .isNotEqualTo("old-token")
+            .hasSize(43)
+            .matches("[A-Za-z0-9_-]+");
+        assertThat((String) existingSession.getAttribute(CsrfTokenIssuer.CSRF_FORM_ID_SESSION_ATTRIBUTE))
+            .isNotEqualTo("old-form-id")
+            .hasSize(22)
+            .matches("[A-Za-z0-9_-]+");
     }
 
     @Test

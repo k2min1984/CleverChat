@@ -19,15 +19,18 @@ public class LoginController {
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final LoginAuditService loginAuditService;
+    private final CsrfTokenIssuer csrfTokenIssuer;
 
     public LoginController(
         UserMapper userMapper,
         PasswordEncoder passwordEncoder,
-        LoginAuditService loginAuditService
+        LoginAuditService loginAuditService,
+        CsrfTokenIssuer csrfTokenIssuer
     ) {
         this.userMapper = userMapper;
         this.passwordEncoder = passwordEncoder;
         this.loginAuditService = loginAuditService;
+        this.csrfTokenIssuer = csrfTokenIssuer;
     }
 
     @GetMapping("/login")
@@ -64,10 +67,6 @@ public class LoginController {
 
         loginAuditService.recordSuccess(username, request);
         AuthenticatedUser user = new AuthenticatedUser(account);
-        HttpSession existingSession = request.getSession(false);
-        if (existingSession != null) {
-            existingSession.invalidate();
-        }
         HttpSession session = request.getSession(true);
         session.setAttribute(AdminSession.SESSION_KEY, new AdminSession(
             user.getId(),
@@ -77,6 +76,7 @@ public class LoginController {
             user.isMustChangePassword(),
             LocalDateTime.now()
         ));
+        csrfTokenIssuer.issue(session);
         return "redirect:/admin";
     }
 
