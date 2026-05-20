@@ -47,6 +47,62 @@ class CsrfInterceptorTest {
     }
 
     @Test
+    void allowsPostWithMatchingCsrfFromHeadersWhenParameterMissing() throws Exception {
+        MockHttpSession session = authenticatedSession();
+        String token = (String) session.getAttribute(CsrfTokenIssuer.CSRF_TOKEN_SESSION_ATTRIBUTE);
+        String formId = (String) session.getAttribute(CsrfTokenIssuer.CSRF_FORM_ID_SESSION_ATTRIBUTE);
+        MockHttpServletRequest request = postRequest(session);
+        request.addHeader("X-CSRF-Token", token);
+        request.addHeader("X-CSRF-FormId", formId);
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        boolean handled = interceptor.preHandle(request, response, new Object());
+
+        assertThat(handled).isTrue();
+        assertThat(session.getAttribute(CsrfTokenIssuer.CSRF_TOKEN_SESSION_ATTRIBUTE)).isNotEqualTo(token);
+        assertThat(session.getAttribute(CsrfTokenIssuer.CSRF_FORM_ID_SESSION_ATTRIBUTE)).isNotEqualTo(formId);
+        assertThat(response.getHeader("X-CSRF-Token"))
+            .isEqualTo(session.getAttribute(CsrfTokenIssuer.CSRF_TOKEN_SESSION_ATTRIBUTE));
+        assertThat(response.getHeader("X-CSRF-FormId"))
+            .isEqualTo(session.getAttribute(CsrfTokenIssuer.CSRF_FORM_ID_SESSION_ATTRIBUTE));
+    }
+
+    @Test
+    void prefersParameterOverHeaderWhenBothPresent() throws Exception {
+        MockHttpSession session = authenticatedSession();
+        String token = (String) session.getAttribute(CsrfTokenIssuer.CSRF_TOKEN_SESSION_ATTRIBUTE);
+        String formId = (String) session.getAttribute(CsrfTokenIssuer.CSRF_FORM_ID_SESSION_ATTRIBUTE);
+        MockHttpServletRequest request = postRequest(session);
+        request.setParameter("csrfToken", token);
+        request.setParameter("csrfFormId", formId);
+        request.addHeader("X-CSRF-Token", "wrong-header-token");
+        request.addHeader("X-CSRF-FormId", "wrong-header-form-id");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        boolean handled = interceptor.preHandle(request, response, new Object());
+
+        assertThat(handled).isTrue();
+    }
+
+    @Test
+    void rejectsPostWithMismatchedCsrfHeaderToken() throws Exception {
+        MockHttpSession session = authenticatedSession();
+        String token = (String) session.getAttribute(CsrfTokenIssuer.CSRF_TOKEN_SESSION_ATTRIBUTE);
+        String formId = (String) session.getAttribute(CsrfTokenIssuer.CSRF_FORM_ID_SESSION_ATTRIBUTE);
+        MockHttpServletRequest request = postRequest(session);
+        request.addHeader("X-CSRF-Token", "wrong-header-token");
+        request.addHeader("X-CSRF-FormId", formId);
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        boolean handled = interceptor.preHandle(request, response, new Object());
+
+        assertThat(handled).isFalse();
+        assertThat(response.getStatus()).isEqualTo(403);
+        assertThat(session.getAttribute(CsrfTokenIssuer.CSRF_TOKEN_SESSION_ATTRIBUTE)).isEqualTo(token);
+        assertThat(session.getAttribute(CsrfTokenIssuer.CSRF_FORM_ID_SESSION_ATTRIBUTE)).isEqualTo(formId);
+    }
+
+    @Test
     void rejectsPostWithoutCsrfToken() throws Exception {
         MockHttpSession session = authenticatedSession();
         String token = (String) session.getAttribute(CsrfTokenIssuer.CSRF_TOKEN_SESSION_ATTRIBUTE);

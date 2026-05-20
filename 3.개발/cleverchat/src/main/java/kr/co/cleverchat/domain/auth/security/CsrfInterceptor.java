@@ -41,8 +41,8 @@ public class CsrfInterceptor implements HandlerInterceptor {
 
         String sessionToken = getSessionString(session, CsrfTokenIssuer.CSRF_TOKEN_SESSION_ATTRIBUTE);
         String sessionFormId = getSessionString(session, CsrfTokenIssuer.CSRF_FORM_ID_SESSION_ATTRIBUTE);
-        String requestToken = request.getParameter(CSRF_TOKEN_PARAMETER);
-        String requestFormId = request.getParameter(CSRF_FORM_ID_PARAMETER);
+        String requestToken = resolveCsrfValue(request, CSRF_TOKEN_PARAMETER, CSRF_TOKEN_RESPONSE_HEADER);
+        String requestFormId = resolveCsrfValue(request, CSRF_FORM_ID_PARAMETER, CSRF_FORM_ID_RESPONSE_HEADER);
 
         if (!matches(sessionToken, requestToken) || !matches(sessionFormId, requestFormId)) {
             writeForbidden(request, response);
@@ -57,6 +57,14 @@ public class CsrfInterceptor implements HandlerInterceptor {
     private String getSessionString(HttpSession session, String name) {
         Object value = session.getAttribute(name);
         return value instanceof String stringValue ? stringValue : null;
+    }
+
+    private String resolveCsrfValue(HttpServletRequest request, String parameterName, String headerName) {
+        String parameterValue = request.getParameter(parameterName);
+        if (parameterValue != null && !parameterValue.isBlank()) {
+            return parameterValue;
+        }
+        return request.getHeader(headerName);
     }
 
     private boolean matches(String expected, String actual) {
