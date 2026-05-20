@@ -154,9 +154,27 @@ ADM.Form = {
     /**[공통]FormData fetch 전송 + RedirectScript 응답 처리**/
     submit: function(frm, formData){
         if( !formData ) formData = new FormData(frm);
-        fetch(frm.action, { method:'POST', body:formData })
-        .then(function(res){ return res.text(); })
+        var headers = { 'X-Requested-With': 'XMLHttpRequest' };
+        var formIdMeta = document.querySelector('meta[name="csrfFormId"]');
+        var tokenMeta  = document.querySelector('meta[name="csrfToken"]');
+        if( tokenMeta && tokenMeta.content ) headers['X-CSRF-Token'] = tokenMeta.content;
+        if( formIdMeta && formIdMeta.content ) headers['X-CSRF-FormId'] = formIdMeta.content;
+        fetch(frm.action, { method:'POST', body:formData, headers:headers, credentials:'same-origin' })
+        .then(function(res){
+            ADM.updateCsrfMetaValue(res.headers.get('X-CSRF-Token'), res.headers.get('X-CSRF-FormId'));
+            if( res.status === 401 ){
+                alert('세션이 만료되었습니다.\n다시 로그인해 주세요.');
+                location.href = ADM.url('login');
+                return '';
+            }
+            if( res.status === 403 ){
+                alert('잘못된 접근입니다.(CSRF값이 유효하지 않습니다.)');
+                return '';
+            }
+            return res.text();
+        })
         .then(function(html){
+            if( !html ) return;
             //alert 메시지 추출 (유니코드 이스케이프 → JSON.parse로 디코딩)
             var alertMatch = html.match(/alert\('([^']*)'\)/);
             if( alertMatch ){
@@ -228,6 +246,11 @@ ADM.setCsrfHeaders = function(xhr){
 ADM.updateCsrfMeta = function(xhr){
     var newFormId = xhr.getResponseHeader('X-CSRF-FormId');
     var newToken  = xhr.getResponseHeader('X-CSRF-Token');
+    ADM.updateCsrfMetaValue(newToken, newFormId);
+};
+
+/**[CSRF]응답에서 갱신된 토큰 값을 meta 태그에 반영**/
+ADM.updateCsrfMetaValue = function(newToken, newFormId){
     if( newFormId && newToken ){
         var formIdMeta = document.querySelector('meta[name="csrfFormId"]');
         var tokenMeta  = document.querySelector('meta[name="csrfToken"]');
