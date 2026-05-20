@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="ctx" th:content="@{/}">
+    <meta name="csrfToken" th:content="${session.csrfToken}">
+    <meta name="csrfFormId" th:content="${session.csrfFormId}">
     <title th:text="${pageTitle}">CleverChat</title>
     <link rel="stylesheet" th:href="@{/asset/admmgr/style2/css/admin-layout.css}">
     <link rel="stylesheet" th:href="@{/asset/admmgr/style2/css/sub.css}">

@@ -204,12 +204,24 @@ ADM.encodeParams = function(obj){
 
 /**[CSRF]meta 태그에서 CSRF 토큰 추출하여 URL 인코딩 문자열 반환**/
 ADM.getCsrfParam = function(){
-    var formIdMeta = document.querySelector('meta[name="_csrf_form_id"]');
-    var tokenMeta  = document.querySelector('meta[name="_csrf_token"]');
+    var formIdMeta = document.querySelector('meta[name="csrfFormId"]');
+    var tokenMeta  = document.querySelector('meta[name="csrfToken"]');
     if( formIdMeta && tokenMeta && formIdMeta.content && tokenMeta.content ){
         return ADM.encodeParam('csrfFormId', formIdMeta.content) + '&' + ADM.encodeParam('csrfToken', tokenMeta.content);
     }
     return '';
+};
+
+/**[CSRF]meta 태그 값을 AJAX 요청 헤더에 첨부**/
+ADM.setCsrfHeaders = function(xhr){
+    var formIdMeta = document.querySelector('meta[name="csrfFormId"]');
+    var tokenMeta  = document.querySelector('meta[name="csrfToken"]');
+    if( tokenMeta && tokenMeta.content ){
+        xhr.setRequestHeader('X-CSRF-Token', tokenMeta.content);
+    }
+    if( formIdMeta && formIdMeta.content ){
+        xhr.setRequestHeader('X-CSRF-FormId', formIdMeta.content);
+    }
 };
 
 /**[CSRF]AJAX 응답 헤더에서 갱신된 토큰을 meta 태그에 반영 (연속 AJAX 호출 지원)**/
@@ -217,8 +229,8 @@ ADM.updateCsrfMeta = function(xhr){
     var newFormId = xhr.getResponseHeader('X-CSRF-FormId');
     var newToken  = xhr.getResponseHeader('X-CSRF-Token');
     if( newFormId && newToken ){
-        var formIdMeta = document.querySelector('meta[name="_csrf_form_id"]');
-        var tokenMeta  = document.querySelector('meta[name="_csrf_token"]');
+        var formIdMeta = document.querySelector('meta[name="csrfFormId"]');
+        var tokenMeta  = document.querySelector('meta[name="csrfToken"]');
         if( formIdMeta ) formIdMeta.content = newFormId;
         if( tokenMeta )  tokenMeta.content  = newToken;
     }
@@ -230,6 +242,7 @@ ADM.ajaxPost = function(url, data, onSuccess, onError){
     xhr.open('POST', url, true);
     xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
     xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+    ADM.setCsrfHeaders(xhr);
     //[CSRF] meta 태그에서 토큰 추출하여 파라미터에 자동 추가
     var csrfData = ADM.getCsrfParam();
     if( csrfData ){
@@ -358,6 +371,7 @@ ADM.Modal = ADM.Modal || {
         xhr.open('POST', form.action, true);
         xhr.withCredentials = true;
         xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+        ADM.setCsrfHeaders(xhr);
         xhr.onload = function(){
             //[CSRF] 응답 헤더에서 갱신된 토큰 반영
             ADM.updateCsrfMeta(xhr);
