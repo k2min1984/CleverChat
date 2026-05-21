@@ -157,8 +157,14 @@ ADM.Form = {
         var headers = { 'X-Requested-With': 'XMLHttpRequest' };
         var formIdMeta = document.querySelector('meta[name="csrfFormId"]');
         var tokenMeta  = document.querySelector('meta[name="csrfToken"]');
-        if( tokenMeta && tokenMeta.content ) headers['X-CSRF-Token'] = tokenMeta.content;
-        if( formIdMeta && formIdMeta.content ) headers['X-CSRF-FormId'] = formIdMeta.content;
+        if( tokenMeta && tokenMeta.content ){
+            headers['X-CSRF-Token'] = tokenMeta.content;
+            if( !formData.has('csrfToken') ) formData.append('csrfToken', tokenMeta.content);
+        }
+        if( formIdMeta && formIdMeta.content ){
+            headers['X-CSRF-FormId'] = formIdMeta.content;
+            if( !formData.has('csrfFormId') ) formData.append('csrfFormId', formIdMeta.content);
+        }
         fetch(frm.action, { method:'POST', body:formData, headers:headers, credentials:'same-origin' })
         .then(function(res){
             ADM.updateCsrfMetaValue(res.headers.get('X-CSRF-Token'), res.headers.get('X-CSRF-FormId'));

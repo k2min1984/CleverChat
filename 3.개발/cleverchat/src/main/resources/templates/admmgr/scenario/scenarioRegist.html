@@ -13,6 +13,8 @@
                 <a class="button" th:href="@{/admin/scenarios}">목록</a>
             </header>
             <form th:object="${scenarioForm}" th:action="@{${formAction}}" method="post">
+                <input type="hidden" name="csrfToken" th:value="${session.csrfToken}">
+                <input type="hidden" name="csrfFormId" th:value="${session.csrfFormId}">
                 <label for="categoryId">카테고리
                     <select id="categoryId" th:field="*{categoryId}" aria-describedby="categoryHelp" required>
                         <option value="">선택</option>
