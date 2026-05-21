@@ -2,6 +2,11 @@
 
 시나리오 챗봇 시스템 (Spring Boot + MyBatis + PostgreSQL).
 
+기술 기준 요약:
+- JPA는 사용하지 않습니다. DB 접근은 Flyway + MyBatis mapper/XML 기준입니다.
+- Spring Security 기반 인증/인가는 사용하지 않습니다. 관리자 인증/인가, CSRF, 세션, 보안 헤더는 HandlerInterceptor + 세션 VO 기반 구현을 기준으로 합니다.
+- `8.소스/OverseasNPP_20260511`은 프레임워크 전환용 베이스가 아니라 화면/자산/업무 흐름/SQL 패턴 참고 소스입니다. 상세 기준은 [docs/Security_JPA_8소스_기준정리.md](docs/Security_JPA_8소스_기준정리.md)를 참고합니다.
+
 ## 요구 환경
 
 - JDK 17
@@ -51,7 +56,7 @@ java -jar target/cleverchat.jar --spring.profiles.active=dev
 ```
 src/main/java/kr/co/cleverchat
 ├── CleverChatApplication.java
-├── config/         설정 (Security, Web, MyBatis)
+├── config/         설정 (Web, MyBatis, 인터셉터)
 ├── common/         공용 (예외, AOP, 유틸)
 └── domain/         도메인 모듈
     ├── auth, admin, scenario, chatbot, search, crawl, ops
