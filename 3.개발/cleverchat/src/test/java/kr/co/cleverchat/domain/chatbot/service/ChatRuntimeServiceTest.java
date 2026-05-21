@@ -48,6 +48,8 @@ class ChatRuntimeServiceTest {
 
     private static final UUID SESSION_ID = UUID.fromString("00000000-0000-0000-0000-000000000001");
     private static final UUID ANONYMOUS_ID = UUID.fromString("00000000-0000-0000-0000-000000000002");
+    private static final String SESSION_ID_STR = SESSION_ID.toString();
+    private static final String ANONYMOUS_ID_STR = ANONYMOUS_ID.toString();
 
     @Mock
     ChatSessionMapper sessionMapper;
@@ -93,7 +95,7 @@ class ChatRuntimeServiceTest {
             message.setId(messageIds.getAndIncrement());
             return null;
         }).when(messageMapper).insert(any(ChatMessage.class));
-        lenient().when(messageMapper.findBySessionId(any(UUID.class))).thenReturn(List.of());
+        lenient().when(messageMapper.findBySessionId(any(String.class))).thenReturn(List.of());
         lenient().when(optionMapper.findEnabledByNodeId(any())).thenReturn(List.of());
     }
 
@@ -121,7 +123,7 @@ class ChatRuntimeServiceTest {
         verify(messageMapper).insert(messageCaptor.capture());
         assertThat(response.scenarioId()).isEqualTo(100L);
         assertThat(sessionCaptor.getValue().getState()).isEqualTo("ACTIVE");
-        assertThat(sessionCaptor.getValue().getAnonymousId()).isEqualTo(ANONYMOUS_ID);
+        assertThat(sessionCaptor.getValue().getAnonymousId()).isEqualTo(ANONYMOUS_ID_STR);
         assertThat(messageCaptor.getValue().getDirection()).isEqualTo("BOT");
         assertThat(messageCaptor.getValue().getSeq()).isEqualTo(1);
         assertThat(messageCaptor.getValue().getContent()).isEqualTo("안녕하세요");
@@ -146,29 +148,29 @@ class ChatRuntimeServiceTest {
     @Test
     void selectOptionRecordsInvalidOptionFailure() {
         ChatSession session = activeSession();
-        when(sessionMapper.findById(SESSION_ID)).thenReturn(Optional.of(session));
+        when(sessionMapper.findById(SESSION_ID_STR)).thenReturn(Optional.of(session));
         when(optionMapper.findEnabledByNodeId(300L)).thenReturn(List.of());
         @SuppressWarnings({"unchecked", "rawtypes"})
         ArgumentCaptor<Map<String, Object>> detailCaptor = ArgumentCaptor.forClass((Class) Map.class);
 
         assertBusinessError(() -> service.selectOption(SESSION_ID, 999L, context), ErrorCode.VALIDATION_ERROR);
 
-        verify(sessionMapper).lockSessionByAdvisoryKey(SESSION_ID);
-        verify(failureRecorder).recordFailure(eq(SESSION_ID), isNull(), eq("INVALID_OPTION"), detailCaptor.capture());
+        verify(sessionMapper).lockSessionByAdvisoryKey(SESSION_ID_STR);
+        verify(failureRecorder).recordFailure(eq(SESSION_ID_STR), isNull(), eq("INVALID_OPTION"), detailCaptor.capture());
         assertThat(detailCaptor.getValue()).containsEntry("requestedOptionId", 999L);
     }
 
     @Test
     void selectOptionCompletesWhenNextNodeIsNull() {
         ChatSession session = activeSession();
-        when(sessionMapper.findById(SESSION_ID)).thenReturn(Optional.of(session));
+        when(sessionMapper.findById(SESSION_ID_STR)).thenReturn(Optional.of(session));
         when(optionMapper.findEnabledByNodeId(300L)).thenReturn(List.of(option(10L, null, "종료")));
-        when(messageMapper.selectNextSeq(SESSION_ID)).thenReturn(2);
+        when(messageMapper.selectNextSeq(SESSION_ID_STR)).thenReturn(2);
         ArgumentCaptor<ChatMessage> messageCaptor = ArgumentCaptor.forClass(ChatMessage.class);
 
         service.selectOption(SESSION_ID, 10L, context);
 
-        verify(sessionMapper).updateCurrentNode(eq(SESSION_ID), eq(300L), eq("COMPLETED"), any(OffsetDateTime.class));
+        verify(sessionMapper).updateCurrentNode(eq(SESSION_ID_STR), eq(300L), eq("COMPLETED"), any(OffsetDateTime.class));
         verify(messageMapper, org.mockito.Mockito.times(2)).insert(messageCaptor.capture());
         assertThat(messageCaptor.getAllValues().get(1).getContent()).isEqualTo("대화가 완료되었습니다.");
     }
@@ -176,9 +178,9 @@ class ChatRuntimeServiceTest {
     @Test
     void selectOptionRejectsNextNodeFromDifferentVersion() {
         ChatSession session = activeSession();
-        when(sessionMapper.findById(SESSION_ID)).thenReturn(Optional.of(session));
+        when(sessionMapper.findById(SESSION_ID_STR)).thenReturn(Optional.of(session));
         when(optionMapper.findEnabledByNodeId(300L)).thenReturn(List.of(option(10L, 400L, "다음")));
-        when(messageMapper.selectNextSeq(SESSION_ID)).thenReturn(2);
+        when(messageMapper.selectNextSeq(SESSION_ID_STR)).thenReturn(2);
         when(nodeMapper.findById(400L)).thenReturn(node(400L, 999L, "ANSWER", "다음", "내용"));
 
         assertBusinessError(() -> service.selectOption(SESSION_ID, 10L, context), ErrorCode.STATE_CONFLICT);
@@ -187,15 +189,15 @@ class ChatRuntimeServiceTest {
     @Test
     void freeTextNoMatchRecordsFailureAndFallbackMessage() {
         ChatSession session = activeSession();
-        when(sessionMapper.findById(SESSION_ID)).thenReturn(Optional.of(session));
+        when(sessionMapper.findById(SESSION_ID_STR)).thenReturn(Optional.of(session));
         when(matchingService.match(100L, 300L, "모르는 질문")).thenReturn(Optional.empty());
-        when(messageMapper.selectNextSeq(SESSION_ID)).thenReturn(2);
+        when(messageMapper.selectNextSeq(SESSION_ID_STR)).thenReturn(2);
         ArgumentCaptor<ChatMessage> messageCaptor = ArgumentCaptor.forClass(ChatMessage.class);
 
         service.freeText(SESSION_ID, "모르는 질문", context);
 
         verify(messageMapper, org.mockito.Mockito.times(2)).insert(messageCaptor.capture());
-        verify(failureRecorder).recordFailure(SESSION_ID, null, "NO_MATCH");
+        verify(failureRecorder).recordFailure(SESSION_ID_STR, null, "NO_MATCH");
         assertThat(messageCaptor.getAllValues().get(0).getPayload()).contains("\"matched\":false", "\"matchType\":\"NONE\"");
         assertThat(messageCaptor.getAllValues().get(1).getLatencyMs()).isNotNull();
         assertThat(messageCaptor.getAllValues().get(1).getContent()).isEqualTo("질문에 맞는 답변을 찾지 못했습니다.");
@@ -204,15 +206,15 @@ class ChatRuntimeServiceTest {
     @Test
     void freeTextMatchWithNextNodeAdvancesSession() {
         ChatSession session = activeSession();
-        when(sessionMapper.findById(SESSION_ID)).thenReturn(Optional.of(session));
+        when(sessionMapper.findById(SESSION_ID_STR)).thenReturn(Optional.of(session));
         when(matchingService.match(100L, 300L, "배송")).thenReturn(Optional.of(new MatchResult(100L, null, 400L, 80.0, 100, 0, MatchType.KEYWORD)));
-        when(messageMapper.selectNextSeq(SESSION_ID)).thenReturn(2);
+        when(messageMapper.selectNextSeq(SESSION_ID_STR)).thenReturn(2);
         when(nodeMapper.findById(400L)).thenReturn(node(400L, 200L, "ANSWER", "배송", "배송 안내"));
         ArgumentCaptor<ChatMessage> messageCaptor = ArgumentCaptor.forClass(ChatMessage.class);
 
         service.freeText(SESSION_ID, "배송", context);
 
-        verify(sessionMapper).updateCurrentNode(eq(SESSION_ID), eq(400L), eq("ACTIVE"), any(OffsetDateTime.class));
+        verify(sessionMapper).updateCurrentNode(eq(SESSION_ID_STR), eq(400L), eq("ACTIVE"), any(OffsetDateTime.class));
         verify(messageMapper, org.mockito.Mockito.times(2)).insert(messageCaptor.capture());
         assertThat(messageCaptor.getAllValues().get(0).getPayload()).contains("\"matched\":true", "\"score\":80.0", "\"matchType\":\"KEYWORD\"", "\"scenarioId\":100");
         assertThat(messageCaptor.getAllValues().get(1).getLatencyMs()).isNotNull();
@@ -221,15 +223,15 @@ class ChatRuntimeServiceTest {
     @Test
     void freeTextMatchWithoutNextNodeReturnsScenarioTitle() {
         ChatSession session = activeSession();
-        when(sessionMapper.findById(SESSION_ID)).thenReturn(Optional.of(session));
+        when(sessionMapper.findById(SESSION_ID_STR)).thenReturn(Optional.of(session));
         when(matchingService.match(100L, 300L, "환불")).thenReturn(Optional.of(new MatchResult(200L, null, null, 60.0, 100, 1, MatchType.KEYWORD)));
-        when(messageMapper.selectNextSeq(SESSION_ID)).thenReturn(2);
+        when(messageMapper.selectNextSeq(SESSION_ID_STR)).thenReturn(2);
         when(scenarioMapper.findById(200L)).thenReturn(scenario(200L, "ACTIVE", "환불 상담"));
         ArgumentCaptor<ChatMessage> messageCaptor = ArgumentCaptor.forClass(ChatMessage.class);
 
         service.freeText(SESSION_ID, "환불", context);
 
-        verify(sessionMapper, never()).updateCurrentNode(eq(SESSION_ID), any(), any(), any());
+        verify(sessionMapper, never()).updateCurrentNode(eq(SESSION_ID_STR), any(), any(), any());
         verify(messageMapper, org.mockito.Mockito.times(2)).insert(messageCaptor.capture());
         assertThat(messageCaptor.getAllValues().get(1).getContent()).isEqualTo("환불 상담");
     }
@@ -237,8 +239,8 @@ class ChatRuntimeServiceTest {
     @Test
     void getRejectsDifferentAnonymousOwner() {
         ChatSession session = activeSession();
-        session.setAnonymousId(UUID.fromString("00000000-0000-0000-0000-000000000003"));
-        when(sessionMapper.findById(SESSION_ID)).thenReturn(Optional.of(session));
+        session.setAnonymousId("00000000-0000-0000-0000-000000000003");
+        when(sessionMapper.findById(SESSION_ID_STR)).thenReturn(Optional.of(session));
 
         assertBusinessError(() -> service.get(SESSION_ID, context), ErrorCode.ACCESS_DENIED);
     }
@@ -247,7 +249,7 @@ class ChatRuntimeServiceTest {
     void selectOptionRejectsCompletedSession() {
         ChatSession session = activeSession();
         session.setState("COMPLETED");
-        when(sessionMapper.findById(SESSION_ID)).thenReturn(Optional.of(session));
+        when(sessionMapper.findById(SESSION_ID_STR)).thenReturn(Optional.of(session));
 
         assertBusinessError(() -> service.selectOption(SESSION_ID, 10L, context), ErrorCode.STATE_CONFLICT);
     }
@@ -256,11 +258,11 @@ class ChatRuntimeServiceTest {
     void freeTextExpiredSessionRecordsExpiredFailure() {
         ChatSession session = activeSession();
         session.setExpiresAt(OffsetDateTime.now().minusMinutes(1));
-        when(sessionMapper.findById(SESSION_ID)).thenReturn(Optional.of(session));
+        when(sessionMapper.findById(SESSION_ID_STR)).thenReturn(Optional.of(session));
 
         assertBusinessError(() -> service.freeText(SESSION_ID, "배송", context), ErrorCode.STATE_CONFLICT);
 
-        verify(failureRecorder).recordFailure(SESSION_ID, null, "EXPIRED");
+        verify(failureRecorder).recordFailure(SESSION_ID_STR, null, "EXPIRED");
     }
 
     private void assertBusinessError(ThrowingCallable callable, ErrorCode errorCode) {
@@ -272,8 +274,8 @@ class ChatRuntimeServiceTest {
 
     private ChatSession activeSession() {
         ChatSession session = new ChatSession();
-        session.setId(SESSION_ID);
-        session.setAnonymousId(ANONYMOUS_ID);
+        session.setId(SESSION_ID_STR);
+        session.setAnonymousId(ANONYMOUS_ID_STR);
         session.setScenarioId(100L);
         session.setVersionId(200L);
         session.setCurrentNodeId(300L);
