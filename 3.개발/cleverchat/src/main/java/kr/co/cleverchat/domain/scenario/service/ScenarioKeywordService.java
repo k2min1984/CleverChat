@@ -10,6 +10,7 @@ import kr.co.cleverchat.common.error.ErrorCode;
 import kr.co.cleverchat.domain.scenario.dto.ScenarioKeywordDtos.KeywordRequest;
 import kr.co.cleverchat.domain.scenario.dto.ScenarioKeywordDtos.ReplaceRequest;
 import kr.co.cleverchat.domain.scenario.dto.ScenarioKeywordDtos.SynonymRequest;
+import kr.co.cleverchat.domain.scenario.event.ScenarioMatchingCacheInvalidator;
 import kr.co.cleverchat.domain.scenario.mapper.ScenarioKeywordMapper;
 import kr.co.cleverchat.domain.scenario.mapper.ScenarioMapper;
 import kr.co.cleverchat.domain.scenario.mapper.ScenarioSynonymMapper;
@@ -25,17 +26,20 @@ public class ScenarioKeywordService {
     private final ScenarioKeywordMapper keywordMapper;
     private final ScenarioSynonymMapper synonymMapper;
     private final AuditTrailRecorder auditTrailRecorder;
+    private final ScenarioMatchingCacheInvalidator matchingCacheInvalidator;
 
     public ScenarioKeywordService(
         ScenarioMapper scenarioMapper,
         ScenarioKeywordMapper keywordMapper,
         ScenarioSynonymMapper synonymMapper,
-        AuditTrailRecorder auditTrailRecorder
+        AuditTrailRecorder auditTrailRecorder,
+        ScenarioMatchingCacheInvalidator matchingCacheInvalidator
     ) {
         this.scenarioMapper = scenarioMapper;
         this.keywordMapper = keywordMapper;
         this.synonymMapper = synonymMapper;
         this.auditTrailRecorder = auditTrailRecorder;
+        this.matchingCacheInvalidator = matchingCacheInvalidator;
     }
 
     public List<ScenarioKeyword> findKeywords(Long scenarioId) {
@@ -86,6 +90,7 @@ public class ScenarioKeywordService {
             "keywordCount", keywords.size(),
             "synonymCount", synonymCount
         ));
+        matchingCacheInvalidator.onScenarioChanged(scenarioId);
     }
 
     private String normalize(String value) {
