@@ -79,6 +79,7 @@
 - [ ] 시나리오 등록/수정/삭제
 - [ ] 노드 트리 편집 UI
 - [ ] 키워드/유사어 관리
+  - [x] 키워드 replace 저장 성공 시 매칭 캐시 무효화 훅 적용 (`ScenarioMatchingCacheInvalidator.onScenarioChanged(scenarioId)`, 2026-05-21)
 - [ ] 미리보기 (실제 챗봇 화면 재사용)
 - [x] M2 API 초안 작성 (`2.설계/03.API설계서/M2_시나리오API.md`)
 - [x] 1.A-⑤ 8소스 CSS `url()`/`@font-face` 종속 자산 실측 반영 (`3.개발/cleverchat/docs/Phase1A_C_Static_Asset_Inventory_8소스_작업지시.md` 부록 B-1)
