@@ -10,7 +10,8 @@
 
 - 변경 대상은 `src/main/resources/templates/admmgr/common/head.html` 단일 파일이다.
 - 삽입 대상은 자체 CSRF용 메타 태그 2개뿐이다.
-- 클라이언트 셀렉터와 일치시키기 위해 `name` 값은 `_csrf_token`, `_csrf_form_id`를 그대로 사용한다.
+- 클라이언트 셀렉터와 일치시키기 위해 `name` 값은 `csrfToken`, `csrfFormId`를 그대로 사용한다.
+- 초안 표기 `_csrf_token`/`_csrf_form_id`는 실제 코드와 불일치하므로 폐기한다.
 - Spring Security 표준 메타명인 `_csrf`, `_csrf_header`는 사용하지 않는다.
 - 공통 JS, 인증/인가 로직, 인터셉터, 컨트롤러, 템플릿 구조는 이번 단계에서 수정하지 않는다.
 
@@ -19,24 +20,24 @@
 ### M1. CSRF Token
 
 ```html
-<meta name="_csrf_token" th:content="${session.csrfToken}">
+<meta name="csrfToken" th:content="${session.csrfToken}">
 ```
 
 용도:
 
-- `ADM.getCsrfParam()`이 `meta[name="_csrf_token"]`으로 조회한다.
+- `ADM.getCsrfParam()`이 `meta[name="csrfToken"]`으로 조회한다.
 - Ajax POST 요청 파라미터 `csrfToken` 값으로 직렬화된다.
 - Ajax 응답 후 `ADM.updateCsrfMeta()`가 `X-CSRF-Token` 응답 헤더 값으로 갱신한다.
 
 ### M2. CSRF Form ID
 
 ```html
-<meta name="_csrf_form_id" th:content="${session.csrfFormId}">
+<meta name="csrfFormId" th:content="${session.csrfFormId}">
 ```
 
 용도:
 
-- `ADM.getCsrfParam()`이 `meta[name="_csrf_form_id"]`로 조회한다.
+- `ADM.getCsrfParam()`이 `meta[name="csrfFormId"]`로 조회한다.
 - Ajax POST 요청 파라미터 `csrfFormId` 값으로 직렬화된다.
 - Ajax 응답 후 `ADM.updateCsrfMeta()`가 `X-CSRF-FormId` 응답 헤더 값으로 갱신한다.
 
@@ -61,7 +62,7 @@
 
 > ⚠️ **선행 의존성 경고**
 >
-> 본 §3의 메타 태그 주입 작업(`head.html`에 `_csrf_token`, `_csrf_form_id` 추가)은 단독으로 수행하면 런타임에서 빈 값 또는 null이 렌더링되어 CSRF 보호가 동작하지 않는다. 다음 두 선행 작업이 반드시 먼저 완료되어 있어야 한다.
+> 본 §3의 메타 태그 주입 작업(`head.html`에 `csrfToken`, `csrfFormId` 추가)은 단독으로 수행하면 런타임에서 빈 값 또는 null이 렌더링되어 CSRF 보호가 동작하지 않는다. 다음 두 선행 작업이 반드시 먼저 완료되어 있어야 한다.
 >
 > 1. **세션 CSRF 발급 작업** — `Phase1A_E_세션CSRF발급_작업지시.md`
 >    - 로그인 또는 관리자 진입 시 세션 attribute로 `csrfToken`, `csrfFormId` 값을 생성·저장하는 서버 측 구현이 선행되어야 한다.
@@ -83,8 +84,8 @@
 `head.html`에 다음 2줄을 추가한다.
 
 ```html
-<meta name="_csrf_token" th:content="${session.csrfToken}">
-<meta name="_csrf_form_id" th:content="${session.csrfFormId}">
+<meta name="csrfToken" th:content="${session.csrfToken}">
+<meta name="csrfFormId" th:content="${session.csrfFormId}">
 ```
 
 권고 사유:
@@ -103,8 +104,8 @@
 서버 측 CSRF 세션 attribute명이 아직 확정되지 않은 경우에만 임시로 다음 형태를 사용할 수 있다.
 
 ```html
-<meta name="_csrf_token" content="">
-<meta name="_csrf_form_id" content="">
+<meta name="csrfToken" content="">
+<meta name="csrfFormId" content="">
 ```
 
 단, B안은 런타임 CSRF 보호를 완성하지 못한다. 후속 단계에서 반드시 `th:content` 기반 실제 값 주입으로 전환해야 한다.
@@ -125,8 +126,8 @@
 
 ```html
 <meta name="ctx" th:content="@{/}">
-<meta name="_csrf_token" th:content="${session.csrfToken}">
-<meta name="_csrf_form_id" th:content="${session.csrfFormId}">
+<meta name="csrfToken" th:content="${session.csrfToken}">
+<meta name="csrfFormId" th:content="${session.csrfFormId}">
 <title th:text="${pageTitle}">CleverChat</title>
 ```
 
@@ -135,7 +136,7 @@
 1. `src/main/resources/templates/admmgr/common/head.html`을 연다.
 2. 현재 `<head th:fragment="adminHead(pageTitle)">` 내부의 메타 태그 구성을 확인한다.
 3. `<meta name="ctx" th:content="@{/}">` 바로 아래에 자체 CSRF 메타 태그 2줄을 추가한다.
-4. 태그 이름이 `_csrf_token`, `_csrf_form_id`와 정확히 일치하는지 확인한다.
+4. 태그 이름이 `csrfToken`, `csrfFormId`와 정확히 일치하는지 확인한다.
 5. 다른 템플릿, JavaScript, Java 코드는 수정하지 않는다.
 6. 아래 검증 명령을 실행해 범위와 계약 일치를 확인한다.
 
@@ -144,13 +145,13 @@
 ### 6.1 메타 태그 존재 확인
 
 ```bash
-rg -n 'meta name="_csrf_(token|form_id)"' src/main/resources/templates/admmgr/common/head.html
+rg -n 'meta name="csrf(Token|FormId)"' src/main/resources/templates/admmgr/common/head.html
 ```
 
 기대 결과:
 
-- `_csrf_token` 1건
-- `_csrf_form_id` 1건
+- `csrfToken` 1건
+- `csrfFormId` 1건
 
 ### 6.2 Spring Security 스타일 메타 오삽입 차단
 
@@ -165,13 +166,13 @@ rg -n 'meta name="(_csrf|_csrf_header|csrf-token|csrf-form-id)"' src/main/resour
 ### 6.3 클라이언트 셀렉터 일치 확인
 
 ```bash
-rg -n '_csrf_token|_csrf_form_id|X-CSRF-Token|X-CSRF-FormId|csrfToken|csrfFormId' src/main/resources/static/asset/admmgr/style2/js/ADM.Common.js
+rg -n 'csrfToken|csrfFormId|X-CSRF-Token|X-CSRF-FormId' src/main/resources/static/asset/admmgr/style2/js/ADM.Common.js
 ```
 
 기대 결과:
 
-- `meta[name="_csrf_token"]`
-- `meta[name="_csrf_form_id"]`
+- `meta[name="csrfToken"]`
+- `meta[name="csrfFormId"]`
 - `X-CSRF-Token`
 - `X-CSRF-FormId`
 - `csrfToken`
@@ -204,8 +205,8 @@ rg -n 'head th:fragment="adminHead\(pageTitle\)"|</head>|</html>' src/main/resou
 관리자 화면 렌더링 후 브라우저 개발자 도구에서 다음을 확인한다.
 
 ```javascript
-document.querySelector('meta[name="_csrf_token"]')?.content
-document.querySelector('meta[name="_csrf_form_id"]')?.content
+document.querySelector('meta[name="csrfToken"]')?.content
+document.querySelector('meta[name="csrfFormId"]')?.content
 ```
 
 기대 결과:
@@ -235,14 +236,14 @@ PR에는 다음 변경만 포함한다.
 PR 설명에는 다음 내용을 명시한다.
 
 - 자체 CSRF 메타 태그를 관리자 공통 head fragment에 추가했다.
-- 메타명은 기존 `ADM.Common.js` 계약인 `_csrf_token`, `_csrf_form_id`와 일치한다.
+- 메타명은 기존 `ADM.Common.js` 계약인 `csrfToken`, `csrfFormId`와 일치한다.
 - Spring Security CSRF 메타 계약은 도입하지 않았다.
 - 후속 검증으로 세션 attribute명과 런타임 content 값을 확인해야 한다.
 
 ## 9. 산출물 체크리스트
 
-- [ ] `head.html`에 `_csrf_token` 메타 태그가 1개 추가되었다.
-- [ ] `head.html`에 `_csrf_form_id` 메타 태그가 1개 추가되었다.
+- [ ] `head.html`에 `csrfToken` 메타 태그가 1개 추가되었다.
+- [ ] `head.html`에 `csrfFormId` 메타 태그가 1개 추가되었다.
 - [ ] 두 태그 모두 `meta[name="..."]` 형태로 작성되었다.
 - [ ] `ADM.Common.js`의 셀렉터와 메타명이 일치한다.
 - [ ] Spring Security 스타일 메타명이 추가되지 않았다.
@@ -261,7 +262,7 @@ PR 설명에는 다음 내용을 명시한다.
 롤백 절차:
 
 1. `src/main/resources/templates/admmgr/common/head.html`에서 추가한 CSRF 메타 태그 2줄을 제거한다.
-2. `rg -n 'meta name="_csrf_(token|form_id)"' src/main/resources/templates/admmgr/common/head.html` 결과가 없는지 확인한다.
+2. `rg -n 'meta name="csrf(Token|FormId)"' src/main/resources/templates/admmgr/common/head.html` 결과가 없는지 확인한다.
 3. 관리자 화면이 기존 상태로 렌더링되는지 확인한다.
 
 ## 11. 1.A 단계 관계표
@@ -283,4 +284,4 @@ PR 설명에는 다음 내용을 명시한다.
 
 - `README.md`: Spring Security 기반 인증/인가를 사용하지 않고 HandlerInterceptor + 세션 VO 기반 구현을 기준으로 한다.
 - `docs/Security_JPA_8소스_기준정리.md`: Spring Security 구성 재도입 금지, CSRF는 자체 폼 토큰 방식 또는 Spring Boot 3 환경에 맞춘 동등한 HandlerInterceptor 방식으로 구현한다.
-- `src/main/resources/static/asset/admmgr/style2/js/ADM.Common.js`: `_csrf_token`, `_csrf_form_id` 메타 태그를 읽고 Ajax POST 파라미터와 응답 헤더 갱신에 사용한다.
+- `src/main/resources/static/asset/admmgr/style2/js/ADM.Common.js`: `csrfToken`, `csrfFormId` 메타 태그를 읽고 Ajax POST 파라미터와 응답 헤더 갱신에 사용한다.
