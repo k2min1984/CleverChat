@@ -9,6 +9,9 @@ spring:
       minimum-idle: 2
   thymeleaf:
     cache: false
+  flyway:
+    placeholders:
+      default-admin-seed-enabled: true
 
 server:
   port: 8080

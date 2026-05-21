@@ -52,7 +52,7 @@ erDiagram
 
 ## M1 결정
 
-- 초기 관리자 계정은 Flyway SQL에 BCrypt 해시를 커밋하지 않고, 부팅 시 환경변수로 1회 생성한다.
+- 초기 관리자 계정은 Flyway `V4_1__seed_default_admin.sql`로 DB에 생성한다. 개발/검증 기본값은 `admin/admin`이며, 운영 배포 전 비밀번호 변경 또는 별도 운영 시딩 정책을 재검토한다.
 - 세션은 Spring Session JDBC를 사용하며 테이블은 Flyway `V2__auth_session_baseline.sql`에서 관리한다.
 - 로그인 실패 잠금 정책 기본값은 5회 실패 시 30분 잠금이다.
 - `roles.code`는 HandlerInterceptor 권한 검사에서 `ROLE_` 접두사를 붙여 세션 VO의 권한 코드와 비교한다.
