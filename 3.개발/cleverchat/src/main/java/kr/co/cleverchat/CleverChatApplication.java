@@ -9,7 +9,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @SpringBootApplication
 @EnableCaching
 @EnableScheduling
-@MapperScan("kr.co.cleverchat.domain.**.mapper")
+@MapperScan(basePackages = {"kr.co.cleverchat.domain.**.mapper", "kr.co.cleverchat.common.audit"})
 public class CleverChatApplication {
 
     public static void main(String[] args) {
