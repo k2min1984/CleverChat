@@ -119,6 +119,8 @@ style2/
   - 부록 B-1 기준 `../font/Inter-*.woff2` 5건 및 `../font/NotoSansKR-*.ttf` 4건, 합계 폰트 9건에 종속된다.
   - 부록 D 4·5번 기준 Inter/NotoSansKR OFL 1.1 사본이 확보되지 않았으므로 단독 도입 시 `@font-face` 참조가 깨진다.
   - 보류 해제 조건: Inter/NotoSansKR OFL 1.1 사본 동봉 또는 PR 설명 내 공식 출처 URL 확보, 그리고 `style2/css/`와 `style2/font/`의 상대 위치를 유지할 수 있는 배치 경로 확정.
+  - **B4 최종 배치 경로 = `static/asset/admmgr/style2/{css,font}/` (Phase1A_E §3.2 권고안 1안 기준).** 본 경로는 8소스의 `style2/css/`와 `style2/font/` 부모-자식 상대 구조를 그대로 보존하므로 `sub.css`의 `../font/` 9건 참조가 깨지지 않는다. B5 복사 금지 해제 근거는 본 경로 기준을 따른다.
+  - 1안 채택 근거: Phase1A_E §3.2 (`3.개발/cleverchat/docs/Phase1A_E_Static_Asset_Blocker_B3_B4_B5_작업지시.md`)
 - `style2/js/lib/chart.umd.min.js`
   - 부록 D 6번 기준 Chart.js MIT 라이선스가 minified 파일 상단 헤더 주석에 명시되어 있다.
   - §4 매트릭스 기준 scenario 화면 외부 JS 참조 0건으로 현재 화면 참조는 확인되지 않았다.
@@ -146,9 +148,13 @@ style2/
 - Inter family 5건(`Inter-Regular.woff2`, `Inter-Medium.woff2`, `Inter-SemiBold.woff2`, `Inter-Bold.woff2`, `Inter-ExtraBold.woff2`)
   - 부록 D 4번 기준 OFL 1.1 추정이나 사본이 미동봉되어 있다.
   - 해제 조건: 공식 배포처(rsms/inter 또는 Google Fonts) OFL 본문 및 출처 URL을 `3.개발/cleverchat/docs/licenses/Inter-OFL.txt`(Phase1A_D 확정) 또는 PR 설명에 첨부.
+  - **B4 최종 배치 경로 = `static/asset/admmgr/style2/font/` (Phase1A_E §3.2 권고안 1안 기준).** 복사 금지 해제(B5)는 OFL 사본 확보(B1·B2), 공식 출처 URL 기록(B3), 본 경로 확정(B4)을 모두 충족하는 시점에 한해 진행한다.
+  - 1안 채택 근거: Phase1A_E §3.2 (`3.개발/cleverchat/docs/Phase1A_E_Static_Asset_Blocker_B3_B4_B5_작업지시.md`)
 - NotoSansKR family 4건(`NotoSansKR-Regular.ttf`, `NotoSansKR-Medium.ttf`, `NotoSansKR-SemiBold.ttf`, `NotoSansKR-Bold.ttf`)
   - 부록 D 5번 기준 OFL 1.1 추정이나 사본이 미동봉되어 있다.
   - 해제 조건: 공식 배포처(Google Fonts Noto Sans KR) OFL 본문 및 출처 URL을 `3.개발/cleverchat/docs/licenses/NotoSansKR-OFL.txt`(Phase1A_D 확정) 또는 PR 설명에 첨부.
+  - **B4 최종 배치 경로 = `static/asset/admmgr/style2/font/` (Phase1A_E §3.2 권고안 1안 기준).** 복사 금지 해제(B5)는 OFL 사본 확보(B1·B2), 공식 출처 URL 기록(B3), 본 경로 확정(B4)을 모두 충족하는 시점에 한해 진행한다.
+  - 1안 채택 근거: Phase1A_E §3.2 (`3.개발/cleverchat/docs/Phase1A_E_Static_Asset_Blocker_B3_B4_B5_작업지시.md`)
 - `style2/css/login.css`
   - scenario 범위 외 자산이므로 별도 로그인 화면 트랙에서 평가한다.
 - `style2/js/ADM.Form.js`
