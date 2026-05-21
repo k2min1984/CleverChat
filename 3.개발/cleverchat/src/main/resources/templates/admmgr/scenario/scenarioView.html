@@ -21,6 +21,8 @@
                 <p><strong>카테고리</strong> <span th:text="${scenario.categoryName}">기본</span></p>
                 <p th:text="${scenario.description}">설명</p>
                 <form th:if="${scenario.status == 'ACTIVE'}" th:action="@{/admin/scenarios/{id}/deactivate(id=${scenario.id})}" method="post">
+                    <input type="hidden" name="csrfToken" th:value="${session.csrfToken}">
+                    <input type="hidden" name="csrfFormId" th:value="${session.csrfFormId}">
                     <button type="submit">비활성화</button>
                 </form>
             </section>
@@ -28,6 +30,8 @@
                 <div class="actions">
                     <h2>버전</h2>
                     <form th:action="@{/admin/scenarios/{id}/versions(id=${scenario.id})}" method="post">
+                        <input type="hidden" name="csrfToken" th:value="${session.csrfToken}">
+                        <input type="hidden" name="csrfFormId" th:value="${session.csrfFormId}">
                         <button type="submit">새 초안</button>
                     </form>
                 </div>
@@ -41,10 +45,14 @@
                         <td class="actions">
                             <a class="button" th:href="@{/admin/scenarios/versions/{id}/preview(id=${version.id})}">미리보기</a>
                             <form th:if="${version.status == 'DRAFT'}" th:action="@{/admin/scenarios/versions/{id}/publish(id=${version.id})}" method="post">
+                                <input type="hidden" name="csrfToken" th:value="${session.csrfToken}">
+                                <input type="hidden" name="csrfFormId" th:value="${session.csrfFormId}">
                                 <input type="hidden" name="scenarioId" th:value="${scenario.id}">
                                 <button type="submit">게시</button>
                             </form>
                             <form th:if="${version.status == 'PUBLISHED' and scenario.status != 'ACTIVE'}" th:action="@{/admin/scenarios/{id}/activate(id=${scenario.id})}" method="post">
+                                <input type="hidden" name="csrfToken" th:value="${session.csrfToken}">
+                                <input type="hidden" name="csrfFormId" th:value="${session.csrfFormId}">
                                 <input type="hidden" name="versionId" th:value="${version.id}">
                                 <button type="submit">활성화</button>
                             </form>
