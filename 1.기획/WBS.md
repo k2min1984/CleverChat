@@ -125,6 +125,25 @@
 - [ ] M3 단위/통합/화면/보안 회귀 테스트 구현 — 설계 완료: `4.테스트/02.테스트케이스/M3_챗봇런타임_테스트케이스.md`
 - [ ] 관리자 세션/실패 큐/피드백/추천 질문 화면 구현 — 설계 완료: `2.설계/01.화면설계서/M3_운영자화면목록.md`
 
+### 4.5 시나리오 게시 UX 개선
+
+> 분석 근거: `3.개발/cleverchat/docs/Scenario_Publish_UX_분석.md`,
+>            `3.개발/cleverchat/docs/Scenario_Activate_Button_조건분석.md` (2026-05-22)
+> 대상 화면: `src/main/resources/templates/admmgr/scenario/scenarioView.html`,
+>            컨트롤러: `AdmScenarioController`, `AdmScenarioApiController`
+
+#### 단기 (관리자 화면 즉시 안내 강화)
+- [ ] DRAFT 게시 버튼 비활성화: `version.startNodeId == null`인 경우 `th:disabled` 적용
+- [ ] 비활성 버튼 tooltip: 상황별 문구 (`title` + `aria-describedby` 병행)
+- [ ] 게시 버튼 인접 help text: 선행조건 안내
+- [ ] 실패 메시지 표준화: 5종 (`저장된 그래프가 없습니다.` 외) 사용자 행동 중심 문구 매핑
+
+#### 중기 (응답 구조 분리·재사용)
+- [ ] form POST 실패 시 상세 화면 redirect + Flash 메시지 흐름 도입
+- [ ] 화면/API 응답 구조 분리 (Controller redirect / ApiController JSON)
+- [ ] 게시 가능 여부 DTO 도입 (`hasGraph`, `hasStartNode`, `publishable`, `reason`)
+- [ ] 관리자 form POST UX 공통화 (`activate`/`deactivate`/`new draft`/`publish`)
+
 ---
 
 ## 5. M4 — 검색
