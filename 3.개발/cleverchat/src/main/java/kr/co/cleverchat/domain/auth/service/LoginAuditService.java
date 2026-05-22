@@ -3,6 +3,7 @@ package kr.co.cleverchat.domain.auth.service;
 import jakarta.servlet.http.HttpServletRequest;
 import kr.co.cleverchat.domain.auth.mapper.LoginLogMapper;
 import kr.co.cleverchat.domain.auth.mapper.UserMapper;
+import kr.co.cleverchat.domain.auth.model.UserAccount;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
