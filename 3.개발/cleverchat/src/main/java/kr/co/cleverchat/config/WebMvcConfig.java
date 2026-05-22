@@ -32,7 +32,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
         registry.addInterceptor(authInterceptor)
             .addPathPatterns("/admin/**");
         registry.addInterceptor(csrfInterceptor)
-            .addPathPatterns("/admin/**");
+            .addPathPatterns("/admin/**", "/logout");
     }
 
     @Override

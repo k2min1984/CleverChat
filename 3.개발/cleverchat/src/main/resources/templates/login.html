@@ -77,6 +77,7 @@
     <h1>관리자 로그인</h1>
     <p th:if="${param.error}" class="message error" role="alert">아이디 또는 비밀번호를 확인해 주세요.</p>
     <p th:if="${param.logout}" class="message logout" role="status">로그아웃되었습니다.</p>
+    <!-- CSRF: 로그인 전 세션은 _csrfHidden fragment 미적용 정책 -->
     <form th:action="@{/login}" method="post">
         <label for="username">아이디</label>
         <input id="username" name="username" type="text" autocomplete="username" required autofocus>
