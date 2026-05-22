@@ -22,6 +22,7 @@
 - 만료 세션은 410 Gone과 `CHAT_SESSION_EXPIRED`를 반환한다.
 - 모든 입력은 `입력검증표준.md`를 따르며 free-text 500자, feedback comment 1,000자 이하로 제한한다.
 - 응답에는 원문 사용자 입력을 과도하게 되돌려주지 않는다. 필요한 경우 마스킹된 요약만 포함한다.
+- API 계약의 `sessionId`와 `anonymous_id`는 UUID 문자열이다. Controller/DTO 경계에서는 `UUID`로 검증하고, MyBatis 모델과 매퍼 호출부에서는 `String`으로 변환해 DB UUID 컬럼에 바인딩한다.
 
 ## 3. 사용자 엔드포인트
 

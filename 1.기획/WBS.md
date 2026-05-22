@@ -136,6 +136,9 @@
 > 정책 전제: `1.기획/결정사항.md` §7의 `ACTIVE` 시나리오 개정 정책은 B안(게시 성공 시 즉시 `active_version_id`를 새 `PUBLISHED`로 교체)을 따른다.
 
 #### P0 (ACTIVE 무중단 개정 선행 필수)
+
+> 작업 순서: 그래프 편집 → 새 초안 중복 방지 → 게시 실패 Flash → 미리보기 분기
+
 - [ ] 그래프 편집 화면: `scenarioView.html`에서 노드/엣지 편집·저장 UI를 신설하고 백엔드 저장 API와 연결
 - [ ] 새 초안 중복 방지: 동일 시나리오의 다중 `DRAFT` 생성을 금지하고 기존 `DRAFT` 편집/미리보기로 안내
 - [ ] 게시 실패 Flash: form POST 게시 실패 시 상세 화면으로 redirect하고 `RedirectAttributes` flash로 원인 안내, 화면/JSON 응답 경계 분리
@@ -151,7 +154,7 @@
 - [ ] form POST 실패 시 상세 화면 redirect + Flash 메시지 흐름 도입
 - [ ] 화면/API 응답 구조 분리 (Controller redirect / ApiController JSON)
 - [ ] 게시 가능 여부 DTO 도입 (`hasGraph`, `hasStartNode`, `publishable`, `reason`)
-- [ ] 관리자 form POST UX 공통화 (`activate`/`deactivate`/`new draft`/`publish`)
+- [ ] 관리자 form POST UX 공통화 (`activate`/`deactivate`/`new draft`/`publish`) (범위: P0 외 activate/deactivate/new draft 공통화)
 
 > 추적성(역링크): 본 절 항목의 근거/배경은 `3.개발/cleverchat/docs/Scenario_Publish_UX_분석.md`(게시 실패 UX), `3.개발/cleverchat/docs/Scenario_Activate_Button_조건분석.md`(활성 버튼 노출 조건) 참조. 위 분석 문서에서 본 절(`1.기획/WBS.md` §4.5)을 역참조해 양방향 동기화.
 
