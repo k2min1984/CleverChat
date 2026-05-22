@@ -54,6 +54,7 @@
 - [x] 세션 만료/동시 로그인 정책
 - [x] 로그인 성공/실패 이력 저장
 - [x] 로그인 실패 5회/30분 잠금 기본 정책
+- [x] 초기 관리자 시딩 Flyway 전환 완료: `V4_1__seed_default_admin.sql` + `default-admin-seed-enabled` placeholder 토글(dev/stage `true`, prod 기본 `false`) 기준
 
 ### 2.3 인가
 - [x] URL 기반 접근 제어 (HandlerInterceptor 매핑)
@@ -143,6 +144,8 @@
 - [ ] 화면/API 응답 구조 분리 (Controller redirect / ApiController JSON)
 - [ ] 게시 가능 여부 DTO 도입 (`hasGraph`, `hasStartNode`, `publishable`, `reason`)
 - [ ] 관리자 form POST UX 공통화 (`activate`/`deactivate`/`new draft`/`publish`)
+
+> 추적성(역링크): 본 절 항목의 근거/배경은 `3.개발/cleverchat/docs/Scenario_Publish_UX_분석.md`(게시 실패 UX), `3.개발/cleverchat/docs/Scenario_Activate_Button_조건분석.md`(활성 버튼 노출 조건) 참조. 위 분석 문서에서 본 절(`1.기획/WBS.md` §4.5)을 역참조해 양방향 동기화.
 
 ---
 
@@ -260,6 +263,8 @@
 - [x] 쿠키 보안 속성: `SameSite=Lax`, `Secure=true`, `HttpOnly=true` 기본 적용. CSRF 토큰 쿠키는 `HttpOnly=false` 예외
 - [x] 프록시 헤더: `server.forward-headers-strategy=framework`, 운영 프로파일에서만 부팅 경고 로그
 - [x] 매칭 캐시 TTL: Caffeine 기본값 300초
+- [x] 매칭 캐시 무효화 훅: 키워드 replace 저장 성공 시 scenario 단위 무효화 적용 완료. 게시/상태변경 훅은 M2/M3 후속 구현 범위에서 계속 추적
+- [x] 초기 관리자 시딩: Flyway `V4_1__seed_default_admin.sql` + placeholder 토글로 단일화. dev/stage는 기본 관리자 생성, prod는 자동 생성 차단
 - [x] M2 테스트 분리 정책 확정: 기본 `mvn test`는 순수 단위 테스트만 실행(Docker 불요), PIT(Testcontainers 통합 테스트)는 `@Tag("integration")` 부착 후 `mvn -Pit test`로 실행(Docker Desktop 기동 필수). 상세는 `3.개발/작업지시서/M2_테스트분리정책_작업지시서.md` 및 `4.테스트/01.테스트계획서/M2_테스트계획서.md` 참조.
 
 ### 추후 재검토 트리거
