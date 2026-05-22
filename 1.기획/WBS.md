@@ -129,9 +129,17 @@
 ### 4.5 시나리오 게시 UX 개선
 
 > 분석 근거: `3.개발/cleverchat/docs/Scenario_Publish_UX_분석.md`,
->            `3.개발/cleverchat/docs/Scenario_Activate_Button_조건분석.md` (2026-05-22)
+>            `3.개발/cleverchat/docs/Scenario_Activate_Button_조건분석.md`,
+>            `3.개발/cleverchat/docs/Scenario_Registration_Workflow_재검토.md` (2026-05-22)
 > 대상 화면: `src/main/resources/templates/admmgr/scenario/scenarioView.html`,
 >            컨트롤러: `AdmScenarioController`, `AdmScenarioApiController`
+> 정책 전제: `1.기획/결정사항.md` §7의 `ACTIVE` 시나리오 개정 정책은 B안(게시 성공 시 즉시 `active_version_id`를 새 `PUBLISHED`로 교체)을 따른다.
+
+#### P0 (ACTIVE 무중단 개정 선행 필수)
+- [ ] 그래프 편집 화면: `scenarioView.html`에서 노드/엣지 편집·저장 UI를 신설하고 백엔드 저장 API와 연결
+- [ ] 새 초안 중복 방지: 동일 시나리오의 다중 `DRAFT` 생성을 금지하고 기존 `DRAFT` 편집/미리보기로 안내
+- [ ] 게시 실패 Flash: form POST 게시 실패 시 상세 화면으로 redirect하고 `RedirectAttributes` flash로 원인 안내, 화면/JSON 응답 경계 분리
+- [ ] 미리보기 분기: `DRAFT`는 시뮬레이터, `PUBLISHED`/`ACTIVE`는 게시본 미리보기로 라우팅 분리
 
 #### 단기 (관리자 화면 즉시 안내 강화)
 - [ ] DRAFT 게시 버튼 비활성화: `version.startNodeId == null`인 경우 `th:disabled` 적용
