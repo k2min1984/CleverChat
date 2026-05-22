@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:fragment="csrfHidden">
+    <input type="hidden" name="csrfToken" th:value="${session.csrfToken}">
+    <input type="hidden" name="csrfFormId" th:value="${session.csrfFormId}">
+</th:block>
+</body>
+</html>
