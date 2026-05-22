@@ -156,7 +156,7 @@
 - [ ] 게시 가능 여부 DTO 도입 (`hasGraph`, `hasStartNode`, `publishable`, `reason`)
 - [ ] 관리자 form POST UX 공통화 (`activate`/`deactivate`/`new draft`/`publish`) (범위: P0 외 activate/deactivate/new draft 공통화)
 
-> 추적성(역링크): 본 절 항목의 근거/배경은 `3.개발/cleverchat/docs/Scenario_Publish_UX_분석.md`(게시 실패 UX), `3.개발/cleverchat/docs/Scenario_Activate_Button_조건분석.md`(활성 버튼 노출 조건) 참조. 위 분석 문서에서 본 절(`1.기획/WBS.md` §4.5)을 역참조해 양방향 동기화.
+> 추적성(역링크): 본 절 항목의 근거/배경은 `3.개발/cleverchat/docs/Scenario_Publish_UX_분석.md`(게시 실패 UX), `3.개발/cleverchat/docs/Scenario_Activate_Button_조건분석.md`(활성 버튼 노출 조건), `3.개발/cleverchat/docs/Scenario_Registration_Workflow_재검토.md`(P0 순서 출처, 2026-05-22) 참조. 위 분석 문서에서 본 절(`1.기획/WBS.md` §4.5)을 역참조해 양방향 동기화.
 
 ---
 
