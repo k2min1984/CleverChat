@@ -205,6 +205,8 @@
 
 ### 8.1 보안 (OWASP / ASVS / 전자정부)
 - [ ] CSRF (인터셉터 기반 폼/AJAX 토큰 처리)
+  - [x] 관리자 native POST form CSRF 스캔: `templates/admin/**`, `templates/admmgr/**`의 `method="post"` form과 `ADM.Form.submit` 호출 점검. `/logout` form은 `_csrfHidden` 적용, `/login` form은 로그인 전 진입점으로 적용 제외 정책 문서화 (2026-05-22)
+  - [ ] 신규 관리자 화면 PR 체크: `method="post"` form은 `_csrfHidden` fragment 포함, `ADM.Form.submit`은 CSRF hidden/header 제출 여부 확인
 - [ ] XSS (출력 이스케이프, CSP 헤더)
 - [ ] SQL Injection (파라미터 바인딩 강제, MyBatis `${}` 금지)
 - [ ] 파일 업로드 검증 (MIME, 확장자, 크기, 백신 스캔 권장)
