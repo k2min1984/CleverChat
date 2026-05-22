@@ -184,7 +184,22 @@ DELETE FROM scn_scenario WHERE title LIKE 'CSRF stale seed %';
 | 콘솔 로그, 서버 로그, 메신저 공유 내용에 토큰 원문 미노출 |  |  |
 | URL query string에 토큰 값 미노출 |  |  |
 
-## 부록 B. 참고 라인
+## 부록 C. scenarioView 추가 검증 및 참고사항
+
+### C.1 scenarioView 추가 버튼 검증
+
+| 버튼 | 검증 결과 | 분류 | 비고 |
+| --- | --- | --- | --- |
+| 게시 버튼 | CSRF 검증 통과 후 업무 검증에서 `VALIDATION_ERROR` 발생 | CSRF PASS / 업무 VALIDATION_ERROR | 응답 메시지: `저장된 그래프가 없습니다.` |
+| 활성화 버튼 | 현재 상태 조건상 화면에 미노출되어 트리거 불가 | 미수행 | 버튼 미노출 상태이므로 CSRF 검증 요청 자체가 발생하지 않음 |
+
+### C.2 참고사항 (UI 자산 도입 범위)
+
+- 현재 admin UI는 Phase1A-C/E 범위의 최소 `css`/`font`/`js`만 적용된 상태이다.
+- `images/`, `icon/`, `style2/` 전체 자산은 아직 도입되지 않았다.
+- 위 자산 미도입으로 일부 레이아웃이 비정상처럼 보일 수 있으나, Phase1A-G PASS/FAIL 판정에는 직접 영향이 없다.
+
+## 부록 D. 참고 라인
 
 2026-05-20 작업지시서 기준 참고 위치:
 
