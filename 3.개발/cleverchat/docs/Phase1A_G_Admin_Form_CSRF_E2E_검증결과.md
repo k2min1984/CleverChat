@@ -8,44 +8,44 @@
 
 | 항목 | 값 |
 | --- | --- |
-| 검증일 |  |
-| 검증자 |  |
-| 브랜치 |  |
-| 커밋 |  |
-| 실행 환경 | 로컬 / 검증 서버 / 기타:  |
-| 애플리케이션 URL |  |
-| 브라우저 |  |
-| OS |  |
-| 관리자 계정 구분 |  |
-| 비고 |  |
+| 검증일 | 2026-05-22 (부분 확인 시점) |
+| 검증자 | (실측 미완료) |
+| 브랜치 | master |
+| 커밋 | 3e0919d 시점 |
+| 실행 환경 | 로컬 / 검증 서버 / 기타: (실측 미완료) |
+| 애플리케이션 URL | (실측 미완료) |
+| 브라우저 | (실측 미완료) |
+| OS | (실측 미완료) |
+| 관리자 계정 구분 | (실측 미완료) |
+| 비고 | 전체 S/C 케이스 실측 미완료. 응답 헤더 회전 및 stale 시드 정리 미확인. |
 
 ## 2. 사전 확인
 
 | 확인 항목 | 기대 상태 | 결과 | 비고 |
 | --- | --- | --- | --- |
-| Phase1A-D 적용 | 관리자 공통 head에 `csrfToken`, `csrfFormId` meta 렌더링 |  |  |
-| Phase1A-E 적용 | 로그인 후 세션에 CSRF 토큰과 form id 발급 |  |  |
-| Phase1A-F 적용 | `/admin/**` POST CSRF 인터셉터 등록, 성공 시 토큰 회전 |  |  |
-| 관리자 로그인 | `/login`으로 관리자 로그인 가능 |  |  |
-| 카테고리 seed | `/admin/scenarios/new` 카테고리 select에 선택 가능한 값 1개 이상 존재 |  |  |
-| DevTools 설정 | Network 탭 `Preserve log` 활성화 |  |  |
-| 공통 스니펫 등록 | `window.__csrfE2E` 및 보조 호출 스니펫 등록 완료 |  |  |
+| Phase1A-D 적용 | 관리자 공통 head에 `csrfToken`, `csrfFormId` meta 렌더링 | 적용됨 | head meta `csrfToken`/`csrfFormId` 값 존재(S2에서 재확인) |
+| Phase1A-E 적용 | 로그인 후 세션에 CSRF 토큰과 form id 발급 | 미확인 |  |
+| Phase1A-F 적용 | `/admin/**` POST CSRF 인터셉터 등록, 성공 시 토큰 회전 | 미확인 |  |
+| 관리자 로그인 | `/login`으로 관리자 로그인 가능 | 미확인 |  |
+| 카테고리 seed | `/admin/scenarios/new` 카테고리 select에 선택 가능한 값 1개 이상 존재 | 미확인 |  |
+| DevTools 설정 | Network 탭 `Preserve log` 활성화 | 미확인 |  |
+| 공통 스니펫 등록 | `window.__csrfE2E` 및 보조 호출 스니펫 등록 완료 | 미확인 |  |
 
 ## 3. 케이스별 수동 결과표
 
 | ID | 전송 경로 | 토큰 상태 | 기대 결과 | PASS/FAIL | HTTP status | 업무 데이터 생성/변경 | 응답 CSRF 헤더 | JSON code | meta 갱신 | 비고 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| S1 | 일반 브라우저 submit | 정상 meta, hidden 없음 | 403, 업무 데이터 미생성, non-JSON 빈 본문 |  |  |  |  | 비어 있음(non-JSON) | 미갱신 |  |
-| S2 | meta 계약 확인 | 렌더링 | `csrfToken`, `csrfFormId` meta 값 존재 |  |  | - | 값 존재 여부 기록 | - | - |  |
-| C1 | `ADM.Form.submit` | 정상 | 2xx/3xx, 업무 처리, 새 CSRF 응답 헤더, meta 갱신 |  |  |  |  | - |  |  |
-| C2 | `ADM.Form.submit` | 만료/stale | 403, 업무 데이터 미생성, CSRF 응답 헤더 없음, meta 미갱신 |  |  |  |  | 비어 있음(non-JSON) 또는 - |  |  |
-| C3 | `ADM.Form.submit` | 위조 | 403, 업무 데이터 미생성, CSRF 응답 헤더 없음, meta 미갱신 |  |  |  |  | 비어 있음(non-JSON) 또는 - |  |  |
-| C4 | `ADM.ajaxPost` | 정상 | 2xx/3xx, 업무 처리, 새 CSRF 응답 헤더, meta 갱신 |  |  |  |  | - |  |  |
-| C5 | `ADM.ajaxPost` | 만료/stale | 403, 공통 오류 alert, 업무 데이터 미생성, `CSRF_INVALID` |  |  |  |  | CSRF_INVALID |  |  |
-| C6 | `ADM.ajaxPost` | 위조 | 403, 공통 오류 alert, 업무 데이터 미생성, `CSRF_INVALID` |  |  |  |  | CSRF_INVALID |  |  |
-| C7 | `ADM.Modal.submitForm` | 정상 | 2xx/3xx, 업무 처리, 새 CSRF 응답 헤더, meta 갱신 |  |  |  |  | - |  |  |
-| C8 | `ADM.Modal.submitForm` | 만료/stale | 403, 공통 오류 alert, 업무 데이터 미생성, `CSRF_INVALID` |  |  |  |  | CSRF_INVALID |  |  |
-| C9 | `ADM.Modal.submitForm` | 위조 | 403, 공통 오류 alert, 업무 데이터 미생성, `CSRF_INVALID` |  |  |  |  | CSRF_INVALID |  |  |
+| S1 | 일반 브라우저 submit | 정상 meta, hidden 없음 | 403, 업무 데이터 미생성, non-JSON 빈 본문 | 보류 |  |  |  | 비어 있음(non-JSON) | 미갱신 | 실측 미완료 |
+| S2 | meta 계약 확인 | 렌더링 | `csrfToken`, `csrfFormId` meta 값 존재 | PASS |  | - | 값 존재 | - | - | meta `csrfToken`/`csrfFormId` 값 존재 확인 |
+| C1 | `ADM.Form.submit` | 정상 | 2xx/3xx, 업무 처리, 새 CSRF 응답 헤더, meta 갱신 | 보류 |  |  |  | - |  | 실측 미완료 |
+| C2 | `ADM.Form.submit` | 만료/stale | 403, 업무 데이터 미생성, CSRF 응답 헤더 없음, meta 미갱신 | 보류 |  |  |  | 비어 있음(non-JSON) 또는 - |  | 실측 미완료 |
+| C3 | `ADM.Form.submit` | 위조 | 403, 업무 데이터 미생성, CSRF 응답 헤더 없음, meta 미갱신 | 보류 |  |  |  | 비어 있음(non-JSON) 또는 - |  | 실측 미완료 |
+| C4 | `ADM.ajaxPost` | 정상 | 2xx/3xx, 업무 처리, 새 CSRF 응답 헤더, meta 갱신 | 보류 |  |  |  | - |  | 실측 미완료 |
+| C5 | `ADM.ajaxPost` | 만료/stale | 403, 공통 오류 alert, 업무 데이터 미생성, `CSRF_INVALID` | 보류 |  |  |  | CSRF_INVALID |  | 실측 미완료 |
+| C6 | `ADM.ajaxPost` | 위조 | 403, 공통 오류 alert, 업무 데이터 미생성, `CSRF_INVALID` | 보류 |  |  |  | CSRF_INVALID |  | 실측 미완료 |
+| C7 | `ADM.Modal.submitForm` | 정상 | 2xx/3xx, 업무 처리, 새 CSRF 응답 헤더, meta 갱신 | 보류 |  |  |  | - |  | 실측 미완료 |
+| C8 | `ADM.Modal.submitForm` | 만료/stale | 403, 공통 오류 alert, 업무 데이터 미생성, `CSRF_INVALID` | 보류 |  |  |  | CSRF_INVALID |  | 실측 미완료 |
+| C9 | `ADM.Modal.submitForm` | 위조 | 403, 공통 오류 alert, 업무 데이터 미생성, `CSRF_INVALID` | 보류 |  |  |  | CSRF_INVALID |  | 실측 미완료 |
 
 ## 4. DevTools 확인표
 
@@ -53,47 +53,47 @@
 
 | ID | URL | Method | `X-Requested-With` | `X-CSRF-Token` 헤더 | `X-CSRF-FormId` 헤더 | `csrfToken` body param | `csrfFormId` body param | 토큰 노출 여부 | 비고 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| S1 | `/admin/scenarios` | POST |  |  |  |  |  |  |  |
-| C1 | `/admin/scenarios` | POST |  |  |  |  |  |  |  |
-| C2 | `/admin/scenarios` | POST |  |  |  |  |  |  |  |
-| C3 | `/admin/scenarios` | POST |  |  |  |  |  |  |  |
-| C4 | `/admin/scenarios` | POST |  |  |  |  |  |  |  |
-| C5 | `/admin/scenarios` | POST |  |  |  |  |  |  |  |
-| C6 | `/admin/scenarios` | POST |  |  |  |  |  |  |  |
-| C7 | `/admin/scenarios` | POST |  |  |  |  |  |  |  |
-| C8 | `/admin/scenarios` | POST |  |  |  |  |  |  |  |
-| C9 | `/admin/scenarios` | POST |  |  |  |  |  |  |  |
+| S1 | `/admin/scenarios` | POST |  |  |  |  |  |  | 미실측 |
+| C1 | `/admin/scenarios` | POST |  |  |  |  |  |  | 미실측 |
+| C2 | `/admin/scenarios` | POST |  |  |  |  |  |  | 미실측 |
+| C3 | `/admin/scenarios` | POST |  |  |  |  |  |  | 미실측 |
+| C4 | `/admin/scenarios` | POST |  |  |  |  |  |  | 미실측 |
+| C5 | `/admin/scenarios` | POST |  |  |  |  |  |  | 미실측 |
+| C6 | `/admin/scenarios` | POST |  |  |  |  |  |  | 미실측 |
+| C7 | `/admin/scenarios` | POST |  |  |  |  |  |  | 미실측 |
+| C8 | `/admin/scenarios` | POST |  |  |  |  |  |  | 미실측 |
+| C9 | `/admin/scenarios` | POST |  |  |  |  |  |  | 미실측 |
 
 ### 4.2 응답 헤더/본문
 
 | ID | HTTP status | `X-CSRF-Token` 응답 헤더 | `X-CSRF-FormId` 응답 헤더 | Content-Type | 본문 형태 | JSON `success` | JSON `error.code` | 비고 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| S1 |  |  |  |  | 비어 있음(non-JSON) | - | - |  |
-| C1 |  |  |  |  |  |  | - |  |
-| C2 |  |  |  |  | 비어 있음(non-JSON) 또는 - |  |  |  |
-| C3 |  |  |  |  | 비어 있음(non-JSON) 또는 - |  |  |  |
-| C4 |  |  |  |  |  |  | - |  |
-| C5 |  |  |  |  | JSON | false | CSRF_INVALID |  |
-| C6 |  |  |  |  | JSON | false | CSRF_INVALID |  |
-| C7 |  |  |  |  |  |  | - |  |
-| C8 |  |  |  |  | JSON | false | CSRF_INVALID |  |
-| C9 |  |  |  |  | JSON | false | CSRF_INVALID |  |
+| S1 |  |  |  |  | 비어 있음(non-JSON) | - | - | 미실측 |
+| C1 |  |  |  |  |  |  | - | 미실측 |
+| C2 |  |  |  |  | 비어 있음(non-JSON) 또는 - |  |  | 미실측 |
+| C3 |  |  |  |  | 비어 있음(non-JSON) 또는 - |  |  | 미실측 |
+| C4 |  |  |  |  |  |  | - | 미실측 |
+| C5 |  |  |  |  | JSON | false | CSRF_INVALID | 미실측 |
+| C6 |  |  |  |  | JSON | false | CSRF_INVALID | 미실측 |
+| C7 |  |  |  |  |  |  | - | 미실측 |
+| C8 |  |  |  |  | JSON | false | CSRF_INVALID | 미실측 |
+| C9 |  |  |  |  | JSON | false | CSRF_INVALID | 미실측 |
 
 ### 4.3 사용자 화면 동작
 
 | ID | 화면/alert/redirect 관찰 | 성공 콜백 실행 여부 | 오류 alert 표시 여부 | meta 변경 관찰 | 비고 |
 | --- | --- | --- | --- | --- | --- |
-| S1 |  |  |  |  |  |
-| S2 |  |  |  |  |  |
-| C1 |  |  |  |  |  |
-| C2 |  |  |  |  |  |
-| C3 |  |  |  |  |  |
-| C4 |  |  |  |  |  |
-| C5 |  |  |  |  |  |
-| C6 |  |  |  |  |  |
-| C7 |  |  |  |  |  |
-| C8 |  |  |  |  |  |
-| C9 |  |  |  |  |  |
+| S1 |  |  |  |  | 미실측 |
+| S2 |  |  |  |  | meta 값 존재 확인 외 사용자 화면 동작 미실측 |
+| C1 |  |  |  |  | 미실측 |
+| C2 |  |  |  |  | 미실측 |
+| C3 |  |  |  |  | 미실측 |
+| C4 |  |  |  |  | 미실측 |
+| C5 |  |  |  |  | 미실측 |
+| C6 |  |  |  |  | 미실측 |
+| C7 |  |  |  |  | 미실측 |
+| C8 |  |  |  |  | 미실측 |
+| C9 |  |  |  |  | 미실측 |
 
 ## 5. stale 시드 정리표
 
@@ -101,9 +101,9 @@
 
 | 대상 케이스 | 생성 여부 | 정리 방법 | 정리 결과 | 담당자 | 비고 |
 | --- | --- | --- | --- | --- | --- |
-| C2 |  | 관리자 화면 삭제 / 삭제 API / DB 삭제 / 해당 없음 |  |  |  |
-| C5 |  | 관리자 화면 삭제 / 삭제 API / DB 삭제 / 해당 없음 |  |  |  |
-| C8 |  | 관리자 화면 삭제 / 삭제 API / DB 삭제 / 해당 없음 |  |  |  |
+| C2 | 미확인 | 관리자 화면 삭제 / 삭제 API / DB 삭제 / 해당 없음 | 미정리 |  | stale 시드 정리 미확인 |
+| C5 | 미확인 | 관리자 화면 삭제 / 삭제 API / DB 삭제 / 해당 없음 | 미정리 |  | stale 시드 정리 미확인 |
+| C8 | 미확인 | 관리자 화면 삭제 / 삭제 API / DB 삭제 / 해당 없음 | 미정리 |  | stale 시드 정리 미확인 |
 
 DB 직접 정리를 수행한 경우 운영자 권한 검증 환경에서만 아래 SQL을 사용했는지 확인한다.
 
@@ -151,9 +151,9 @@ DELETE FROM scn_scenario WHERE title LIKE 'CSRF stale seed %';
 
 | 구분 | 총 건수 | PASS | FAIL | 보류 | 비고 |
 | --- | ---: | ---: | ---: | ---: | --- |
-| S 케이스 | 2 |  |  |  | S1, S2 |
-| C 케이스 | 9 |  |  |  | C1~C9 |
-| 전체 | 11 |  |  |  |  |
+| S 케이스 | 2 | 1 | 0 | 1 | S1 보류, S2 PASS |
+| C 케이스 | 9 | 0 | 0 | 9 | C1~C9 실측 미완료 |
+| 전체 | 11 | 1 | 0 | 10 | 전체 판정 불가 |
 
 ### 7.2 판정 규칙
 
@@ -168,21 +168,21 @@ DELETE FROM scn_scenario WHERE title LIKE 'CSRF stale seed %';
 
 | 항목 | 값 |
 | --- | --- |
-| 최종 판정 | PASS / CONDITIONAL PASS / FAIL / HOLD |
-| 판정 사유 |  |
-| 필수 후속 조치 |  |
-| 검증자 서명 |  |
-| 검토자 서명 |  |
+| 최종 판정 | HOLD |
+| 판정 사유 | S1/S2/C1~C9 전체 실측 미완료, 응답 CSRF 헤더 회전 미확인, stale 시드 정리 미확인 |
+| 필수 후속 조치 | 전체 S/C 실측, 응답 CSRF 헤더 회전 관찰, stale 시드 정리 절차 실행 |
+| 검증자 서명 | (실측 미완료) |
+| 검토자 서명 | (실측 미완료) |
 
 ## 부록 A. 토큰 노출 금지 재확인
 
 | 점검 항목 | 결과 | 비고 |
 | --- | --- | --- |
-| 결과표에 실제 `csrfToken` 값 미기재 |  |  |
-| 결과표에 실제 `csrfFormId` 값 미기재 |  |  |
-| 화면 캡처 또는 첨부 자료에 토큰 원문 마스킹 |  |  |
-| 콘솔 로그, 서버 로그, 메신저 공유 내용에 토큰 원문 미노출 |  |  |
-| URL query string에 토큰 값 미노출 |  |  |
+| 결과표에 실제 `csrfToken` 값 미기재 | 준수 | 값 존재/미수신 등 상태어만 사용 |
+| 결과표에 실제 `csrfFormId` 값 미기재 | 준수 | 값 존재/미수신 등 상태어만 사용 |
+| 화면 캡처 또는 첨부 자료에 토큰 원문 마스킹 | 미확인 | 첨부 자료 실측 미수행 |
+| 콘솔 로그, 서버 로그, 메신저 공유 내용에 토큰 원문 미노출 | 미확인 | 로그/공유 내용 실측 미수행 |
+| URL query string에 토큰 값 미노출 | 미확인 | URL 실측 미수행 |
 
 ## 부록 C. scenarioView 추가 검증 및 참고사항
 
@@ -198,6 +198,13 @@ DELETE FROM scn_scenario WHERE title LIKE 'CSRF stale seed %';
 - 현재 admin UI는 Phase1A-C/E 범위의 최소 `css`/`font`/`js`만 적용된 상태이다.
 - `images/`, `icon/`, `style2/` 전체 자산은 아직 도입되지 않았다.
 - 위 자산 미도입으로 일부 레이아웃이 비정상처럼 보일 수 있으나, Phase1A-G PASS/FAIL 판정에는 직접 영향이 없다.
+
+### C.3 scenarioRegist native form POST 참고사항
+
+- `scenarioRegist` native form POST에서 `csrfToken`/`csrfFormId` hidden 파라미터 전달이 정상화되었다(commit d11d334).
+- hidden 파라미터가 요청 본문으로 정상 전달되는 사실만 확인했으며, 토큰 원문은 기록하지 않는다.
+- 이는 CSRF 인터셉터의 파라미터 우선 정책에 부합한다.
+- 단, 해당 경로의 인터셉터 실측은 아직 수행하지 않았다.
 
 ## 부록 D. 참고 라인
 
