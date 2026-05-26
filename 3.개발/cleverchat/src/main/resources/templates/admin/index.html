@@ -12,7 +12,8 @@
                 <h1>CleverChat 관리자</h1>
                 <nav class="actions">
                     <form th:action="@{/logout}" method="post">
-                        <th:block th:replace="~{admmgr/common/_csrfHidden :: csrfHidden}"></th:block>
+                        <input type="hidden" name="csrfToken" th:value="${session.csrfToken}">
+                        <input type="hidden" name="csrfFormId" th:value="${session.csrfFormId}">
                         <button type="submit">로그아웃</button>
                     </form>
                 </nav>
