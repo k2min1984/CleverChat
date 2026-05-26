@@ -139,6 +139,7 @@
 
 > 작업 순서: 그래프 편집 → 새 초안 중복 방지 → 게시 실패 Flash → 미리보기 분기
 
+- [ ] P0-01 그래프 편집 화면: DRAFT 버전 전용 그래프 편집/저장 화면 신설(또는 상세 화면 연결), `GET /admin/api/scenarios/versions/{versionId}/graph` JSON API 신규 추가, PUBLISHED/ARCHIVED 편집 진입은 409 `STATE_CONFLICT`로 차단. (근거: `3.개발/작업지시서/P0_Scenario_Graph_Edit_View_작업지시.md`, `1.기획/결정사항.md` §12)
 - [ ] 그래프 편집 화면: `scenarioView.html`에서 노드/엣지 편집·저장 UI를 신설하고 백엔드 저장 API와 연결
 - [ ] 새 초안 중복 방지: 동일 시나리오의 다중 `DRAFT` 생성을 금지하고 기존 `DRAFT` 편집/미리보기로 안내
 - [ ] 게시 실패 Flash: form POST 게시 실패 시 상세 화면으로 redirect하고 `RedirectAttributes` flash로 원인 안내, 화면/JSON 응답 경계 분리
