@@ -1,0 +1,25 @@
+-- Admin seed policy change note.
+-- 작성일: 2026-05-26
+-- Decision source: 1.기획/결정사항.md §6, 3.개발/cleverchat/docs/M1_V2_Baseline_AdminSeed_주석정리_작업지시.md
+--
+-- Historical reference:
+-- V2__auth_session_baseline.sql lines 31-32 reference the legacy environment-variable
+-- based admin seeding (CLEVERCHAT_ADMIN_SEED_USERNAME / CLEVERCHAT_ADMIN_SEED_PASSWORD)
+-- via the deleted InitialAdminSeeder. Those comments are retained for history only
+-- because V2 is an applied baseline and direct edits would cause Flyway checksum mismatch.
+--
+-- Current policy (effective):
+-- 1) Default admin account (admin / admin) is created by V4_1__seed_default_admin.sql.
+-- 2) Seeding is gated by the Flyway placeholder
+--    spring.flyway.placeholders.default-admin-seed-enabled.
+-- 3) dev and stage profiles set the placeholder to true.
+-- 4) prod profile sets the placeholder to false in application-prod.yml,
+--    blocking automatic creation of the default admin account in production.
+-- 5) V4_1 uses ON CONFLICT (username) DO UPDATE on the admin row, so re-running
+--    seeding in dev/stage resets password hash, display name, enabled flag,
+--    failed_attempts, locked_until, and must_change_password to seed defaults.
+--
+-- This migration intentionally performs no schema or data change. It exists to
+-- record the policy transition in Flyway history alongside V4_1.
+
+DO $$ BEGIN NULL; END $$;
