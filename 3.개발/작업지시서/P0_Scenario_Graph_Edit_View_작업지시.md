@@ -154,11 +154,15 @@ stateDiagram-v2
 
 | 행위 | 허용 상태 | 금지 상태 | 기대 오류 |
 |---|---|---|---|
-| 그래프 편집 화면 진입 | `scenario_version.status=DRAFT` | `PUBLISHED`, `ARCHIVED` | 409 또는 읽기 전용 처리 |
+| 그래프 편집 화면 진입 | `scenario_version.status=DRAFT` | `PUBLISHED`, `ARCHIVED` | 409 Conflict (`STATE_CONFLICT`) |
 | 그래프 저장 | `scenario_version.status=DRAFT` | `PUBLISHED`, `ARCHIVED` | `STATE_CONFLICT` |
 | 미리보기 | `DRAFT`, `PUBLISHED`, `ARCHIVED` | 삭제된 시나리오의 버전 | 404 또는 정책 오류 |
 | 게시 | 저장된 graph가 있는 `DRAFT` | 시작 노드 없음, 노드 없음, invalid edge | validation error |
 | 활성화 | `PUBLISHED` 버전 | `DRAFT`, `ARCHIVED` | `STATE_CONFLICT` |
+
+결정 1 (P0 확정): `PUBLISHED`, `ARCHIVED` 버전의 그래프 편집 화면 진입은 409 Conflict와 `STATE_CONFLICT`로 단일 차단한다. 읽기 전용 편집 화면은 이번 P0 범위에서 제외한다.
+
+결정 2 (P0 확정): 편집 화면 초기 graph 적재를 위해 `GET /admin/api/scenarios/versions/{versionId}/graph` JSON API를 신규 추가한다. 화면 컨트롤러는 편집 화면 골격과 식별 정보만 렌더링하고, graph payload는 이 JSON API 응답을 사용한다. §4.4의 API 선택 단서는 본 결정으로 대체한다.
 
 ## 7. 화면 요구사항
 
@@ -174,6 +178,10 @@ stateDiagram-v2
 | 미리보기 | 모든 버전, 단 graph가 없을 때 빈 상태 메시지 허용 |
 | 게시 | `version.status == 'DRAFT'` |
 | 활성화 | `version.status == 'PUBLISHED' and scenario.status != 'ACTIVE'` |
+
+DRAFT 외 버전에는 `편집` 버튼을 노출하지 않는다. 직접 URL로 `PUBLISHED`, `ARCHIVED` 버전 편집 화면에 진입하면 서버에서 409 Conflict와 `STATE_CONFLICT`로 차단하며, 읽기 전용 편집 화면은 제공하지 않는다.
+
+편집 화면의 초기 graph는 서버 렌더링 model에만 싣지 않고 `GET /admin/api/scenarios/versions/{versionId}/graph` JSON API 호출로 적재한다. 상세 화면의 `편집` 버튼은 §7.2 그래프 편집 화면으로 이동하는 진입점 역할만 한다.
 
 ### 7.2 그래프 편집 화면 최소 구성
 
@@ -254,7 +262,7 @@ P0-01에서 아래 작업은 금지한다.
 | ID | 시나리오 | 기대 결과 |
 |---|---|---|
 | P0-GE-TC-001 | DRAFT 버전 편집 화면 GET | 200, `scenarioGraphEdit` 렌더링 |
-| P0-GE-TC-002 | PUBLISHED 버전 편집 화면 GET | 409 또는 읽기 전용 정책에 맞는 응답 |
+| P0-GE-TC-002 | PUBLISHED 버전 편집 화면 GET | 409 Conflict, `STATE_CONFLICT` 응답 본문 |
 | P0-GE-TC-003 | DRAFT graph 저장 PUT | `ApiResponse.ok`, node/option 저장 |
 | P0-GE-TC-004 | 시작 노드 없는 graph 저장 | validation error |
 | P0-GE-TC-005 | 없는 `nextNodeKey` 저장 | validation error |
@@ -263,6 +271,8 @@ P0-01에서 아래 작업은 금지한다.
 | P0-GE-TC-008 | graph 저장 후 게시 POST | DRAFT -> PUBLISHED |
 | P0-GE-TC-009 | 게시 후 같은 version graph 저장 | `STATE_CONFLICT` |
 | P0-GE-TC-010 | 권한 없는 사용자 편집 화면 접근 | 로그인 요구 또는 403 |
+| P0-GE-TC-011 | DRAFT 버전 graph JSON GET | 200, 저장된 graph JSON 반환 |
+| P0-GE-TC-012 | PUBLISHED 버전 graph JSON GET | 200, 저장된 graph JSON 반환. 단 편집 화면 진입과 저장은 409/`STATE_CONFLICT`로 차단 |
 
 ### 10.2 수동 검증 경로
 
@@ -281,7 +291,7 @@ cd /mnt/c/02.Project/02.자바/01.WorkSpace/CLEVERCHAT/3.개발/cleverchat
 5. QUESTION 시작 노드 1개, ANSWER 또는 END 노드 1개, 옵션 1개 저장
 6. 미리보기에서 시작 노드와 옵션 이동 확인
 7. 게시 성공 확인
-8. 게시된 버전 편집/저장 차단 확인
+8. 게시된 버전 편집 진입은 409로 차단됨을 확인한다. 읽기 전용 편집 화면은 없으며, 저장 호출도 `STATE_CONFLICT`로 차단됨을 확인한다.
 
 ## 11. 설계 문서 보완 후보
 
