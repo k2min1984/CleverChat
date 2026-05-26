@@ -8,7 +8,7 @@
 
 초기 관리자 시딩은 애플리케이션 부팅 시점의 Java 시더에서 Flyway 마이그레이션 기반으로 전환되어 있다. `InitialAdminSeeder.java`는 삭제 상태이며, 대체 마이그레이션 `V4_1__seed_default_admin.sql`이 추가되어 `admin/admin` 기본 계정을 생성한다.
 
-운영 프로파일에서는 기본 설정의 `spring.flyway.placeholders.default-admin-seed-enabled: false`를 상속하므로 현재 구성상 기본 관리자 계정이 생성되지 않는다. 다만 `application-prod.yml`에 명시적인 `false` 선언이 없어 향후 설정 병합, 환경변수/프로파일 오적용, 운영 설정 편집 시 방어력이 약하다.
+운영 프로파일에서는 `application-prod.yml`에 `spring.flyway.placeholders.default-admin-seed-enabled: false`가 명시되어 있어 현재 구성상 기본 관리자 계정이 생성되지 않는다. 다만 환경변수/CLI 인자 등 외부 override로 `true`가 주입될 수 있으므로 배포 파이프라인과 마이그레이션 후 점검으로 보강하는 것이 바람직하다.
 
 ## 2. 확인 항목별 결과
 
@@ -27,20 +27,19 @@
 
 ### 2.2 운영 프로파일에서 admin/admin 기본 계정 비활성 가드 여부
 
-결과: 작동하지만 약함
+결과: 작동
 
 가드 방식:
 
 - `V4_1__seed_default_admin.sql`은 `${default-admin-seed-enabled}` placeholder가 문자열 `true`일 때만 INSERT/UPSERT를 실행한다.
 - `application.yml` 기본값은 `spring.flyway.placeholders.default-admin-seed-enabled: false`이다.
 - `application-dev.yml`, `application-stage.yml`은 `true`로 설정되어 dev/stage에서만 기본 관리자 계정이 생성된다.
-- `application-prod.yml`은 해당 placeholder를 명시하지 않아 base의 `false`를 상속한다.
+- `application-prod.yml`은 `false`를 명시해 운영 프로파일에서 기본 관리자 계정 생성을 차단한다.
 
 판단:
 
 - 현재 구성 기준으로 운영 프로파일에서 기본 관리자 계정은 생성되지 않는다.
-- 하지만 운영 파일 자체에 명시적인 차단 선언이 없으므로 보안상 강한 가드라고 보기 어렵다.
-- 운영 환경에서는 `application-prod.yml`에 아래 설정을 명시하는 것이 권장된다.
+- 운영 파일 자체의 명시 가드는 반영되었으나, 운영 환경에서는 effective config 검증과 마이그레이션 후 기본 계정 점검을 함께 두는 것이 권장된다.
 
 ```yaml
 spring:
@@ -58,7 +57,7 @@ spring:
 | `application.yml` | `default-admin-seed-enabled: false` | fail-safe 기본값 |
 | `application-dev.yml` | `default-admin-seed-enabled: true` | 로컬/개발 검증용 활성 |
 | `application-stage.yml` | `default-admin-seed-enabled: true` | 스테이지 검증용 활성 |
-| `application-prod.yml` | 미설정, base `false` 상속 | 동작상 비활성이나 명시 가드 권장 |
+| `application-prod.yml` | `default-admin-seed-enabled: false` | 운영 명시 가드 |
 
 별도 기존 설정:
 
@@ -127,18 +126,18 @@ M2 보안문서 교차확인:
 
 prod seed 차단 필요성:
 
-- 현재 prod 차단은 `application.yml`의 base 기본값 `default-admin-seed-enabled: false`를 prod가 상속하는 단일 레이어에 가깝다.
-- 다음과 같은 오주입/운영 실수 시나리오에서는 base 상속만으로 방어가 부족하다.
+- 현재 prod 차단은 `application-prod.yml`에 `default-admin-seed-enabled: false`가 명시되어 base 상속 의존은 제거된 상태다.
+- 다음과 같은 오주입/운영 실수 시나리오는 명시 가드만으로도 완전히 차단하기 어렵다.
   - `SPRING_FLYWAY_PLACEHOLDERS_DEFAULT_ADMIN_SEED_ENABLED=true` 환경변수가 운영에 주입되는 경우
   - dev/stage yml 또는 샘플 설정을 prod yml로 복사하는 경우
   - 배포 CLI 인자 또는 임시 override가 회수되지 않는 경우
-- defense-in-depth 관점에서 prod yml 명시 차단, 배포 파이프라인 검증, 마이그레이션 후 점검, prod 전용 마이그레이션 분리 기준을 함께 두는 것이 바람직하다.
+- defense-in-depth 관점에서 배포 파이프라인 검증, 마이그레이션 후 점검, prod 전용 마이그레이션 분리 기준을 함께 두는 것이 바람직하다.
 
 prod 다층 방어 권장안:
 
 | 레이어 | 권장 기준 | 차단 효과 |
 |--------|-----------|-----------|
-| prod yml | `application-prod.yml`에 `spring.flyway.placeholders.default-admin-seed-enabled: false` 명시 | base 상속 의존 제거 |
+| prod yml | `application-prod.yml`에 `spring.flyway.placeholders.default-admin-seed-enabled: false` 명시 | base 상속 의존 제거, 반영 완료 |
 | 파이프라인 | prod 배포 전 effective config에서 seed placeholder가 `true`이면 실패 | 환경변수/CLI 오주입 차단 |
 | post-migrate 점검 | prod 마이그레이션 직후 `admin/admin` 로그인 가능 또는 V4_1 해시 회귀 확인 시 배포 실패 | DB 반영 후 검출 |
 | prod 전용 분리 | prod에서는 기본 계정 seed 마이그레이션을 제외하거나 별도 운영 runbook으로 대체 | 구조적 유입 차단 |
@@ -201,11 +200,11 @@ V2 주석 체크섬 위험:
 | A | `feat(auth): replace InitialAdminSeeder with Flyway V4_1 seed` | 시더 삭제, V4_1, yml 3종, 해시 검증 테스트 |
 | B | `docs(m1): align decision/security/ops docs to flyway admin seed` | 결정사항, 보안체크리스트, 운영메모, 테스트케이스, README, 온보딩, 전환 작업지시 |
 | C | `docs(m1): expand initial admin seed review (idempotency, prod guard, V2 checksum)` | 본 검수 보고서 보강분 |
-| D | `chore(prod): add explicit admin seed guard placeholder` | `application-prod.yml` 명시 가드 추가. 코드/설정 수정 승인 후 별도 진행 권장 |
+| D | `chore(prod): keep explicit admin seed guard placeholder` | `application-prod.yml` 명시 가드 유지 및 설정 회귀 방지 |
 
 ## 5. 최종 권고
 
-1. `application-prod.yml`에 `default-admin-seed-enabled: false`를 명시해 운영 가드를 강화한다.
+1. `application-prod.yml`의 `default-admin-seed-enabled: false` 명시 가드는 반영 완료 상태로 유지한다.
 2. `V2__auth_session_baseline.sql`의 기존 환경변수 기반 시딩 안내 주석은 본문 직접 수정 대신 후속 마이그레이션 또는 문서 메모로 정리한다.
-3. `1.기획/결정사항.md`에는 해시/평문 커밋 정책 변경에 따른 trade-off와 운영 차단 기준을 보강한다.
+3. `1.기획/결정사항.md`의 해시/평문 커밋 정책 변경 trade-off와 운영 차단 기준 보강 상태를 유지한다.
 4. 운영 배포 체크리스트에 `admin/admin` 로그인 가능 여부 확인, 기본 계정 존재 시 배포 차단, 비밀번호 변경 또는 계정 삭제 절차를 포함한다.
