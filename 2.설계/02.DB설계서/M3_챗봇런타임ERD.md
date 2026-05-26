@@ -118,6 +118,12 @@ erDiagram
 - 신규 세션은 해당 시나리오의 최신 `PUBLISHED` 버전만 사용한다.
 - `ARCHIVED` 버전은 이미 진행 중인 세션에서만 계속 참조할 수 있다.
 
+구현 매핑 규약:
+
+- DB 컬럼 `chat_session.id`, `chat_session.anonymous_id`, `chat_message.session_id`, `chat_failure.session_id`의 물리 타입은 UUID다.
+- MyBatis 모델에서는 `ChatSession.id`, `ChatSession.anonymousId`, 메시지/실패의 `sessionId`를 `String`으로 매핑한다.
+- 사용자 API 경계에서는 path variable, cookie, 응답 DTO를 `UUID`로 검증·표현하고 서비스/매퍼 호출 전후에 `String`과 `UUID`를 명시적으로 변환한다.
+
 ### 3.2 `chat_message`
 
 | 컬럼 | 타입 | 제약 | 설명 |
