@@ -546,3 +546,18 @@ cd /mnt/c/02.Project/02.자바/01.WorkSpace/CLEVERCHAT/3.개발/cleverchat
 - `application.yml`, `WebMvcConfig`, CSRF 인터셉터 정책 변경이 없음을 PR 본문에 명시한다.
 - 커밋은 feat, docs, test 3개로 분리된다.
 - 이 작업지시서 파일은 후속 구현 PR 커밋에 포함하지 않는다.
+
+## 9. [2026-05-26 보강] 구현 경로 확정
+
+P0 그래프 편집 구현 전 실제 프로젝트 구조 기준으로 mapper XML 경로, JS 파일 배치 경로, 테스트 클래스 위치를 확인했다.
+
+| 항목 | 작업지시서 기준 | 실제 프로젝트 구조 | 보강 지시 |
+|---|---|---|---|
+| mapper XML 경로 | `ScenarioNodeMapper`, `ScenarioNodeOptionMapper`와 XML만 언급 | `3.개발/cleverchat/src/main/resources/mapper/scenario/ScenarioNodeMapper.xml`, `3.개발/cleverchat/src/main/resources/mapper/scenario/ScenarioNodeOptionMapper.xml` 존재 | mapper XML 변경이 필요할 경우 해당 경로의 기존 XML에 최소 범위로 반영한다. |
+| JS 파일 배치 경로 | `src/main/resources/static/asset/admmgr/style2/js/ADM.ScenarioGraphEdit.js` | 동일 디렉토리에 `ADM.Common.js` 존재, 신규 `ADM.ScenarioGraphEdit.js`는 아직 없음 | 지시서의 JS 배치 경로를 그대로 사용한다. |
+| 테스트 클래스 위치 | `src/test/java/kr/co/cleverchat/domain/scenario/controller/AdmScenarioControllerTest.java`, `AdmScenarioApiControllerTest.java` | `src/test/java/kr/co/cleverchat/domain/scenario/` 아래 `service/`, `event/`만 있고 `controller/` 디렉토리는 아직 없음 | 테스트 작성 시 `src/test/java/kr/co/cleverchat/domain/scenario/controller/` 신규 디렉토리를 생성한 뒤 해당 위치에 컨트롤러 테스트를 둔다. |
+
+CSRF 인터셉터 포함 컨트롤러 테스트 fixture는 아래 기존 테스트를 참고한다.
+
+- `3.개발/cleverchat/src/test/java/kr/co/cleverchat/domain/auth/security/CsrfInterceptorTest.java`
+- `3.개발/cleverchat/src/test/java/kr/co/cleverchat/domain/auth/security/LoginControllerTest.java`
