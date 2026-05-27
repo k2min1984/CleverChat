@@ -57,6 +57,11 @@ public class AdmScenarioApiController {
         return ApiResponse.ok(scenarioService.createVersion(id));
     }
 
+    @GetMapping("/versions/{versionId}/graph")
+    public ApiResponse<ScenarioGraphDtos.SaveRequest> scenarioGraphView(@PathVariable Long versionId) {
+        return ApiResponse.ok(scenarioService.graph(versionId));
+    }
+
     @PutMapping("/versions/{versionId}/graph")
     public ApiResponse<Void> scenarioGraphModifyProc(@PathVariable Long versionId, @Valid @RequestBody ScenarioGraphDtos.SaveRequest request) {
         scenarioService.saveGraph(versionId, request);

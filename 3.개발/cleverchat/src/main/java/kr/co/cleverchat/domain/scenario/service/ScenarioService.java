@@ -87,6 +87,11 @@ public class ScenarioService {
         return optionMapper.findByNodeId(nodeId);
     }
 
+    public ScenarioGraphDtos.SaveRequest graph(Long versionId) {
+        ScenarioVersion version = version(versionId);
+        return readPersistedGraph(version);
+    }
+
     @Transactional
     public Scenario create(SaveRequest request) {
         Scenario scenario = new Scenario();
@@ -200,7 +205,10 @@ public class ScenarioService {
     @Transactional
     public void publish(Long versionId) {
         ScenarioVersion version = draftVersion(versionId);
-        ScenarioGraphDtos.SaveRequest graph = persistedGraph(versionId);
+        ScenarioGraphDtos.SaveRequest graph = readPersistedGraph(version);
+        if (graph.startNodeKey() == null || graph.nodes().isEmpty()) {
+            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "저장된 그래프가 없습니다.");
+        }
         graphValidator.validateForPublish(graph);
         versionMapper.archivePublished(version.getScenarioId());
         versionMapper.publish(versionId);
@@ -254,11 +262,10 @@ public class ScenarioService {
         return version;
     }
 
-    private ScenarioGraphDtos.SaveRequest persistedGraph(Long versionId) {
-        ScenarioVersion version = versionMapper.findById(versionId);
-        List<ScenarioNode> nodes = nodeMapper.findByVersionId(versionId);
-        if (version.getStartNodeId() == null || nodes.isEmpty()) {
-            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "저장된 그래프가 없습니다.");
+    private ScenarioGraphDtos.SaveRequest readPersistedGraph(ScenarioVersion version) {
+        List<ScenarioNode> nodes = nodeMapper.findByVersionId(version.getId());
+        if (nodes.isEmpty()) {
+            return new ScenarioGraphDtos.SaveRequest(null, List.of());
         }
         Map<Long, ScenarioNode> byId = nodes.stream().collect(Collectors.toMap(ScenarioNode::getId, Function.identity()));
         List<NodeRequest> nodeRequests = new ArrayList<>();
@@ -282,7 +289,8 @@ public class ScenarioService {
                 optionRequests
             ));
         }
-        return new ScenarioGraphDtos.SaveRequest(byId.get(version.getStartNodeId()).getNodeKey(), nodeRequests);
+        String startNodeKey = version.getStartNodeId() == null ? null : byId.get(version.getStartNodeId()).getNodeKey();
+        return new ScenarioGraphDtos.SaveRequest(startNodeKey, nodeRequests);
     }
 
     private String currentUsername() {

@@ -4,6 +4,8 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import kr.co.cleverchat.common.error.BusinessException;
+import kr.co.cleverchat.common.error.ErrorCode;
 import kr.co.cleverchat.domain.scenario.dto.ScenarioDtos;
 import kr.co.cleverchat.domain.scenario.model.ScenarioNode;
 import kr.co.cleverchat.domain.scenario.model.ScenarioNodeOption;
@@ -121,6 +123,27 @@ public class AdmScenarioController {
     public String scenarioDeactivateProc(@PathVariable Long id) {
         scenarioService.deactivate(id);
         return "redirect:/admin/scenarios/" + id;
+    }
+
+    @GetMapping("/{scenarioId}/versions/{versionId}/graph")
+    public String scenarioGraphEdit(@PathVariable Long scenarioId, @PathVariable Long versionId, Model model) {
+        var scenario = scenarioService.get(scenarioId);
+        ScenarioVersion version = scenarioService.version(versionId);
+        if (!scenarioId.equals(version.getScenarioId())) {
+            throw new BusinessException(ErrorCode.NOT_FOUND);
+        }
+        if (!"DRAFT".equals(version.getStatus())) {
+            throw new BusinessException(ErrorCode.STATE_CONFLICT, "DRAFT 버전만 편집할 수 있습니다.");
+        }
+        model.addAttribute("scenario", scenario);
+        model.addAttribute("version", version);
+        model.addAttribute("scenarioId", scenarioId);
+        model.addAttribute("versionId", versionId);
+        model.addAttribute("backUrl", "/admin/scenarios/" + scenarioId);
+        model.addAttribute("previewUrl", "/admin/scenarios/versions/" + versionId + "/preview");
+        model.addAttribute("graphLoadUrl", "/admin/api/scenarios/versions/" + versionId + "/graph");
+        model.addAttribute("graphSaveUrl", "/admin/api/scenarios/versions/" + versionId + "/graph");
+        return "admmgr/scenario/scenarioGraphEdit";
     }
 
     @GetMapping("/versions/{versionId}/preview")
