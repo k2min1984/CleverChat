@@ -23,3 +23,6 @@ Thumbs.db
 
 # Project build output
 3.개발/cleverchat/target/
+
+# External source dump (reference only, not part of repo)
+8.소스/
