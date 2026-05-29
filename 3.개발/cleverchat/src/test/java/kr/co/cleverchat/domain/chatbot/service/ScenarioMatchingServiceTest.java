@@ -1,6 +1,8 @@
 package kr.co.cleverchat.domain.chatbot.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
@@ -23,21 +25,18 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class ScenarioMatchingServiceTest {
 
-    @Mock
-    ScenarioNodeOptionMapper optionMapper;
+    @Mock ScenarioNodeOptionMapper optionMapper;
 
-    @Mock
-    ScenarioKeywordMapper keywordMapper;
+    @Mock ScenarioKeywordMapper keywordMapper;
 
-    @Mock
-    ScenarioSynonymMapper synonymMapper;
+    @Mock ScenarioSynonymMapper synonymMapper;
 
-    @InjectMocks
-    ScenarioMatchingService service;
+    @InjectMocks ScenarioMatchingService service;
 
     @Test
     void optionLabelExactMatchScores100() {
-        when(optionMapper.findEnabledByNodeId(10L)).thenReturn(List.of(option(1L, 20L, "예약 확인", 1)));
+        when(optionMapper.findEnabledByNodeId(10L))
+                .thenReturn(List.of(option(1L, 20L, "예약 확인", 1)));
 
         Optional<MatchResult> result = service.match(100L, 10L, "예약 확인");
 
@@ -50,7 +49,8 @@ class ScenarioMatchingServiceTest {
 
     @Test
     void optionLabelPartialMatchScores85() {
-        when(optionMapper.findEnabledByNodeId(10L)).thenReturn(List.of(option(1L, 20L, "예약 확인하기", 1)));
+        when(optionMapper.findEnabledByNodeId(10L))
+                .thenReturn(List.of(option(1L, 20L, "예약 확인하기", 1)));
 
         Optional<MatchResult> result = service.match(100L, 10L, "예약 확인");
 
@@ -74,7 +74,8 @@ class ScenarioMatchingServiceTest {
     @Test
     void currentScenarioKeywordExactMatchScores80AtWeight100() {
         when(optionMapper.findEnabledByNodeId(10L)).thenReturn(List.of());
-        when(keywordMapper.findEnabledByScenarioId(100L)).thenReturn(List.of(keyword(100L, "배송", 100)));
+        when(keywordMapper.findEnabledByScenarioId(100L))
+                .thenReturn(List.of(keyword(100L, "배송", 100)));
         when(synonymMapper.findEnabledByScenarioId(100L)).thenReturn(List.of());
         when(keywordMapper.findEnabledForActiveScenarios()).thenReturn(List.of());
         when(synonymMapper.findEnabledForActiveScenarios()).thenReturn(List.of());
@@ -90,7 +91,8 @@ class ScenarioMatchingServiceTest {
     void currentScenarioSynonymMatchAppliesWeight() {
         when(optionMapper.findEnabledByNodeId(10L)).thenReturn(List.of());
         when(keywordMapper.findEnabledByScenarioId(100L)).thenReturn(List.of());
-        when(synonymMapper.findEnabledByScenarioId(100L)).thenReturn(List.of(synonym(100L, "운송", 80)));
+        when(synonymMapper.findEnabledByScenarioId(100L))
+                .thenReturn(List.of(synonym(100L, "운송", 80)));
         when(keywordMapper.findEnabledForActiveScenarios()).thenReturn(List.of());
         when(synonymMapper.findEnabledForActiveScenarios()).thenReturn(List.of());
 
@@ -106,7 +108,8 @@ class ScenarioMatchingServiceTest {
         when(optionMapper.findEnabledByNodeId(10L)).thenReturn(List.of());
         when(keywordMapper.findEnabledByScenarioId(100L)).thenReturn(List.of());
         when(synonymMapper.findEnabledByScenarioId(100L)).thenReturn(List.of());
-        when(keywordMapper.findEnabledForActiveScenarios()).thenReturn(List.of(keyword(200L, "환불", 100)));
+        when(keywordMapper.findEnabledForActiveScenarios())
+                .thenReturn(List.of(keyword(200L, "환불", 100)));
         when(synonymMapper.findEnabledForActiveScenarios()).thenReturn(List.of());
 
         Optional<MatchResult> result = service.match(100L, 10L, "환불");
@@ -121,7 +124,8 @@ class ScenarioMatchingServiceTest {
         when(optionMapper.findEnabledByNodeId(10L)).thenReturn(List.of());
         when(keywordMapper.findEnabledByScenarioId(100L)).thenReturn(List.of());
         when(synonymMapper.findEnabledByScenarioId(100L)).thenReturn(List.of());
-        when(keywordMapper.findEnabledForActiveScenarios()).thenReturn(List.of(keyword(200L, "환불", 80)));
+        when(keywordMapper.findEnabledForActiveScenarios())
+                .thenReturn(List.of(keyword(200L, "환불", 80)));
         when(synonymMapper.findEnabledForActiveScenarios()).thenReturn(List.of());
 
         Optional<MatchResult> result = service.match(100L, 10L, "환불");
@@ -143,7 +147,8 @@ class ScenarioMatchingServiceTest {
     @Test
     void normalizeHandlesFullWidthCaseAndHtml() {
         when(optionMapper.findEnabledByNodeId(10L)).thenReturn(List.of());
-        when(keywordMapper.findEnabledByScenarioId(100L)).thenReturn(List.of(keyword(100L, "abc 테스트", 100)));
+        when(keywordMapper.findEnabledByScenarioId(100L))
+                .thenReturn(List.of(keyword(100L, "abc 테스트", 100)));
         when(synonymMapper.findEnabledByScenarioId(100L)).thenReturn(List.of());
         when(keywordMapper.findEnabledForActiveScenarios()).thenReturn(List.of());
         when(synonymMapper.findEnabledForActiveScenarios()).thenReturn(List.of());
@@ -158,7 +163,8 @@ class ScenarioMatchingServiceTest {
     void nullCurrentNodeSkipsOptionMatching() {
         when(keywordMapper.findEnabledByScenarioId(100L)).thenReturn(List.of());
         when(synonymMapper.findEnabledByScenarioId(100L)).thenReturn(List.of());
-        when(keywordMapper.findEnabledForActiveScenarios()).thenReturn(List.of(keyword(200L, "문의", 100)));
+        when(keywordMapper.findEnabledForActiveScenarios())
+                .thenReturn(List.of(keyword(200L, "문의", 100)));
         when(synonymMapper.findEnabledForActiveScenarios()).thenReturn(List.of());
 
         Optional<MatchResult> result = service.match(100L, null, "문의");
@@ -173,6 +179,45 @@ class ScenarioMatchingServiceTest {
         assertThat(service.match(100L, 10L, "   ")).isEmpty();
         assertThat(service.match(100L, 10L, null)).isEmpty();
         verifyNoInteractions(optionMapper, keywordMapper, synonymMapper);
+    }
+
+    @Test
+    void matchingDataIsCachedUntilInvalidated() {
+        when(optionMapper.findEnabledByNodeId(10L)).thenReturn(List.of());
+        when(keywordMapper.findEnabledByScenarioId(100L))
+                .thenReturn(List.of(keyword(100L, "cache", 100)));
+        when(synonymMapper.findEnabledByScenarioId(100L)).thenReturn(List.of());
+        when(keywordMapper.findEnabledForActiveScenarios()).thenReturn(List.of());
+        when(synonymMapper.findEnabledForActiveScenarios()).thenReturn(List.of());
+
+        assertThat(service.match(100L, 10L, "cache")).isPresent();
+        assertThat(service.match(100L, 10L, "cache")).isPresent();
+
+        verify(optionMapper, times(1)).findEnabledByNodeId(10L);
+        verify(keywordMapper, times(1)).findEnabledByScenarioId(100L);
+        verify(synonymMapper, times(1)).findEnabledByScenarioId(100L);
+        verify(keywordMapper, times(1)).findEnabledForActiveScenarios();
+        verify(synonymMapper, times(1)).findEnabledForActiveScenarios();
+    }
+
+    @Test
+    void scenarioInvalidationClearsScenarioAndGlobalCaches() {
+        when(optionMapper.findEnabledByNodeId(10L)).thenReturn(List.of());
+        when(keywordMapper.findEnabledByScenarioId(100L))
+                .thenReturn(List.of(keyword(100L, "cache", 100)));
+        when(synonymMapper.findEnabledByScenarioId(100L)).thenReturn(List.of());
+        when(keywordMapper.findEnabledForActiveScenarios()).thenReturn(List.of());
+        when(synonymMapper.findEnabledForActiveScenarios()).thenReturn(List.of());
+
+        assertThat(service.match(100L, 10L, "cache")).isPresent();
+        service.onScenarioChanged(100L);
+        assertThat(service.match(100L, 10L, "cache")).isPresent();
+
+        verify(optionMapper, times(2)).findEnabledByNodeId(10L);
+        verify(keywordMapper, times(2)).findEnabledByScenarioId(100L);
+        verify(synonymMapper, times(2)).findEnabledByScenarioId(100L);
+        verify(keywordMapper, times(2)).findEnabledForActiveScenarios();
+        verify(synonymMapper, times(2)).findEnabledForActiveScenarios();
     }
 
     private ScenarioNodeOption option(Long id, Long nextNodeId, String label, int sortOrder) {

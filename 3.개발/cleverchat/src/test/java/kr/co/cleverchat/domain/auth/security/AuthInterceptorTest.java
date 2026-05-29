@@ -4,14 +4,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.LocalDateTime;
 import java.util.Set;
+import kr.co.cleverchat.common.ops.OpsEventLogger;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockHttpSession;
 
 class AuthInterceptorTest {
 
-    private final AuthInterceptor interceptor = new AuthInterceptor();
+    private final OpsEventLogger opsEventLogger = Mockito.mock(OpsEventLogger.class);
+    private final AuthInterceptor interceptor = new AuthInterceptor(opsEventLogger);
 
     @Test
     void allowsRequestWithAdminSession() throws Exception {

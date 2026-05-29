@@ -14,14 +14,21 @@ public class AuditTrailRecorder {
     private final ObjectMapper objectMapper;
     private final HttpServletRequest request;
 
-    public AuditTrailRecorder(AuditLogMapper auditLogMapper, ObjectMapper objectMapper, HttpServletRequest request) {
+    public AuditTrailRecorder(
+            AuditLogMapper auditLogMapper, ObjectMapper objectMapper, HttpServletRequest request) {
         this.auditLogMapper = auditLogMapper;
         this.objectMapper = objectMapper;
         this.request = request;
     }
 
     public void record(String action, String targetType, Object targetId, Map<String, ?> detail) {
-        auditLogMapper.insert(actor(), action, targetType, targetId == null ? null : String.valueOf(targetId), json(detail), clientIp());
+        auditLogMapper.insert(
+                actor(),
+                action,
+                targetType,
+                targetId == null ? null : String.valueOf(targetId),
+                json(detail),
+                clientIp());
     }
 
     private String actor() {

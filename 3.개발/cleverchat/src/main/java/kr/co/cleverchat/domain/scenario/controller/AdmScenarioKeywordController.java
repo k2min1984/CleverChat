@@ -27,7 +27,9 @@ public class AdmScenarioKeywordController {
     }
 
     @PutMapping
-    public ApiResponse<Void> scenarioKeywordModifyProc(@PathVariable Long scenarioId, @Valid @RequestBody ScenarioKeywordDtos.ReplaceRequest request) {
+    public ApiResponse<Void> scenarioKeywordModifyProc(
+            @PathVariable Long scenarioId,
+            @Valid @RequestBody ScenarioKeywordDtos.ReplaceRequest request) {
         keywordService.replace(scenarioId, request);
         return ApiResponse.ok();
     }

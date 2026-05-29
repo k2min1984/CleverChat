@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admmgr/common/head :: adminHead('Crawl runs | CleverChat')}"></head>
+<body>
+<div class="admin-wrap">
+    <div th:replace="~{admmgr/common/sidebar :: adminSidebar}"></div>
+    <div class="main-area">
+        <div th:replace="~{admmgr/common/header :: adminHeader}"></div>
+        <div th:replace="~{admmgr/common/navigation :: adminNavigation}"></div>
+        <main class="content-area" data-crawl-runs-root>
+            <header>
+                <h1>Crawl runs</h1>
+                <nav class="actions" aria-label="Crawl run operations">
+                    <a class="button" th:href="@{/admin/crawl-targets}">Targets</a>
+                    <a class="button" th:href="@{/admin/crawl-documents}">Documents</a>
+                </nav>
+            </header>
+            <form method="get" th:action="@{/admin/crawl-runs}" aria-label="Crawl run filters">
+                <label>
+                    Target ID
+                    <input type="number" name="targetId" min="1" th:value="${targetId}">
+                </label>
+                <label>
+                    Status
+                    <select name="status">
+                        <option value="" th:selected="${status == null or status == ''}">All</option>
+                        <option value="SUCCESS" th:selected="${status == 'SUCCESS'}">SUCCESS</option>
+                        <option value="DUPLICATE" th:selected="${status == 'DUPLICATE'}">DUPLICATE</option>
+                        <option value="FAILED" th:selected="${status == 'FAILED'}">FAILED</option>
+                    </select>
+                </label>
+                <label>
+                    Failure code
+                    <select name="failureCode">
+                        <option value="" th:selected="${failureCode == null or failureCode == ''}">All</option>
+                        <option value="ROBOTS_BLOCKED" th:selected="${failureCode == 'ROBOTS_BLOCKED'}">ROBOTS_BLOCKED</option>
+                        <option value="HTTP_ERROR" th:selected="${failureCode == 'HTTP_ERROR'}">HTTP_ERROR</option>
+                        <option value="TIMEOUT" th:selected="${failureCode == 'TIMEOUT'}">TIMEOUT</option>
+                        <option value="PARSE_ERROR" th:selected="${failureCode == 'PARSE_ERROR'}">PARSE_ERROR</option>
+                        <option value="DUP_HASH" th:selected="${failureCode == 'DUP_HASH'}">DUP_HASH</option>
+                        <option value="FETCH_ERROR" th:selected="${failureCode == 'FETCH_ERROR'}">FETCH_ERROR</option>
+                        <option value="NOT_HTML" th:selected="${failureCode == 'NOT_HTML'}">NOT_HTML</option>
+                        <option value="URL_BLOCKED" th:selected="${failureCode == 'URL_BLOCKED'}">URL_BLOCKED</option>
+                        <option value="SCHEDULE_INVALID" th:selected="${failureCode == 'SCHEDULE_INVALID'}">SCHEDULE_INVALID</option>
+                        <option value="SYSTEM_ERROR" th:selected="${failureCode == 'SYSTEM_ERROR'}">SYSTEM_ERROR</option>
+                    </select>
+                </label>
+                <button type="submit">Filter</button>
+            </form>
+            <section aria-label="Crawl retention operations">
+                <h2>Retention</h2>
+                <form id="crawlRetentionForm">
+                    <label>
+                        Run log days
+                        <input type="number" name="runRetentionDays" min="30" value="365">
+                    </label>
+                    <label>
+                        Failed/duplicate document days
+                        <input type="number" name="documentRetentionDays" min="30" value="90">
+                    </label>
+                    <label>
+                        <input type="checkbox" name="dryRun" checked>
+                        Dry run
+                    </label>
+                    <button type="submit">Clean expired</button>
+                </form>
+                <p id="crawlRunStatus" role="status" aria-live="polite"></p>
+            </section>
+            <table aria-label="Crawl run list">
+                <caption>Crawl run list</caption>
+                <thead>
+                <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col">Target</th>
+                    <th scope="col">Document</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Failure code</th>
+                    <th scope="col">HTTP</th>
+                    <th scope="col">Duration</th>
+                    <th scope="col">Message</th>
+                    <th scope="col">Created</th>
+                    <th scope="col">Review</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="run : ${runs}">
+                    <td th:text="${run.id}">1</td>
+                    <td th:text="${run.targetId}">10</td>
+                    <td th:text="${run.documentId ?: '-'}">20</td>
+                    <td th:text="${run.status}">SUCCESS</td>
+                    <td th:text="${run.failureCode ?: '-'}">-</td>
+                    <td th:text="${run.httpStatus ?: '-'}">200</td>
+                    <td th:text="${run.durationMs == null ? '-' : run.durationMs + 'ms'}">5ms</td>
+                    <td th:text="${run.message ?: '-'}">Fetched.</td>
+                    <td th:text="${#temporals.format(run.createdAt, 'yyyy-MM-dd HH:mm')}">2026-05-27 13:00</td>
+                    <td>
+                        <span th:if="${run.status != 'FAILED'}">-</span>
+                        <span th:if="${run.status == 'FAILED' and run.reviewed}">Reviewed</span>
+                        <button th:if="${run.status == 'FAILED' and !run.reviewed}" type="button" class="button" th:attr="data-review-run-id=${run.id},aria-label=${'Review failed crawl run ' + run.id}">Review</button>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(runs)}">
+                    <td colspan="10">No crawl runs found.</td>
+                </tr>
+                </tbody>
+            </table>
+        </main>
+        <div th:replace="~{admmgr/common/footer :: adminFooter}"></div>
+    </div>
+</div>
+<script th:src="@{/asset/admmgr/style2/js/ADM.CrawlRuns.js}" defer></script>
+</body>
+</html>

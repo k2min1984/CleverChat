@@ -1,10 +1,6 @@
 package kr.co.cleverchat.common.api;
 
-public record ApiResponse<T>(
-    boolean success,
-    T data,
-    ErrorBody error
-) {
+public record ApiResponse<T>(boolean success, T data, ErrorBody error) {
 
     public static <T> ApiResponse<T> ok(T data) {
         return new ApiResponse<>(true, data, null);
@@ -18,6 +14,5 @@ public record ApiResponse<T>(
         return new ApiResponse<>(false, null, new ErrorBody(code, message));
     }
 
-    public record ErrorBody(String code, String message) {
-    }
+    public record ErrorBody(String code, String message) {}
 }

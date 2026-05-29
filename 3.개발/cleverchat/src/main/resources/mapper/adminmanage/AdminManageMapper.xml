@@ -1,0 +1,487 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.cleverchat.domain.adminmanage.mapper.AdminManageMapper">
+
+    <sql id="codeColumns">
+        code_no AS id,
+        NULLIF(p_code_no, 0) AS parent_id,
+        code_group AS code,
+        code_nm AS name,
+        code_val AS value,
+        code_dc AS description,
+        code_depth AS depth,
+        sort_order,
+        CASE WHEN use_yn = 'Y' THEN TRUE ELSE FALSE END AS enabled,
+        NULL::BIGINT AS created_by,
+        NULL::BIGINT AS updated_by,
+        frst_reg_dt AS created_at,
+        lst_chg_dt AS updated_at
+    </sql>
+
+    <sql id="menuColumns">
+        menu_no AS id,
+        NULLIF(p_menu_no, 0) AS parent_id,
+        CONCAT('menu.', menu_no) AS menu_key,
+        menu_nm AS title,
+        menu_url AS url,
+        menu_depth AS depth,
+        sort_order,
+        CASE WHEN use_yn = 'Y' THEN TRUE ELSE FALSE END AS enabled,
+        CASE WHEN open_yn = 'Y' THEN TRUE ELSE FALSE END AS visible,
+        NULL::BIGINT AS created_by,
+        NULL::BIGINT AS updated_by,
+        frst_reg_dt AS created_at,
+        lst_chg_dt AS updated_at
+    </sql>
+
+    <sql id="menuColumnsWithAlias">
+        tb_menu.menu_no AS id,
+        NULLIF(tb_menu.p_menu_no, 0) AS parent_id,
+        CONCAT('menu.', tb_menu.menu_no) AS menu_key,
+        tb_menu.menu_nm AS title,
+        tb_menu.menu_url AS url,
+        tb_menu.menu_depth AS depth,
+        tb_menu.sort_order,
+        CASE WHEN tb_menu.use_yn = 'Y' THEN TRUE ELSE FALSE END AS enabled,
+        CASE WHEN tb_menu.open_yn = 'Y' THEN TRUE ELSE FALSE END AS visible,
+        NULL::BIGINT AS created_by,
+        NULL::BIGINT AS updated_by,
+        tb_menu.frst_reg_dt AS created_at,
+        tb_menu.lst_chg_dt AS updated_at
+    </sql>
+
+    <select id="findCodes" resultType="kr.co.cleverchat.domain.adminmanage.model.AdminCode">
+        SELECT <include refid="codeColumns"/>
+        FROM tb_code
+        ORDER BY p_code_no ASC, sort_order ASC, code_no ASC
+    </select>
+
+    <select id="findCodesByParent" resultType="kr.co.cleverchat.domain.adminmanage.model.AdminCode">
+        SELECT <include refid="codeColumns"/>
+        FROM tb_code
+        WHERE p_code_no = COALESCE(#{parentId}, 0)
+          AND use_yn = 'Y'
+        ORDER BY sort_order ASC, code_no ASC
+    </select>
+
+    <select id="findCodeById" resultType="kr.co.cleverchat.domain.adminmanage.model.AdminCode">
+        SELECT <include refid="codeColumns"/>
+        FROM tb_code
+        WHERE code_no = #{id}
+    </select>
+
+    <select id="findCodeLayerById" resultType="map">
+        SELECT code_no AS "codeNo",
+               code_nm AS "codeNm",
+               code_val AS "codeVal",
+               code_group AS "codeGroup",
+               code_dc AS "codeDc"
+        FROM tb_code
+        WHERE code_no = #{id}
+    </select>
+
+    <insert id="insertCode" parameterType="kr.co.cleverchat.domain.adminmanage.model.AdminCode" useGeneratedKeys="true" keyProperty="id" keyColumn="code_no">
+        INSERT INTO tb_code (
+            p_code_no, code_group, code_nm, code_val, code_dc, code_depth, sort_order, use_yn,
+            frst_regr_empno, frst_reg_dt, lst_chgr_empno, lst_chg_dt
+        )
+        VALUES (
+            COALESCE(#{parentId}, 0),
+            #{code},
+            #{name},
+            #{value},
+            #{description},
+            CASE WHEN #{parentId} IS NULL THEN 1 ELSE 2 END,
+            #{sortOrder},
+            CASE WHEN #{enabled} THEN 'Y' ELSE 'N' END,
+            #{updatedBy},
+            now(),
+            #{updatedBy},
+            now()
+        )
+    </insert>
+
+    <insert id="insertLegacyCode">
+        INSERT INTO tb_code (
+            p_code_no, code_group, code_nm, code_depth, sort_order, use_yn,
+            frst_regr_empno, frst_reg_dt, lst_chgr_empno, lst_chg_dt
+        )
+        VALUES (
+            COALESCE(#{parentId}, 0),
+            NULL,
+            #{name},
+            #{depth},
+            COALESCE((SELECT MAX(sort_order) + 1 FROM tb_code WHERE p_code_no = COALESCE(#{parentId}, 0)), 1),
+            'Y',
+            #{updatedBy},
+            now(),
+            #{updatedBy},
+            now()
+        )
+    </insert>
+
+    <update id="updateCode" parameterType="kr.co.cleverchat.domain.adminmanage.model.AdminCode">
+        UPDATE tb_code
+        SET p_code_no = COALESCE(#{parentId}, 0),
+            code_group = #{code},
+            code_nm = #{name},
+            code_val = #{value},
+            code_dc = #{description},
+            code_depth = CASE WHEN #{parentId} IS NULL THEN 1 ELSE 2 END,
+            sort_order = #{sortOrder},
+            use_yn = CASE WHEN #{enabled} THEN 'Y' ELSE 'N' END,
+            lst_chgr_empno = #{updatedBy},
+            lst_chg_dt = now()
+        WHERE code_no = #{id}
+    </update>
+
+    <update id="updateCodeLayer">
+        UPDATE tb_code
+        SET code_nm = #{name},
+            code_val = #{value},
+            code_group = #{codeGroup},
+            code_dc = #{description},
+            lst_chgr_empno = #{updatedBy},
+            lst_chg_dt = now()
+        WHERE code_no = #{id}
+    </update>
+
+    <update id="updateCodeName">
+        UPDATE tb_code
+        SET code_nm = #{name},
+            lst_chgr_empno = #{updatedBy},
+            lst_chg_dt = now()
+        WHERE code_no = #{id}
+    </update>
+
+    <update id="updateCodeSort">
+        UPDATE tb_code
+        SET sort_order = #{sortOrder},
+            lst_chgr_empno = #{updatedBy},
+            lst_chg_dt = now()
+        WHERE code_no = #{id}
+    </update>
+
+    <update id="disableCode">
+        WITH RECURSIVE sub_codes AS (
+            SELECT code_no FROM tb_code WHERE code_no = #{id}
+            UNION ALL
+            SELECT child.code_no
+            FROM tb_code child
+            JOIN sub_codes parent ON child.p_code_no = parent.code_no
+        )
+        UPDATE tb_code
+        SET use_yn = 'N',
+            lst_chgr_empno = #{updatedBy},
+            lst_chg_dt = now()
+        WHERE code_no IN (SELECT code_no FROM sub_codes)
+    </update>
+
+    <select id="findMenus" resultType="kr.co.cleverchat.domain.adminmanage.model.AdminMenu">
+        SELECT <include refid="menuColumns"/>
+        FROM tb_menu
+        ORDER BY p_menu_no ASC, sort_order ASC, menu_no ASC
+    </select>
+
+    <select id="findMenusByParent" resultType="kr.co.cleverchat.domain.adminmanage.model.AdminMenu">
+        SELECT <include refid="menuColumns"/>
+        FROM tb_menu
+        WHERE p_menu_no = COALESCE(#{parentId}, 0)
+          AND use_yn = 'Y'
+        ORDER BY sort_order ASC, menu_no ASC
+    </select>
+
+    <select id="findVisibleMenusForRoles" resultType="kr.co.cleverchat.domain.adminmanage.model.AdminMenu">
+        SELECT <include refid="menuColumnsWithAlias"/>
+        FROM tb_menu
+        WHERE tb_menu.use_yn = 'Y'
+          AND tb_menu.open_yn = 'Y'
+          AND EXISTS (
+              SELECT 1
+              FROM tb_auth_menu_adm am
+              JOIN tb_auth a ON a.auth_no = am.auth_no AND a.use_yn = 'Y'
+              WHERE am.menu_no = tb_menu.menu_no
+                AND am.use_yn = 'Y'
+                AND am.select_yn = 'Y'
+                <choose>
+                  <when test="roleCodes != null and roleCodes.size() > 0">
+                    AND a.auth_nm IN
+                    <foreach collection="roleCodes" item="roleCode" open="(" separator="," close=")">
+                      #{roleCode}
+                    </foreach>
+                  </when>
+                  <otherwise>
+                    AND 1 = 0
+                  </otherwise>
+                </choose>
+          )
+        ORDER BY tb_menu.p_menu_no ASC, tb_menu.sort_order ASC, tb_menu.menu_no ASC
+    </select>
+
+    <select id="findMenuById" resultType="kr.co.cleverchat.domain.adminmanage.model.AdminMenu">
+        SELECT <include refid="menuColumns"/>
+        FROM tb_menu
+        WHERE menu_no = #{id}
+    </select>
+
+    <select id="findMenuLayerById" resultType="map">
+        SELECT menu_no AS "menuNo",
+               menu_nm AS "menuNm",
+               menu_depth AS "menuDepth",
+               menu_url AS "menuUrl",
+               open_yn AS "openYn",
+               target_blank_yn AS "targetBlankYn",
+               menu_type AS "menuType",
+               menu_url AS "relUrl"
+        FROM tb_menu
+        WHERE menu_no = #{id}
+    </select>
+
+    <select id="findMenuByUrl" resultType="kr.co.cleverchat.domain.adminmanage.model.AdminMenu">
+        SELECT <include refid="menuColumns"/>
+        FROM tb_menu
+        WHERE menu_url = #{url}
+        ORDER BY menu_no ASC
+        LIMIT 1
+    </select>
+
+    <insert id="insertMenu" parameterType="kr.co.cleverchat.domain.adminmanage.model.AdminMenu" useGeneratedKeys="true" keyProperty="id" keyColumn="menu_no">
+        INSERT INTO tb_menu (
+            p_menu_no, menu_nm, menu_type, menu_depth, sort_order, target_blank_yn, menu_url,
+            open_yn, use_yn, frst_regr_empno, frst_reg_dt, lst_chgr_empno, lst_chg_dt
+        )
+        VALUES (
+            COALESCE(#{parentId}, 0),
+            #{title},
+            'ADM',
+            CASE WHEN #{parentId} IS NULL THEN 1 ELSE COALESCE((SELECT menu_depth + 1 FROM tb_menu WHERE menu_no = #{parentId}), 2) END,
+            #{sortOrder},
+            'N',
+            #{url},
+            CASE WHEN #{visible} THEN 'Y' ELSE 'N' END,
+            CASE WHEN #{enabled} THEN 'Y' ELSE 'N' END,
+            #{updatedBy},
+            now(),
+            #{updatedBy},
+            now()
+        )
+    </insert>
+
+    <update id="updateMenu" parameterType="kr.co.cleverchat.domain.adminmanage.model.AdminMenu">
+        UPDATE tb_menu
+        SET p_menu_no = COALESCE(#{parentId}, 0),
+            menu_nm = #{title},
+            menu_type = 'ADM',
+            menu_depth = CASE WHEN #{parentId} IS NULL THEN 1 ELSE COALESCE((SELECT parent.menu_depth + 1 FROM tb_menu parent WHERE parent.menu_no = #{parentId}), 2) END,
+            sort_order = #{sortOrder},
+            target_blank_yn = 'N',
+            menu_url = #{url},
+            open_yn = CASE WHEN #{visible} THEN 'Y' ELSE 'N' END,
+            use_yn = CASE WHEN #{enabled} THEN 'Y' ELSE 'N' END,
+            lst_chgr_empno = #{updatedBy},
+            lst_chg_dt = now()
+        WHERE menu_no = #{id}
+    </update>
+
+    <update id="updateMenuLayer">
+        UPDATE tb_menu
+        SET menu_nm = #{title},
+            open_yn = #{openYn},
+            target_blank_yn = #{targetBlankYn},
+            menu_type = #{menuType},
+            menu_url = #{url},
+            lst_chgr_empno = #{updatedBy},
+            lst_chg_dt = now()
+        WHERE menu_no = #{id}
+    </update>
+
+    <update id="updateMenuName">
+        UPDATE tb_menu
+        SET menu_nm = #{title},
+            lst_chgr_empno = #{updatedBy},
+            lst_chg_dt = now()
+        WHERE menu_no = #{id}
+    </update>
+
+    <update id="updateMenuSort">
+        UPDATE tb_menu
+        SET sort_order = #{sortOrder},
+            lst_chgr_empno = #{updatedBy},
+            lst_chg_dt = now()
+        WHERE menu_no = #{id}
+    </update>
+
+    <update id="disableMenu">
+        WITH RECURSIVE sub_menus AS (
+            SELECT menu_no FROM tb_menu WHERE menu_no = #{id}
+            UNION ALL
+            SELECT child.menu_no
+            FROM tb_menu child
+            JOIN sub_menus parent ON child.p_menu_no = parent.menu_no
+        )
+        UPDATE tb_menu
+        SET use_yn = 'N',
+            open_yn = 'N',
+            lst_chgr_empno = #{updatedBy},
+            lst_chg_dt = now()
+        WHERE menu_no IN (SELECT menu_no FROM sub_menus)
+    </update>
+
+    <select id="findRoles" resultType="kr.co.cleverchat.domain.adminmanage.model.RoleInfo">
+        SELECT auth_no AS id,
+               auth_nm AS code,
+               auth_dc AS description
+        FROM tb_auth
+        WHERE use_yn = 'Y'
+          AND dept_cd IS NULL
+        ORDER BY sort_order ASC, auth_no ASC
+    </select>
+
+    <insert id="insertRole">
+        INSERT INTO tb_auth (
+            auth_nm, auth_dc, sort_order, use_yn, frst_regr_empno, frst_reg_dt, lst_chgr_empno, lst_chg_dt
+        )
+        VALUES (
+            #{code},
+            #{description},
+            COALESCE((SELECT MAX(sort_order) + 1 FROM tb_auth WHERE use_yn = 'Y' AND dept_cd IS NULL), 1),
+            'Y',
+            #{updatedBy},
+            now(),
+            #{updatedBy},
+            now()
+        )
+    </insert>
+
+    <update id="disableRole">
+        UPDATE tb_auth
+        SET use_yn = 'N',
+            lst_chgr_empno = #{updatedBy},
+            lst_chg_dt = now()
+        WHERE auth_no = #{authNo}
+    </update>
+
+    <select id="findMenuIdsByRoleCode" resultType="long">
+        SELECT am.menu_no
+        FROM tb_auth_menu_adm am
+        JOIN tb_auth a ON a.auth_no = am.auth_no
+        WHERE a.auth_nm = #{roleCode}
+          AND a.use_yn = 'Y'
+          AND am.use_yn = 'Y'
+          AND am.select_yn = 'Y'
+        ORDER BY am.menu_no ASC
+    </select>
+
+    <select id="findAdminAuthMenuRows" resultType="map">
+        SELECT m.menu_no AS "menuNo",
+               NULLIF(m.p_menu_no, 0) AS "pMenuNo",
+               m.menu_nm AS "menuNm",
+               m.menu_depth AS "menuDepth",
+               COALESCE(am.select_yn, 'N') AS "selectYn",
+               COALESCE(am.insert_yn, 'N') AS "insertYn",
+               COALESCE(am.update_yn, 'N') AS "updateYn",
+               COALESCE(am.delete_yn, 'N') AS "deleteYn",
+               COALESCE(am.proc_yn, 'N') AS "procYn"
+        FROM tb_menu m
+        LEFT JOIN tb_auth_menu_adm am ON am.menu_no = m.menu_no
+            AND am.auth_no = #{authNo}
+            AND am.use_yn = 'Y'
+        WHERE m.use_yn = 'Y'
+        ORDER BY m.p_menu_no ASC, m.sort_order ASC, m.menu_no ASC
+    </select>
+
+    <delete id="deleteRoleMenus">
+        DELETE FROM tb_auth_menu_adm
+        WHERE auth_no = (SELECT auth_no FROM tb_auth WHERE auth_nm = #{roleCode} AND use_yn = 'Y')
+    </delete>
+
+    <delete id="deleteRoleMenusByAuthNo">
+        DELETE FROM tb_auth_menu_adm
+        WHERE auth_no = #{authNo}
+    </delete>
+
+    <insert id="insertRoleMenu">
+        INSERT INTO tb_auth_menu_adm (
+            auth_no, menu_no, p_menu_no, select_yn, insert_yn, update_yn, delete_yn, proc_yn,
+            use_yn, frst_regr_empno, frst_reg_dt, lst_chgr_empno, lst_chg_dt
+        )
+        SELECT a.auth_no,
+               m.menu_no,
+               m.p_menu_no,
+               'Y',
+               'Y',
+               'Y',
+               'Y',
+               'Y',
+               'Y',
+               'system',
+               now(),
+               'system',
+               now()
+        FROM tb_auth a
+        JOIN tb_menu m ON m.menu_no = #{menuId}
+        WHERE a.auth_nm = #{roleCode}
+          AND a.use_yn = 'Y'
+        ON CONFLICT (auth_no, menu_no) DO UPDATE
+        SET select_yn = 'Y',
+            insert_yn = 'Y',
+            update_yn = 'Y',
+            delete_yn = 'Y',
+            proc_yn = 'Y',
+            use_yn = 'Y',
+            lst_chg_dt = now()
+    </insert>
+
+    <insert id="insertRoleMenuByAuthNo">
+        INSERT INTO tb_auth_menu_adm (
+            auth_no, menu_no, p_menu_no, select_yn, insert_yn, update_yn, delete_yn, proc_yn,
+            use_yn, frst_regr_empno, frst_reg_dt, lst_chgr_empno, lst_chg_dt
+        )
+        VALUES (
+            #{authNo},
+            #{menuNo},
+            COALESCE(#{pMenuNo}, 0),
+            #{selectYn},
+            #{insertYn},
+            #{updateYn},
+            #{deleteYn},
+            #{procYn},
+            'Y',
+            'system',
+            now(),
+            'system',
+            now()
+        )
+        ON CONFLICT (auth_no, menu_no) DO UPDATE
+        SET p_menu_no = EXCLUDED.p_menu_no,
+            select_yn = EXCLUDED.select_yn,
+            insert_yn = EXCLUDED.insert_yn,
+            update_yn = EXCLUDED.update_yn,
+            delete_yn = EXCLUDED.delete_yn,
+            proc_yn = EXCLUDED.proc_yn,
+            use_yn = 'Y',
+            lst_chg_dt = now()
+    </insert>
+
+    <select id="countReadableMenuForRoles" resultType="int">
+        SELECT count(*)
+        FROM tb_auth_menu_adm am
+        JOIN tb_auth a ON a.auth_no = am.auth_no
+        WHERE am.menu_no = #{menuId}
+          AND am.use_yn = 'Y'
+          AND am.select_yn = 'Y'
+          AND a.use_yn = 'Y'
+          <choose>
+            <when test="roleCodes != null and roleCodes.size() > 0">
+              AND a.auth_nm IN
+              <foreach collection="roleCodes" item="roleCode" open="(" separator="," close=")">
+                #{roleCode}
+              </foreach>
+            </when>
+            <otherwise>
+              AND 1 = 0
+            </otherwise>
+          </choose>
+    </select>
+</mapper>

@@ -6,21 +6,39 @@
     <title>시나리오 미리보기 | CleverChat</title>
 </head>
 <body>
-<header>
-    <h1>미리보기</h1>
-    <a class="button" th:href="@{/admin/scenarios/{id}(id=${version.scenarioId})}">상세</a>
-</header>
-<main>
-    <section class="panel" th:if="${current != null}">
-        <h2 th:text="${current.title}">노드 제목</h2>
-        <p th:text="${current.content}">본문</p>
-        <div class="actions">
-            <a class="button" th:each="option : ${options}" th:href="@{/admin/scenarios/versions/{versionId}/preview(versionId=${version.id},nodeId=${option.nextNodeId})}" th:text="${option.label}">옵션</a>
+<section class="scenario-preview-layer" aria-label="시나리오 미리보기">
+    <header class="layer-header">
+        <div>
+            <h1 th:text="${previewTitle}">미리보기</h1>
+            <p th:text="'버전 상태: ' + ${version.status}">버전 상태: DRAFT</p>
         </div>
-    </section>
-    <section class="panel" th:if="${current == null}">
-        <p>미리보기 가능한 노드가 없습니다.</p>
-    </section>
-</main>
+        <div class="btn-group">
+            <a class="btn btn-sm btn-secondary"
+               data-preview-detail
+               th:href="@{/admin/scenarios/{id}(id=${version.scenarioId})}">상세</a>
+            <button type="button" class="btn btn-sm btn-secondary preview-close-btn" data-preview-close>닫기</button>
+        </div>
+    </header>
+
+    <div class="layer-body">
+        <section class="preview-card" th:if="${current != null}">
+            <div class="preview-node-type" th:text="${current.nodeType}">MESSAGE</div>
+            <h2 th:text="${current.title}">노드 제목</h2>
+            <p th:text="${current.content}">본문</p>
+            <div class="preview-options" th:if="${!#lists.isEmpty(options)}">
+                <a class="btn btn-sm btn-secondary"
+                   th:each="option : ${options}"
+                   th:href="@{/admin/scenarios/versions/{versionId}/preview(versionId=${version.id},nodeId=${option.nextNodeId})}"
+                   th:text="${option.label}">옵션</a>
+            </div>
+            <p class="help-text" th:if="${#lists.isEmpty(options)}">다음 옵션이 없는 종료 노드입니다.</p>
+        </section>
+
+        <section class="preview-empty" th:if="${current == null}" role="status">
+            <p th:if="${version.startNodeId == null}">저장된 시작 노드가 없습니다. DRAFT 그래프를 저장한 뒤 미리보기를 확인해 주세요.</p>
+            <p th:if="${version.startNodeId != null}">미리보기 가능한 노드를 찾지 못했습니다. 그래프 연결을 확인해 주세요.</p>
+        </section>
+    </div>
+</section>
 </body>
 </html>

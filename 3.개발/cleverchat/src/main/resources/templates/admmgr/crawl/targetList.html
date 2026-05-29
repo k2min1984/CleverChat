@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admmgr/common/head :: adminHead('Crawl targets | CleverChat')}"></head>
+<body>
+<div class="admin-wrap">
+    <div th:replace="~{admmgr/common/sidebar :: adminSidebar}"></div>
+    <div class="main-area">
+        <div th:replace="~{admmgr/common/header :: adminHeader}"></div>
+        <div th:replace="~{admmgr/common/navigation :: adminNavigation}"></div>
+        <main class="content-area" data-crawl-targets-root>
+            <header>
+                <h1>Crawl targets</h1>
+                <nav class="actions" aria-label="Crawl operations">
+                    <a class="button" th:href="@{/admin/crawl-documents}">Documents</a>
+                    <a class="button" th:href="@{/admin/crawl-runs}">Runs</a>
+                </nav>
+            </header>
+            <form method="get" th:action="@{/admin/crawl-targets}" aria-label="Crawl target filters">
+                <label>
+                    Enabled
+                    <select name="enabled">
+                        <option value="" th:selected="${enabled == null}">All</option>
+                        <option value="true" th:selected="${enabled == true}">Enabled</option>
+                        <option value="false" th:selected="${enabled == false}">Disabled</option>
+                    </select>
+                </label>
+                <button type="submit">Filter</button>
+            </form>
+            <section aria-label="Create crawl target">
+                <h2>New target</h2>
+                <form id="crawlTargetForm">
+                    <label>
+                        URL
+                        <input type="url" name="url" maxlength="1000" placeholder="https://example.com/help" required>
+                    </label>
+                    <label>
+                        Label
+                        <input type="text" name="label" maxlength="200">
+                    </label>
+                    <label>
+                        <input type="checkbox" name="enabled" checked>
+                        Enabled
+                    </label>
+                    <label>
+                        <input type="checkbox" name="scheduleEnabled">
+                        Auto run
+                    </label>
+                    <label>
+                        Schedule mode
+                        <select name="scheduleMode">
+                            <option value="INTERVAL">Interval</option>
+                            <option value="CRON">Cron</option>
+                        </select>
+                    </label>
+                    <label>
+                        Interval minutes
+                        <input type="number" name="scheduleIntervalMinutes" min="5" max="10080" value="1440">
+                    </label>
+                    <label>
+                        Cron expression
+                        <input type="text" name="scheduleCron" maxlength="120" placeholder="0 */30 * * * *">
+                    </label>
+                    <button type="button" data-preview-schedule>Preview schedule</button>
+                    <small data-schedule-preview role="status" aria-live="polite"></small>
+                    <button type="submit">Create</button>
+                </form>
+                <p id="crawlStatus" role="status" aria-live="polite"></p>
+            </section>
+            <table aria-label="Crawl target list">
+                <caption>Crawl target list</caption>
+                <thead>
+                <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col">Label</th>
+                    <th scope="col">URL</th>
+                    <th scope="col">Enabled</th>
+                    <th scope="col">Schedule</th>
+                    <th scope="col">Robots</th>
+                    <th scope="col">Last status</th>
+                    <th scope="col">Last run</th>
+                    <th scope="col">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="target : ${targets}">
+                    <td th:text="${target.id}">1</td>
+                    <td th:text="${target.label ?: '-'}">Help</td>
+                    <td><a th:href="${target.url}" th:text="${target.url}" target="_blank" rel="noopener noreferrer">https://example.com</a></td>
+                    <td th:text="${target.enabled ? 'Y' : 'N'}">Y</td>
+                    <td>
+                        <form class="crawl-schedule-form" th:attr="data-schedule-target-id=${target.id}">
+                            <label>
+                                <input type="checkbox" name="scheduleEnabled" th:checked="${target.scheduleEnabled}">
+                                Auto
+                            </label>
+                            <label>
+                                <span class="sr-only">Schedule mode</span>
+                                <select name="scheduleMode" th:attr="aria-label=${'Schedule mode for crawl target ' + target.id}">
+                                    <option value="INTERVAL" th:selected="${target.scheduleMode == null || target.scheduleMode == 'INTERVAL'}">Interval</option>
+                                    <option value="CRON" th:selected="${target.scheduleMode == 'CRON'}">Cron</option>
+                                </select>
+                            </label>
+                            <input type="number" name="scheduleIntervalMinutes" min="5" max="10080" th:value="${target.scheduleIntervalMinutes ?: 1440}" aria-label="Schedule interval minutes">
+                            <input type="text" name="scheduleCron" maxlength="120" th:value="${target.scheduleCron}" aria-label="Schedule cron expression" placeholder="0 */30 * * * *">
+                            <button type="button" data-preview-schedule th:attr="aria-label=${'Preview schedule for crawl target ' + target.id}">Preview</button>
+                            <button type="submit">Save</button>
+                            <small th:text="${target.nextRunAt == null ? '-' : #temporals.format(target.nextRunAt, 'yyyy-MM-dd HH:mm')}">-</small>
+                            <small data-schedule-preview role="status" aria-live="polite"></small>
+                        </form>
+                    </td>
+                    <td th:text="${target.robotsAllowed == null ? '-' : (target.robotsAllowed ? 'Allowed' : 'Blocked')}">-</td>
+                    <td th:text="${target.lastStatus ?: '-'}">SUCCESS</td>
+                    <td th:text="${target.lastRunAt == null ? '-' : #temporals.format(target.lastRunAt, 'yyyy-MM-dd HH:mm')}">2026-05-27 13:00</td>
+                    <td>
+                        <button type="button" class="button" th:attr="data-run-target-id=${target.id},aria-label=${'Run crawl target ' + target.id}">Run</button>
+                        <a class="button" th:href="@{/admin/crawl-documents(targetId=${target.id})}">Documents</a>
+                        <a class="button" th:href="@{/admin/crawl-runs(targetId=${target.id})}">Runs</a>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(targets)}">
+                    <td colspan="9">No crawl targets found.</td>
+                </tr>
+                </tbody>
+            </table>
+        </main>
+        <div th:replace="~{admmgr/common/footer :: adminFooter}"></div>
+    </div>
+</div>
+<script th:src="@{/asset/admmgr/style2/js/ADM.CrawlTargets.js}" defer></script>
+</body>
+</html>

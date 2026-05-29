@@ -1,6 +1,8 @@
 package kr.co.cleverchat.domain.auth.service;
 
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.Map;
+import kr.co.cleverchat.common.ops.OpsEventLogger;
 import kr.co.cleverchat.domain.auth.mapper.LoginLogMapper;
 import kr.co.cleverchat.domain.auth.mapper.UserMapper;
 import kr.co.cleverchat.domain.auth.model.UserAccount;
@@ -15,15 +17,17 @@ public class LoginAuditService {
     private final UserMapper userMapper;
     private final int maxFailedAttempts;
     private final int lockMinutes;
+    private final OpsEventLogger opsEventLogger;
 
     public LoginAuditService(
-        LoginLogMapper loginLogMapper,
-        UserMapper userMapper,
-        @Value("${cleverchat.auth.max-failed-attempts:5}") int maxFailedAttempts,
-        @Value("${cleverchat.auth.lock-minutes:30}") int lockMinutes
-    ) {
+            LoginLogMapper loginLogMapper,
+            UserMapper userMapper,
+            OpsEventLogger opsEventLogger,
+            @Value("${cleverchat.auth.max-failed-attempts:5}") int maxFailedAttempts,
+            @Value("${cleverchat.auth.lock-minutes:30}") int lockMinutes) {
         this.loginLogMapper = loginLogMapper;
         this.userMapper = userMapper;
+        this.opsEventLogger = opsEventLogger;
         this.maxFailedAttempts = maxFailedAttempts;
         this.lockMinutes = lockMinutes;
     }
@@ -44,6 +48,23 @@ public class LoginAuditService {
         UserAccount account = userMapper.findByUsername(username);
         if (account != null && account.getFailedAttempts() >= maxFailedAttempts) {
             userMapper.lockUser(username, lockMinutes);
+            opsEventLogger.securityEvent(
+                    "LOGIN_LOCKED",
+                    request,
+                    username,
+                    Map.of("reason", "failed_attempt_threshold"));
+        } else if (account != null && account.getFailedAttempts() >= maxFailedAttempts - 1) {
+            opsEventLogger.securityEvent(
+                    "LOGIN_FAILURE_SPIKE",
+                    request,
+                    username,
+                    Map.of(
+                            "reason",
+                            "near_failed_attempt_threshold",
+                            "failedAttempts",
+                            account.getFailedAttempts(),
+                            "threshold",
+                            maxFailedAttempts));
         }
     }
 

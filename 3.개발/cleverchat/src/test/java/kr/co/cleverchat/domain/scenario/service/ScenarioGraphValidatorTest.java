@@ -19,33 +19,52 @@ class ScenarioGraphValidatorTest {
         SaveRequest request = new SaveRequest("missing", List.of(node("start", "END")));
 
         assertThatThrownBy(() -> validator.validateForSave(request))
-            .isInstanceOf(BusinessException.class);
+                .isInstanceOf(BusinessException.class);
     }
 
     @Test
     void rejectsEndNodeWithOptions() {
-        SaveRequest request = new SaveRequest("end", List.of(
-            new NodeRequest("end", "END", "종료", null, 0, "{}", List.of(option("다음", null)))
-        ));
+        SaveRequest request =
+                new SaveRequest(
+                        "end",
+                        List.of(
+                                new NodeRequest(
+                                        "end",
+                                        "END",
+                                        "종료",
+                                        null,
+                                        0,
+                                        "{}",
+                                        List.of(option("다음", null)))));
 
         assertThatThrownBy(() -> validator.validateForSave(request))
-            .isInstanceOf(BusinessException.class);
+                .isInstanceOf(BusinessException.class);
     }
 
     @Test
     void rejectsUnreachableNodeOnPublish() {
-        SaveRequest request = new SaveRequest("start", List.of(node("start", "END"), node("orphan", "END")));
+        SaveRequest request =
+                new SaveRequest("start", List.of(node("start", "END"), node("orphan", "END")));
 
         assertThatThrownBy(() -> validator.validateForPublish(request))
-            .isInstanceOf(BusinessException.class);
+                .isInstanceOf(BusinessException.class);
     }
 
     @Test
     void acceptsReachableGraph() {
-        SaveRequest request = new SaveRequest("start", List.of(
-            new NodeRequest("start", "QUESTION", "시작", null, 0, "{}", List.of(option("끝", "end"))),
-            node("end", "END")
-        ));
+        SaveRequest request =
+                new SaveRequest(
+                        "start",
+                        List.of(
+                                new NodeRequest(
+                                        "start",
+                                        "QUESTION",
+                                        "시작",
+                                        null,
+                                        0,
+                                        "{}",
+                                        List.of(option("끝", "end"))),
+                                node("end", "END")));
 
         assertThatCode(() -> validator.validateForPublish(request)).doesNotThrowAnyException();
     }

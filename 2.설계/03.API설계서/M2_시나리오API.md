@@ -11,6 +11,7 @@
 | GET | `/admin/scenarios/new` | 시나리오 등록 화면 |
 | GET | `/admin/scenarios/{scenarioId}` | 시나리오 상세/편집 화면 |
 | GET | `/admin/scenarios/{scenarioId}/preview` | 시나리오 미리보기 화면 |
+| GET | `/admin/scenarios/{scenarioId}/versions/{versionId}/graph` | DRAFT 버전 graph 편집 화면. PUBLISHED/ARCHIVED 진입은 409 `STATE_CONFLICT` |
 
 ## 2. REST 엔드포인트
 
@@ -24,6 +25,8 @@
 | POST | `/admin/api/scenarios/{scenarioId}/versions` | 새 초안 버전 생성 |
 | GET | `/admin/api/scenarios/{scenarioId}/versions/{versionId}` | 버전 상세 |
 | PUT | `/admin/api/scenarios/{scenarioId}/versions/{versionId}` | 버전 노드 그래프 저장 |
+| GET | `/admin/api/scenarios/versions/{versionId}/graph` | graph JSON 조회. DRAFT/PUBLISHED/ARCHIVED 조회 허용 |
+| PUT | `/admin/api/scenarios/versions/{versionId}/graph` | DRAFT graph 저장. 기존 저장 API 계약 유지 |
 | POST | `/admin/api/scenarios/{scenarioId}/versions/{versionId}/publish` | 버전 게시 |
 | POST | `/admin/api/scenarios/{scenarioId}/activate` | 시나리오 활성화 |
 | POST | `/admin/api/scenarios/{scenarioId}/deactivate` | 시나리오 비활성화 |
@@ -70,6 +73,19 @@
 }
 ```
 
+### 버전 그래프 조회 응답
+
+```json
+{
+  "success": true,
+  "data": {
+    "startNodeKey": "start",
+    "nodes": []
+  },
+  "error": null
+}
+```
+
 ### 키워드 저장
 
 ```json
@@ -92,6 +108,8 @@
 - 게시(`publish`) 성공 응답 시 동일 트랜잭션 내에서 `scenario.active_version_id`를 새 `PUBLISHED` 버전으로 교체한다. (결정사항.md §7 B안)
 - 옵션의 `nextNodeKey`는 같은 버전의 노드를 가리켜야 한다.
 - `END` 노드는 옵션을 가질 수 없다.
+- graph 조회는 게시/보관 버전도 허용하지만, 편집 화면 진입과 저장은 `DRAFT` 버전만 허용한다.
+- 저장된 graph가 없으면 조회 API는 200과 `startNodeKey=null`, `nodes=[]`를 반환한다.
 - 활성화는 게시된 버전이 있을 때만 가능하다.
 - 이미 게시된 버전은 직접 수정하지 않고 새 초안 버전을 만든다.
 - 삭제는 논리 삭제로 처리하고, 활성 시나리오는 삭제 전 비활성화한다.

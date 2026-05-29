@@ -19,7 +19,8 @@ public class AuditAspect {
     private final ObjectMapper objectMapper;
     private final HttpServletRequest request;
 
-    public AuditAspect(AuditLogMapper auditLogMapper, ObjectMapper objectMapper, HttpServletRequest request) {
+    public AuditAspect(
+            AuditLogMapper auditLogMapper, ObjectMapper objectMapper, HttpServletRequest request) {
         this.auditLogMapper = auditLogMapper;
         this.objectMapper = objectMapper;
         this.request = request;
@@ -28,13 +29,12 @@ public class AuditAspect {
     @AfterReturning("@annotation(audited)")
     public void writeAuditLog(JoinPoint joinPoint, Audited audited) {
         auditLogMapper.insert(
-            actor(),
-            audited.action(),
-            blankToNull(audited.targetType()),
-            null,
-            detail(joinPoint),
-            clientIp()
-        );
+                actor(),
+                audited.action(),
+                blankToNull(audited.targetType()),
+                null,
+                detail(joinPoint),
+                clientIp());
     }
 
     private String actor() {

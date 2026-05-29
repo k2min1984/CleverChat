@@ -20,13 +20,12 @@ public class InitialOperatorSeeder implements ApplicationRunner {
     private final boolean enabled;
 
     public InitialOperatorSeeder(
-        UserMapper userMapper,
-        PasswordEncoder passwordEncoder,
-        @Value("${cleverchat.operator.seed.username:}") String username,
-        @Value("${cleverchat.operator.seed.password:}") String password,
-        @Value("${cleverchat.operator.seed.display-name:Initial Operator}") String displayName,
-        @Value("${cleverchat.operator.seed.enabled:false}") boolean enabled
-    ) {
+            UserMapper userMapper,
+            PasswordEncoder passwordEncoder,
+            @Value("${cleverchat.operator.seed.username:}") String username,
+            @Value("${cleverchat.operator.seed.password:}") String password,
+            @Value("${cleverchat.operator.seed.display-name:Initial Operator}") String displayName,
+            @Value("${cleverchat.operator.seed.enabled:false}") boolean enabled) {
         this.userMapper = userMapper;
         this.passwordEncoder = passwordEncoder;
         this.username = username;

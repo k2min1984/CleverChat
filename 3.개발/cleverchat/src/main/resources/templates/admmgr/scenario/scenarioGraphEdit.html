@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admmgr/common/head :: adminHead('시나리오 그래프 편집 | CleverChat')}"></head>
+<body>
+<div class="admin-wrap">
+    <div th:replace="~{admmgr/common/sidebar :: adminSidebar}"></div>
+    <div class="main-area">
+        <div th:replace="~{admmgr/common/header :: adminHeader}"></div>
+        <div th:replace="~{admmgr/common/navigation :: adminNavigation}"></div>
+        <main class="content-area"
+              th:attr="data-graph-load-url=${graphLoadUrl},data-graph-save-url=${graphSaveUrl},data-back-url=${backUrl},data-preview-url=${previewUrl}">
+            <header>
+                <h1>
+                    <span th:text="${scenario.title}">Scenario</span>
+                    <small th:text="'v' + ${version.versionNo} + ' (' + ${version.status} + ')'">v1 (DRAFT)</small>
+                </h1>
+                <nav class="actions" aria-label="그래프 편집 작업">
+                    <a class="btn btn-md btn-secondary" th:href="${backUrl}">상세</a>
+                    <a class="btn btn-md btn-secondary" th:href="${previewUrl}" id="btnPreview">미리보기</a>
+                    <button type="button" class="btn btn-md btn-solid btn-primary" id="btnSave" aria-describedby="graphMsg">저장</button>
+                </nav>
+            </header>
+
+            <section aria-live="polite" role="status" id="graphMsg" class="msg" hidden></section>
+
+            <section class="graph-editor-section">
+                <h2>시작 노드</h2>
+                <div class="graph-start-row">
+                    <label for="startNodeKey">시작 노드 키</label>
+                    <input id="startNodeKey" type="text" maxlength="80" aria-describedby="startNodeKeyHelp" placeholder="예: start">
+                </div>
+                <p id="startNodeKeyHelp" class="help-text">아래 노드 목록에 등록된 노드 키 중 하나를 입력하세요. 첫 질문 노드를 시작 노드로 지정합니다.</p>
+            </section>
+
+            <section class="graph-editor-section">
+                <div class="result-header graph-editor-header">
+                    <div>
+                        <h2>노드 목록</h2>
+                        <p class="help-text">질문/답변/종료 노드를 추가하고, 선택지는 다음 노드 키로 연결합니다.</p>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-solid btn-emerald" id="btnAddNode">노드 추가</button>
+                </div>
+                <div class="graph-node-list" id="nodeTbody" aria-label="시나리오 그래프 노드 목록"></div>
+                <p id="nodeEmptyHelp" class="graph-empty" hidden>저장된 노드가 없습니다. 노드 추가 버튼으로 시작 노드를 만들어 주세요.</p>
+            </section>
+        </main>
+        <div th:replace="~{admmgr/common/footer :: adminFooter}"></div>
+    </div>
+</div>
+<script th:src="@{/asset/admmgr/style2/js/ADM.ScenarioGraphEdit.js}" defer></script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CleverChat Launcher Sample</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 2rem;
+      color: #1f2937;
+      background: #ffffff;
+    }
+
+    .cleverchat-launcher {
+      min-height: 44px;
+      padding: 0.75rem 1rem;
+      border: 0;
+      border-radius: 6px;
+      color: #ffffff;
+      background: #14532d;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .cleverchat-launcher:focus-visible {
+      outline: 3px solid #f59e0b;
+      outline-offset: 3px;
+    }
+  </style>
+</head>
+<body>
+  <h1>CleverChat Launcher Sample</h1>
+  <p>이 샘플은 외부 페이지에서 상담 화면을 새 창으로 여는 버튼 예시입니다.</p>
+
+  <button
+    type="button"
+    class="cleverchat-launcher"
+    aria-label="Open CleverChat consultation in a new window"
+    data-cleverchat-url="/chat">
+    상담 열기
+  </button>
+
+  <script>
+    (function () {
+      var launcher = document.querySelector(".cleverchat-launcher");
+      launcher.addEventListener("click", function () {
+        var chatUrl = launcher.getAttribute("data-cleverchat-url") || "/chat";
+        window.open(chatUrl, "cleverchat", "noopener,noreferrer,width=420,height=720");
+      });
+    })();
+  </script>
+</body>
+</html>

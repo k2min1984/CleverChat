@@ -361,6 +361,10 @@ ADM.Modal = ADM.Modal || {
             Array.from(doc.body.children).forEach(function(el){
                 if( el.tagName !== 'SCRIPT' ) box.appendChild(document.adoptNode(el));
             });
+            if( ADM.ManageLayer && typeof ADM.ManageLayer.init === 'function' ){
+                ADM.ManageLayer.init(box);
+            }
+            document.dispatchEvent(new CustomEvent('adm:modal-loaded', { detail:{ container: box } }));
 
             var scripts = Array.from(doc.querySelectorAll('body script'));
             var execNext = function(i){
@@ -432,3 +436,46 @@ ADM.Modal = ADM.Modal || {
 
 //parent.GF 호환
 window.GF = ADM.Modal;
+
+ADM.initCmsLayout = function(){
+    var sidebar = document.querySelector('.sidebar');
+    if( !sidebar ) return;
+
+    var currentPath = window.location.pathname.replace(/\/$/, '');
+    var pageLabel = document.querySelector('[data-current-admin-page]');
+    var activeLabel = '';
+
+    sidebar.querySelectorAll('a[href]').forEach(function(link){
+        var href = new URL(link.getAttribute('href'), window.location.origin).pathname.replace(/\/$/, '');
+        if( href && (currentPath === href || (href !== '/admin' && currentPath.indexOf(href + '/') === 0)) ){
+            link.classList.add('active');
+            var group = link.closest('.nav-group');
+            if( group ) group.classList.add('open');
+            activeLabel = (link.textContent || '').trim();
+        }
+    });
+
+    if( pageLabel && activeLabel ){
+        pageLabel.textContent = activeLabel;
+    }
+
+    sidebar.querySelectorAll('.nav-group-header').forEach(function(button){
+        button.addEventListener('click', function(){
+            var group = button.closest('.nav-group');
+            if( group ) group.classList.toggle('open');
+        });
+    });
+
+    var toggle = sidebar.querySelector('[data-sidebar-toggle]');
+    if( toggle ){
+        toggle.addEventListener('click', function(){
+            sidebar.classList.toggle('collapsed');
+        });
+    }
+};
+
+if( document.readyState === 'loading' ){
+    document.addEventListener('DOMContentLoaded', ADM.initCmsLayout);
+}else{
+    ADM.initCmsLayout();
+}

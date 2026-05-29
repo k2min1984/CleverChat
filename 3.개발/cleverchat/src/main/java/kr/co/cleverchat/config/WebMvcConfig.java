@@ -29,10 +29,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(authInterceptor)
-            .addPathPatterns("/admin/**");
-        registry.addInterceptor(csrfInterceptor)
-            .addPathPatterns("/admin/**", "/logout");
+        registry.addInterceptor(authInterceptor).addPathPatterns("/admin/**");
+        registry.addInterceptor(csrfInterceptor).addPathPatterns("/admin/**", "/logout");
     }
 
     @Override
@@ -45,16 +43,15 @@ public class WebMvcConfig implements WebMvcConfigurer {
         @Override
         public boolean supportsParameter(MethodParameter parameter) {
             return parameter.hasParameterAnnotation(CurrentUser.class)
-                && AdminSession.class.isAssignableFrom(parameter.getParameterType());
+                    && AdminSession.class.isAssignableFrom(parameter.getParameterType());
         }
 
         @Override
         public Object resolveArgument(
-            MethodParameter parameter,
-            ModelAndViewContainer mavContainer,
-            NativeWebRequest webRequest,
-            WebDataBinderFactory binderFactory
-        ) {
+                MethodParameter parameter,
+                ModelAndViewContainer mavContainer,
+                NativeWebRequest webRequest,
+                WebDataBinderFactory binderFactory) {
             HttpServletRequest request = webRequest.getNativeRequest(HttpServletRequest.class);
             if (request == null) {
                 return null;

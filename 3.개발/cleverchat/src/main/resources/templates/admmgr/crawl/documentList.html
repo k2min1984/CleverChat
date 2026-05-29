@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admmgr/common/head :: adminHead('Crawl documents | CleverChat')}"></head>
+<body>
+<div class="admin-wrap">
+    <div th:replace="~{admmgr/common/sidebar :: adminSidebar}"></div>
+    <div class="main-area">
+        <div th:replace="~{admmgr/common/header :: adminHeader}"></div>
+        <div th:replace="~{admmgr/common/navigation :: adminNavigation}"></div>
+        <main class="content-area">
+            <header>
+                <h1>Crawl documents</h1>
+                <nav class="actions" aria-label="Crawl document operations">
+                    <a class="button" th:href="@{/admin/crawl-targets}">Targets</a>
+                    <a class="button" th:href="@{/admin/crawl-runs}">Runs</a>
+                </nav>
+            </header>
+            <form method="get" th:action="@{/admin/crawl-documents}" aria-label="Crawl document filters">
+                <label>
+                    Target ID
+                    <input type="number" name="targetId" min="1" th:value="${targetId}">
+                </label>
+                <button type="submit">Filter</button>
+            </form>
+            <table aria-label="Crawl document list">
+                <caption>Crawl document list</caption>
+                <thead>
+                <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col">Target</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Title</th>
+                    <th scope="col">URL</th>
+                    <th scope="col">Hash</th>
+                    <th scope="col">Preview</th>
+                    <th scope="col">Fetched</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="document : ${documents}">
+                    <td th:text="${document.id}">1</td>
+                    <td th:text="${document.targetId}">10</td>
+                    <td th:text="${document.status}">SUCCESS</td>
+                    <td th:text="${document.title ?: '-'}">Help</td>
+                    <td><a th:href="${document.url}" th:text="${document.url}" target="_blank" rel="noopener noreferrer">https://example.com</a></td>
+                    <td th:text="${#strings.abbreviate(document.contentHash, 12)}">abcdef</td>
+                    <td th:text="${#strings.abbreviate(document.content, 160)}">Preview</td>
+                    <td th:text="${#temporals.format(document.fetchedAt, 'yyyy-MM-dd HH:mm')}">2026-05-27 13:00</td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(documents)}">
+                    <td colspan="8">No crawl documents found.</td>
+                </tr>
+                </tbody>
+            </table>
+        </main>
+        <div th:replace="~{admmgr/common/footer :: adminFooter}"></div>
+    </div>
+</div>
+</body>
+</html>

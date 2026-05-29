@@ -1,8 +1,23 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <body>
-<header th:fragment="adminHeader" class="admin-header">
-    <h1>CleverChat Admin</h1>
+<header th:fragment="adminHeader" class="top-header">
+    <div class="top-header-left">
+        <strong class="page-title">CleverChat Admin</strong>
+    </div>
+    <div class="header-actions">
+        <div class="user-info-area" th:if="${session.CLEVERCHAT_ADMIN_SESSION != null}">
+            <div class="user-details">
+                <span class="user-name" th:text="${session.CLEVERCHAT_ADMIN_SESSION.displayName}">관리자</span>
+                <span class="user-meta" th:text="${session.CLEVERCHAT_ADMIN_SESSION.username}">admin</span>
+            </div>
+        </div>
+        <form th:action="@{/logout}" method="post">
+            <input type="hidden" name="csrfToken" th:value="${session.csrfToken}">
+            <input type="hidden" name="csrfFormId" th:value="${session.csrfFormId}">
+            <button type="submit" class="btn-logout" aria-label="로그아웃">⎋</button>
+        </form>
+    </div>
 </header>
 </body>
 </html>

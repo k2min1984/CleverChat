@@ -1,8 +1,5 @@
 package kr.co.cleverchat.domain.scenario.event;
 
-import org.springframework.stereotype.Component;
-
-@Component
 public class NoopScenarioMatchingCacheInvalidator implements ScenarioMatchingCacheInvalidator {
 
     @Override

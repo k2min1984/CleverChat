@@ -8,7 +8,10 @@ import org.apache.ibatis.annotations.Param;
 @Mapper
 public interface ScenarioNodeMapper {
     List<ScenarioNode> findByVersionId(@Param("versionId") Long versionId);
+
     ScenarioNode findById(@Param("id") Long id);
+
     void insert(ScenarioNode node);
+
     int deleteByVersionId(@Param("versionId") Long versionId);
 }

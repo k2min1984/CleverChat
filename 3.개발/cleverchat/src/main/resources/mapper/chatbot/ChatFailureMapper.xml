@@ -2,11 +2,113 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="kr.co.cleverchat.domain.chatbot.mapper.ChatFailureMapper">
+    <select id="findQueue" resultType="kr.co.cleverchat.domain.chatbot.model.ChatFailureQueueItem">
+        SELECT
+            f.id,
+            left(f.session_id::text, 8) AS session_key,
+            f.message_id,
+            f.reason,
+            f.detail::text AS detail,
+            f.reviewed,
+            f.reviewed_by,
+            f.reviewed_at,
+            f.review_comment,
+            f.review_comment_ciphertext,
+            f.review_comment_key_id,
+            f.review_comment_encryption_version,
+            f.created_at,
+            s.scenario_id,
+            sc.title AS scenario_title,
+            s.current_node_id
+        FROM chat_failure f
+        JOIN chat_session s ON s.id = f.session_id
+        JOIN scenario sc ON sc.id = s.scenario_id
+        <where>
+            <if test="reviewed != null">
+                f.reviewed = #{reviewed}
+            </if>
+        </where>
+        ORDER BY f.reviewed ASC, f.created_at DESC, f.id DESC
+        LIMIT #{limit}
+    </select>
+    <select id="findBySessionId" resultType="kr.co.cleverchat.domain.chatbot.model.ChatFailureQueueItem">
+        SELECT
+            f.id,
+            left(f.session_id::text, 8) AS session_key,
+            f.message_id,
+            f.reason,
+            f.detail::text AS detail,
+            f.reviewed,
+            f.reviewed_by,
+            f.reviewed_at,
+            f.review_comment,
+            f.review_comment_ciphertext,
+            f.review_comment_key_id,
+            f.review_comment_encryption_version,
+            f.created_at,
+            s.scenario_id,
+            sc.title AS scenario_title,
+            s.current_node_id
+        FROM chat_failure f
+        JOIN chat_session s ON s.id = f.session_id
+        JOIN scenario sc ON sc.id = s.scenario_id
+        WHERE f.session_id = #{sessionId}::uuid
+        ORDER BY f.created_at DESC, f.id DESC
+    </select>
     <insert id="insert" parameterType="kr.co.cleverchat.domain.chatbot.model.ChatFailure" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO chat_failure (session_id, message_id, reason, detail, reviewed, reviewed_by, reviewed_at, review_comment)
+        INSERT INTO chat_failure (
+            session_id, message_id, reason, detail, reviewed, reviewed_by, reviewed_at,
+            review_comment, review_comment_ciphertext, review_comment_key_id,
+            review_comment_encryption_version
+        )
         VALUES (
-            #{sessionId}, #{messageId}, #{reason}, CAST(#{detail} AS jsonb),
-            #{reviewed}, #{reviewedBy}, #{reviewedAt}, #{reviewComment}
+            #{sessionId}::uuid, #{messageId}, #{reason}, CAST(#{detail} AS jsonb),
+            #{reviewed}, #{reviewedBy}, #{reviewedAt}, #{reviewComment},
+            #{reviewCommentCiphertext}, #{reviewCommentKeyId}, #{reviewCommentEncryptionVersion}
         )
     </insert>
+    <update id="markReviewed">
+        UPDATE chat_failure
+        SET reviewed = true,
+            reviewed_by = #{reviewedBy},
+            reviewed_at = now(),
+            review_comment = #{reviewComment},
+            review_comment_ciphertext = #{reviewCommentCiphertext},
+            review_comment_key_id = #{reviewCommentKeyId},
+            review_comment_encryption_version = #{reviewCommentEncryptionVersion}
+        WHERE id = #{id}
+    </update>
+    <select id="findReviewCommentBackfillCandidates" resultType="kr.co.cleverchat.domain.chatbot.model.ChatEncryptedFieldRow">
+        SELECT id,
+               review_comment AS plaintext,
+               review_comment_ciphertext AS ciphertext,
+               review_comment_key_id AS key_id
+        FROM chat_failure
+        WHERE review_comment_ciphertext IS NULL
+          AND review_comment IS NOT NULL
+          AND review_comment != ''
+          AND review_comment != '[encrypted]'
+        ORDER BY id
+        LIMIT #{limit}
+    </select>
+    <select id="findReviewCommentRotationCandidates" resultType="kr.co.cleverchat.domain.chatbot.model.ChatEncryptedFieldRow">
+        SELECT id,
+               review_comment AS plaintext,
+               review_comment_ciphertext AS ciphertext,
+               review_comment_key_id AS key_id
+        FROM chat_failure
+        WHERE review_comment_ciphertext IS NOT NULL
+          AND review_comment_key_id IS NOT NULL
+          AND review_comment_key_id != #{activeKeyId}
+        ORDER BY id
+        LIMIT #{limit}
+    </select>
+    <update id="updateEncryptedReviewComment">
+        UPDATE chat_failure
+        SET review_comment = #{reviewComment},
+            review_comment_ciphertext = #{reviewCommentCiphertext},
+            review_comment_key_id = #{reviewCommentKeyId},
+            review_comment_encryption_version = #{reviewCommentEncryptionVersion}
+        WHERE id = #{id}
+    </update>
 </mapper>

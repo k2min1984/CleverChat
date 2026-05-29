@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admmgr/common/head :: adminHead('Search blocks | CleverChat')}"></head>
+<body>
+<div class="admin-wrap">
+    <div th:replace="~{admmgr/common/sidebar :: adminSidebar}"></div>
+    <div class="main-area">
+        <div th:replace="~{admmgr/common/header :: adminHeader}"></div>
+        <div th:replace="~{admmgr/common/navigation :: adminNavigation}"></div>
+        <main class="content-area">
+            <header>
+                <h1>Search blocks</h1>
+                <nav class="actions" aria-label="Search block navigation">
+                    <a class="button" th:href="@{/admin/search/logs}">Logs</a>
+                    <a class="button" th:href="@{/admin/search/popular}">Popular</a>
+                </nav>
+            </header>
+            <form method="get" th:action="@{/admin/search/blocks}" aria-label="Search block filters">
+                <label>
+                    PII type
+                    <input type="search" name="piiType" maxlength="50" th:value="${piiType}">
+                </label>
+                <label>
+                    Source
+                    <select name="source">
+                        <option value="" th:selected="${source == null or source == ''}">All</option>
+                        <option value="CHAT_FALLBACK" th:selected="${source == 'CHAT_FALLBACK'}">CHAT_FALLBACK</option>
+                        <option value="ADMIN_TEST" th:selected="${source == 'ADMIN_TEST'}">ADMIN_TEST</option>
+                        <option value="API" th:selected="${source == 'API'}">API</option>
+                    </select>
+                </label>
+                <button type="submit">Filter</button>
+            </form>
+            <table aria-label="Blocked search list">
+                <caption>Blocked search list</caption>
+                <thead>
+                <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col">Length</th>
+                    <th scope="col">PII types</th>
+                    <th scope="col">Source</th>
+                    <th scope="col">User</th>
+                    <th scope="col">Created</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="block : ${blocks}">
+                    <td th:text="${block.id}">1</td>
+                    <td th:text="${block.queryLength}">12</td>
+                    <td th:text="${block.piiTypes}">EMAIL</td>
+                    <td th:text="${block.source}">ADMIN_TEST</td>
+                    <td th:text="${block.userId ?: '-'}">10</td>
+                    <td th:text="${#temporals.format(block.createdAt, 'yyyy-MM-dd HH:mm')}">2026-05-27 13:00</td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(blocks)}">
+                    <td colspan="6">No blocked searches found.</td>
+                </tr>
+                </tbody>
+            </table>
+        </main>
+        <div th:replace="~{admmgr/common/footer :: adminFooter}"></div>
+    </div>
+</div>
+</body>
+</html>

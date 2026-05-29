@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<body>
+<form method="post" th:action="@{/admmgr/manage/codeLayerRegistProc.do}" data-manage-layer="code">
+    <input type="hidden" name="codeNo" th:value="${rMap.codeNo}">
+    <div class="detail-header">
+        <div class="title">
+            코드 설정
+            <span class="sub-text" th:text="'관리번호 ' + ${rMap.codeNo}">관리번호</span>
+        </div>
+        <button type="button" class="btn-close-x" data-close-layer aria-label="닫기">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M18 6L6 18"></path>
+                <path d="M6 6l12 12"></path>
+            </svg>
+        </button>
+    </div>
+    <div class="detail-body">
+        <table class="info-table">
+            <caption class="sr-only">코드 설정 입력</caption>
+            <tbody>
+            <tr>
+                <th scope="row">관리번호</th>
+                <td><span class="code-no-val" th:text="${rMap.codeNo}">0</span></td>
+            </tr>
+            <tr>
+                <th scope="row"><em class="required">*</em> 코드명</th>
+                <td>
+                    <input type="text" name="codeNm" class="form-input" maxlength="100"
+                           data-layer-required data-label="코드명" th:value="${rMap.codeNm}">
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">코드값</th>
+                <td><input type="text" name="codeVal" class="form-input" maxlength="100" th:value="${rMap.codeVal}"></td>
+            </tr>
+            <tr>
+                <th scope="row">코드그룹</th>
+                <td><input type="text" name="codeGroup" class="form-input" maxlength="100" th:value="${rMap.codeGroup}"></td>
+            </tr>
+            <tr>
+                <th scope="row">설명</th>
+                <td><textarea name="codeDc" class="form-textarea" maxlength="1000" th:text="${rMap.codeDc}"></textarea></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="detail-footer">
+        <button type="button" class="btn btn-md btn-secondary btn-cancel" data-close-layer>취소</button>
+        <button type="button" class="btn btn-md btn-primary" data-save-layer>저장</button>
+    </div>
+</form>
+</body>
+</html>

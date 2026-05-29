@@ -4,87 +4,67 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>관리자 로그인 | CleverChat</title>
-    <style>
-        :root {
-            color-scheme: light;
-            font-family: Arial, "Noto Sans KR", sans-serif;
-            color: #1f2937;
-            background: #f3f4f6;
-        }
-        body {
-            margin: 0;
-            min-height: 100vh;
-            display: grid;
-            place-items: center;
-        }
-        main {
-            width: min(420px, calc(100vw - 32px));
-            background: #ffffff;
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-            padding: 32px;
-            box-sizing: border-box;
-        }
-        h1 {
-            margin: 0 0 24px;
-            font-size: 24px;
-        }
-        label {
-            display: block;
-            margin: 16px 0 6px;
-            font-weight: 700;
-        }
-        input {
-            width: 100%;
-            min-height: 44px;
-            border: 1px solid #9ca3af;
-            border-radius: 6px;
-            padding: 8px 10px;
-            box-sizing: border-box;
-            font-size: 16px;
-        }
-        button {
-            width: 100%;
-            min-height: 44px;
-            margin-top: 24px;
-            border: 0;
-            border-radius: 6px;
-            background: #2563eb;
-            color: #ffffff;
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-        }
-        .message {
-            margin: 0 0 16px;
-            padding: 12px;
-            border-radius: 6px;
-        }
-        .error {
-            background: #fef2f2;
-            color: #991b1b;
-            border: 1px solid #fecaca;
-        }
-        .logout {
-            background: #ecfdf5;
-            color: #065f46;
-            border: 1px solid #a7f3d0;
-        }
-    </style>
+    <link rel="stylesheet" th:href="@{/asset/admmgr/style2/css/login.css}">
+    <script th:src="@{/asset/admmgr/style2/js/ADM.Login.js}" defer></script>
 </head>
 <body>
-<main>
-    <h1>관리자 로그인</h1>
-    <p th:if="${param.error}" class="message error" role="alert">아이디 또는 비밀번호를 확인해 주세요.</p>
-    <p th:if="${param.logout}" class="message logout" role="status">로그아웃되었습니다.</p>
-    <!-- CSRF: 로그인 전 세션은 _csrfHidden fragment 미적용 정책 -->
-    <form th:action="@{/login}" method="post">
-        <label for="username">아이디</label>
-        <input id="username" name="username" type="text" autocomplete="username" required autofocus>
-        <label for="password">비밀번호</label>
-        <input id="password" name="password" type="password" autocomplete="current-password" required>
-        <button type="submit">로그인</button>
+<div class="login-loading" id="loginLoading" aria-live="polite" aria-hidden="true">
+    <div class="login-loading-spinner" aria-hidden="true"></div>
+    <div class="login-loading-text">로그인 처리 중...</div>
+</div>
+
+<div class="bg-circle" aria-hidden="true"></div>
+<div class="bg-circle" aria-hidden="true"></div>
+<div class="bg-circle" aria-hidden="true"></div>
+
+<main class="login-card" aria-labelledby="loginTitle">
+    <div class="logo-area">
+        <div class="logo-icon" aria-hidden="true"><span>CC</span></div>
+        <h1 id="loginTitle" class="logo-title">CleverChat</h1>
+        <div class="logo-subtitle">Administration CMS</div>
+    </div>
+
+    <p th:if="${param.error}" class="error-msg show" role="alert">아이디 또는 비밀번호를 확인해 주세요.</p>
+    <p th:if="${param.logout}" class="status-msg show" role="status">로그아웃되었습니다.</p>
+
+    <form id="loginForm" th:action="@{/login}" method="post">
+        <div class="form-group">
+            <label for="username">User ID</label>
+            <input type="text" id="username" name="username" class="form-input"
+                   placeholder="아이디를 입력해 주세요" autocomplete="username" required autofocus maxlength="50">
+            <svg class="input-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"></path>
+            </svg>
+        </div>
+
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" class="form-input"
+                   placeholder="비밀번호를 입력해 주세요" autocomplete="current-password" required maxlength="100">
+            <svg class="input-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1s3.1 1.39 3.1 3.1v2z"></path>
+            </svg>
+            <div id="capsLockMsg" class="caps-lock-msg" role="status" aria-live="polite">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"></path>
+                </svg>
+                Caps Lock이 켜져 있습니다.
+            </div>
+        </div>
+
+        <div class="check-row">
+            <label class="check-label">
+                <input type="checkbox" id="saveId" name="saveId">
+                아이디 기억
+            </label>
+        </div>
+
+        <button type="submit" class="btn-login">로그인</button>
     </form>
+
+    <div class="login-footer">
+        <p>COPYRIGHT &copy; CleverChat. ALL RIGHTS RESERVED.</p>
+    </div>
 </main>
 </body>
 </html>

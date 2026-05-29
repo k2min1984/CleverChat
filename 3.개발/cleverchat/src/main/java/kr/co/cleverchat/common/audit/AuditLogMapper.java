@@ -7,11 +7,10 @@ import org.apache.ibatis.annotations.Param;
 public interface AuditLogMapper {
 
     void insert(
-        @Param("actor") String actor,
-        @Param("action") String action,
-        @Param("targetType") String targetType,
-        @Param("targetId") String targetId,
-        @Param("detail") String detail,
-        @Param("ip") String ip
-    );
+            @Param("actor") String actor,
+            @Param("action") String action,
+            @Param("targetType") String targetType,
+            @Param("targetId") String targetId,
+            @Param("detail") String detail,
+            @Param("ip") String ip);
 }

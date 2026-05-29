@@ -1,0 +1,40 @@
+name: CleverChat CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-test-static:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      - name: Unit and controller tests
+        working-directory: 3.개발/cleverchat
+        run: .\mvnw.cmd clean test
+
+      - name: Spotless check
+        working-directory: 3.개발/cleverchat
+        run: .\mvnw.cmd spotless:check
+
+      - name: Diff whitespace check
+        run: git diff --check
+
+  # Optional integration-test job:
+  # Enable this after the runner has a working Docker Engine/Testcontainers setup.
+  # Command: .\mvnw.cmd -Pit test

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admmgr/common/head :: adminHead('Chat failures | CleverChat')}"></head>
+<body>
+<div class="admin-wrap">
+    <div th:replace="~{admmgr/common/sidebar :: adminSidebar}"></div>
+    <div class="main-area">
+        <div th:replace="~{admmgr/common/header :: adminHeader}"></div>
+        <div th:replace="~{admmgr/common/navigation :: adminNavigation}"></div>
+        <main class="content-area" data-chat-failure-root>
+            <header>
+                <h1>Chat failures</h1>
+                <nav class="actions" aria-label="Failure filters">
+                    <a class="button" th:href="@{/admin/chat/failures}">All</a>
+                    <a class="button" th:href="@{/admin/chat/failures(reviewed=false)}">Open</a>
+                    <a class="button" th:href="@{/admin/chat/failures(reviewed=true)}">Reviewed</a>
+                </nav>
+            </header>
+            <p id="failureStatus" role="status" aria-live="polite"></p>
+            <table aria-label="Chat failure queue">
+                <caption>Chat failure queue</caption>
+                <thead>
+                <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col">Reason</th>
+                    <th scope="col">Scenario</th>
+                    <th scope="col">Session</th>
+                    <th scope="col">Detail</th>
+                    <th scope="col">Created</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Review</th>
+                </tr>
+                </thead>
+                <tbody id="failureRows">
+                <tr th:each="failure : ${failures}" th:attr="data-failure-id=${failure.id}">
+                    <td th:text="${failure.id}">1</td>
+                    <td th:text="${failure.reason}">NO_MATCH</td>
+                    <td th:text="${failure.scenarioTitle}">Scenario</td>
+                    <td th:text="${failure.sessionKey}">abcdef12</td>
+                    <td><code th:text="${failure.detail}">{}</code></td>
+                    <td th:text="${#temporals.format(failure.createdAt, 'yyyy-MM-dd HH:mm')}">2026-05-27 13:00</td>
+                    <td th:text="${failure.reviewed ? 'Reviewed' : 'Open'}">Open</td>
+                    <td>
+                        <form th:if="${!failure.reviewed}" class="failure-review-form" th:attr="data-failure-id=${failure.id}">
+                            <label>
+                                <span class="sr-only">Review comment</span>
+                                <input type="text" name="comment" maxlength="1000" placeholder="Comment">
+                            </label>
+                            <button type="submit">Mark reviewed</button>
+                        </form>
+                        <span th:if="${failure.reviewed}" th:text="${failure.reviewComment ?: '-'}">-</span>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(failures)}">
+                    <td colspan="8">No failures found.</td>
+                </tr>
+                </tbody>
+            </table>
+        </main>
+        <div th:replace="~{admmgr/common/footer :: adminFooter}"></div>
+    </div>
+</div>
+<script th:src="@{/asset/admmgr/style2/js/ADM.ChatFailures.js}" defer></script>
+</body>
+</html>

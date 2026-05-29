@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admmgr/common/head :: adminHead('메뉴 관리 | CleverChat')}"></head>
+<body>
+<div class="admin-wrap">
+    <div th:replace="~{admmgr/common/sidebar :: adminSidebar}"></div>
+    <div class="main-area">
+        <div th:replace="~{admmgr/common/header :: adminHeader}"></div>
+        <div th:replace="~{admmgr/common/navigation :: adminNavigation}"></div>
+        <main class="content-area"
+              data-legacy-tree="menu"
+              th:data-select-url="@{/admmgr/manage/menuSelectAjax.do}"
+              th:data-regist-url="@{/admmgr/manage/menuRegistAjaxProc.do}"
+              th:data-remove-url="@{/admmgr/manage/menuDeleteAjaxProc.do}"
+              th:data-update-nm-url="@{/admmgr/manage/menuNmUpdateAjaxProc.do}"
+              th:data-update-sort-url="@{/admmgr/manage/menuSortUpdateAjaxProc.do}"
+              th:data-layer-url="@{/admmgr/manage/menuLayer.do}"
+              th:data-refresh-url="@{/admmgr/manage/menuRefreshAjaxProc.do}">
+            <h1 class="sr-only">메뉴 관리</h1>
+
+            <div class="tree-top-bar">
+                <div class="info-wrap">
+                    <p>메뉴 수정 후 필요한 경우 변경내역 서버 반영을 진행해 주세요.</p>
+                    <div class="usage-info">
+                        <b>사용법</b> 메뉴명 <b>더블클릭</b> 시 실시간 수정이 가능하며,
+                        수정 중 <kbd>Enter</kbd>를 누르면 저장, <kbd>ESC</kbd>를 누르면 취소합니다.
+                    </div>
+                </div>
+                <button type="button" class="btn-server" id="btnRefresh">변경내역 서버 반영</button>
+            </div>
+
+            <div class="tree-wrap">
+                <div class="tree-col" th:each="depth : ${#numbers.sequence(1,3)}">
+                    <div class="tree-col-header">
+                        <div>
+                            <span class="depth-badge" th:text="${depth}">1</span>
+                            <span th:text="${depth + '단계'}">1단계</span>
+                        </div>
+                    </div>
+                    <div class="tree-add-row">
+                        <input type="hidden" class="add-pMenuNo">
+                        <input type="text" class="add-menuNm" placeholder="메뉴명 입력" maxlength="100" th:attr="aria-label=${depth + '단계 메뉴명'}">
+                        <button type="button" class="tree-add-btn" th:data-depth="${depth}">추가</button>
+                    </div>
+                    <div class="tree-list">
+                        <table th:id="'menuTbl_'+${depth}">
+                            <caption th:text="${depth + '단계 메뉴 목록'}">메뉴 목록</caption>
+                            <thead>
+                            <tr>
+                                <th scope="col" class="col-no">번호</th>
+                                <th scope="col" class="col-name">메뉴명</th>
+                                <th scope="col" class="col-drag">이동</th>
+                                <th scope="col" class="col-act">설정</th>
+                                <th scope="col" class="col-act">삭제</th>
+                                <th scope="col" class="col-act" th:if="${depth < 3}">선택</th>
+                            </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+        <div th:replace="~{admmgr/common/footer :: adminFooter}"></div>
+    </div>
+</div>
+<script th:src="@{/asset/admmgr/style2/js/ADM.TreeList.js}" defer></script>
+<script th:src="@{/asset/admmgr/style2/js/ADM.ManageLegacy.js}" defer></script>
+<script th:src="@{/asset/admmgr/style2/js/ADM.ManageLayer.js}" defer></script>
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admmgr/common/head :: adminHead('권한 관리 | CleverChat')}"></head>
+<body>
+<div class="admin-wrap">
+    <div th:replace="~{admmgr/common/sidebar :: adminSidebar}"></div>
+    <div class="main-area">
+        <div th:replace="~{admmgr/common/header :: adminHeader}"></div>
+        <div th:replace="~{admmgr/common/navigation :: adminNavigation}"></div>
+        <main class="content-area"
+              data-legacy-auth
+              th:data-auth-select-url="@{/admmgr/manage/authAdminSelectAjax.do}"
+              th:data-auth-regist-url="@{/admmgr/manage/authAdminRegistAjaxProc.do}"
+              th:data-auth-remove-url="@{/admmgr/manage/authAdminDeleteAjaxProc.do}"
+              th:data-menu-select-url="@{/admmgr/manage/authAdminMenuSelectAjax.do}"
+              th:data-menu-regist-url="@{/admmgr/manage/authAdminMenuRegistAjaxProc.do}">
+            <h1 class="sr-only">권한 관리</h1>
+
+            <div class="auth-wrap">
+                <div class="auth-panel auth-list-panel">
+                    <div class="auth-panel-header">
+                        <span>권한 목록</span>
+                        <span class="panel-badge" id="authCount">0</span>
+                    </div>
+                    <div class="auth-add-row">
+                        <input type="text" id="newAuthNm" placeholder="권한명 입력" maxlength="50" aria-label="권한명 입력">
+                        <button type="button" id="btnAddAuth">추가</button>
+                    </div>
+                    <div class="auth-item-list" id="authList" aria-label="권한 목록"></div>
+                </div>
+
+                <div class="auth-panel auth-tree-panel">
+                    <div class="auth-panel-header">
+                        <span>메뉴 권한 설정</span>
+                        <span id="selectedAuthNm" class="selected-auth-badge">권한을 선택해 주세요</span>
+                    </div>
+                    <div class="auth-tree-body" id="menuTree">
+                        <div class="tree-empty">좌측에서 권한을 선택하면 메뉴 권한을 설정할 수 있습니다.</div>
+                    </div>
+                    <div class="auth-tree-actions">
+                        <button type="button" class="btn-fill green" id="btnSaveMenuAuth" style="margin-left:auto;">
+                            메뉴 권한 저장
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+        <div th:replace="~{admmgr/common/footer :: adminFooter}"></div>
+    </div>
+</div>
+<script th:src="@{/asset/admmgr/style2/js/ADM.ManageLegacy.js}" defer></script>
+</body>
+</html>

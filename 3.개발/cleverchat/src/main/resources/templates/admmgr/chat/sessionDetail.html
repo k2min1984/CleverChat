@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admmgr/common/head :: adminHead('Chat session detail | CleverChat')}"></head>
+<body>
+<div class="admin-wrap">
+    <div th:replace="~{admmgr/common/sidebar :: adminSidebar}"></div>
+    <div class="main-area">
+        <div th:replace="~{admmgr/common/header :: adminHeader}"></div>
+        <div th:replace="~{admmgr/common/navigation :: adminNavigation}"></div>
+        <main class="content-area">
+            <header>
+                <h1>Chat session detail</h1>
+                <nav class="actions" aria-label="Chat session actions">
+                    <a class="button" th:href="@{/admin/chat/sessions}">List</a>
+                </nav>
+            </header>
+            <section>
+                <h2>Session</h2>
+                <p><strong>Session</strong> <span th:text="${detail.session.sessionKey}">abcdef12</span></p>
+                <p><strong>Scenario</strong> <span th:text="${detail.session.scenarioTitle}">Scenario</span></p>
+                <p><strong>State</strong> <span th:text="${detail.session.state}">ACTIVE</span></p>
+                <p><strong>Current node</strong> <span th:text="${detail.session.currentNodeId ?: '-'}">-</span></p>
+            </section>
+            <section>
+                <h2>Messages</h2>
+                <table aria-label="Session message trace">
+                    <caption>Session message trace</caption>
+                    <thead>
+                    <tr>
+                        <th scope="col">Seq</th>
+                        <th scope="col">Direction</th>
+                        <th scope="col">Content</th>
+                        <th scope="col">Feedback</th>
+                        <th scope="col">Created</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="message : ${detail.messages}">
+                        <td th:text="${message.seq}">1</td>
+                        <td th:text="${message.direction}">BOT</td>
+                        <td th:text="${message.content}">Message</td>
+                        <td th:text="${message.feedbackRating ?: '-'}">-</td>
+                        <td th:text="${#temporals.format(message.createdAt, 'yyyy-MM-dd HH:mm')}">2026-05-27 13:00</td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(detail.messages)}">
+                        <td colspan="5">No messages found.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </section>
+            <section>
+                <h2>Failures</h2>
+                <table aria-label="Session failure trace">
+                    <caption>Session failure trace</caption>
+                    <thead>
+                    <tr>
+                        <th scope="col">Reason</th>
+                        <th scope="col">Detail</th>
+                        <th scope="col">Reviewed</th>
+                        <th scope="col">Created</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="failure : ${detail.failures}">
+                        <td th:text="${failure.reason}">NO_MATCH</td>
+                        <td><code th:text="${failure.detail}">{}</code></td>
+                        <td th:text="${failure.reviewed ? 'Reviewed' : 'Open'}">Open</td>
+                        <td th:text="${#temporals.format(failure.createdAt, 'yyyy-MM-dd HH:mm')}">2026-05-27 13:00</td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(detail.failures)}">
+                        <td colspan="4">No failures found.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </section>
+        </main>
+        <div th:replace="~{admmgr/common/footer :: adminFooter}"></div>
+    </div>
+</div>
+</body>
+</html>

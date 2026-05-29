@@ -1,46 +1,147 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{admmgr/common/head :: adminHead('시나리오 | CleverChat')}"></head>
+<head th:replace="~{admmgr/common/head :: adminHead('Scenario list | CleverChat')}"></head>
 <body>
 <div class="admin-wrap">
     <div th:replace="~{admmgr/common/sidebar :: adminSidebar}"></div>
-    <div class="admin-container">
+    <div class="main-area">
         <div th:replace="~{admmgr/common/header :: adminHeader}"></div>
         <div th:replace="~{admmgr/common/navigation :: adminNavigation}"></div>
-        <main class="admin-content">
-            <header>
-                <h1>시나리오</h1>
-                <nav class="actions">
-                    <a class="button" th:href="@{/admin}">관리자 홈</a>
-                    <a class="button" th:href="@{/admin/scenarios/new}">등록</a>
-                </nav>
-            </header>
-            <table aria-label="시나리오 목록">
-                <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>제목</th>
-                    <th>카테고리</th>
-                    <th>상태</th>
-                    <th>수정일</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="scenario : ${scenarios}">
-                    <td th:text="${scenario.id}">1</td>
-                    <td><a th:href="@{/admin/scenarios/{id}(id=${scenario.id})}" th:text="${scenario.title}">제목</a></td>
-                    <td th:text="${scenario.categoryName}">기본</td>
-                    <td th:text="${scenario.status}">DRAFT</td>
-                    <td th:text="${#temporals.format(scenario.updatedAt, 'yyyy-MM-dd HH:mm')}">2026-05-11</td>
-                </tr>
-                <tr th:if="${#lists.isEmpty(scenarios)}">
-                    <td colspan="5">등록된 시나리오가 없습니다.</td>
-                </tr>
-                </tbody>
-            </table>
+        <main class="content-area">
+            <div class="page-wrap">
+                <form method="get" th:action="@{/admin/scenarios}" class="search-card search-card-horizontal" aria-label="Scenario search">
+                    <div class="box-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                        검색 조건
+                    </div>
+                    <div class="search-row">
+                        <div class="search-field">
+                            <label for="categoryId" class="search-label">카테고리</label>
+                            <select id="categoryId" name="categoryId" class="search-select">
+                                <option value="" th:selected="${categoryId == null}">전체</option>
+                                <option th:each="category : ${categories}"
+                                        th:value="${category.id}"
+                                        th:selected="${categoryId != null and categoryId == category.id}"
+                                        th:text="${category.name}">민원</option>
+                            </select>
+                        </div>
+                        <div class="search-field">
+                            <label for="title" class="search-label">제목</label>
+                            <input id="title" name="title" class="search-input" type="text"
+                                   th:value="${title}" maxlength="150" placeholder="제목 입력">
+                        </div>
+                        <div class="search-field">
+                            <label for="status" class="search-label">상태</label>
+                            <select id="status" name="status" class="search-select">
+                                <option value="" th:selected="${status == null or status == ''}">전체</option>
+                                <option value="DRAFT" th:selected="${status == 'DRAFT'}">초안</option>
+                                <option value="ACTIVE" th:selected="${status == 'ACTIVE'}">활성</option>
+                                <option value="INACTIVE" th:selected="${status == 'INACTIVE'}">비활성</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="search-actions">
+                        <a class="btn-reset" th:href="@{/admin/scenarios}">초기화</a>
+                        <button type="submit" class="btn-search">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                            검색
+                        </button>
+                    </div>
+                </form>
+
+                <div class="result-header">
+                    <div class="result-count">검색 결과 총 <strong th:text="${totalCount} + '건'">0건</strong></div>
+                    <div class="result-actions">
+                        <a class="btn btn-sm btn-solid btn-emerald" th:href="@{/admin/scenarios/new}">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                            등록
+                        </a>
+                    </div>
+                </div>
+
+                <div class="table-card">
+                    <div class="table-wrap">
+                        <div class="admin-table-wrap">
+                            <table class="admin-table" aria-label="Scenario list">
+                                <caption>Scenario list</caption>
+                                <colgroup>
+                                    <col style="width:70px">
+                                    <col style="width:150px">
+                                    <col>
+                                    <col style="width:120px">
+                                    <col style="width:150px">
+                                    <col style="width:170px">
+                                </colgroup>
+                                <thead>
+                                <tr>
+                                    <th scope="col">ID</th>
+                                    <th scope="col">카테고리</th>
+                                    <th scope="col">제목</th>
+                                    <th scope="col">상태</th>
+                                    <th scope="col">수정일</th>
+                                    <th scope="col">관리</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="scenario : ${scenarios}">
+                                    <td th:text="${scenario.id}">1</td>
+                                    <td th:text="${scenario.categoryName}">민원</td>
+                                    <td class="td-left">
+                                        <a class="link-detail" th:href="@{/admin/scenarios/{id}(id=${scenario.id})}" th:text="${scenario.title}">제목</a>
+                                    </td>
+                                    <td>
+                                        <span th:if="${scenario.status == 'ACTIVE'}" class="badge badge-success">활성</span>
+                                        <span th:if="${scenario.status == 'DRAFT'}" class="badge badge-info">초안</span>
+                                        <span th:if="${scenario.status == 'INACTIVE'}" class="badge badge-default">비활성</span>
+                                    </td>
+                                    <td th:text="${#temporals.format(scenario.updatedAt, 'yyyy-MM-dd HH:mm')}">2026-05-11</td>
+                                    <td>
+                                        <div class="row-actions">
+                                            <a class="btn btn-xs btn-secondary" th:href="@{/admin/scenarios/{id}(id=${scenario.id})}">상세</a>
+                                            <a th:if="${previewVersionByScenarioId[scenario.id] != null}"
+                                               class="btn btn-xs btn-solid btn-emerald"
+                                               href="#"
+                                               th:href="@{/admin/scenarios/versions/{versionId}/preview(versionId=${previewVersionByScenarioId[scenario.id]})}"
+                                               th:data-preview-url="@{/admin/scenarios/versions/{versionId}/preview(versionId=${previewVersionByScenarioId[scenario.id]})}">
+                                                Preview
+                                            </a>
+                                            <span th:if="${previewVersionByScenarioId[scenario.id] == null}" class="help-text">버전 없음</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(scenarios)}" class="td-empty">
+                                    <td colspan="6">등록된 시나리오가 없습니다.</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="table-footer" th:if="${totalPages > 1}">
+                        <div></div>
+                        <nav class="paging-wrap" aria-label="Scenario pagination">
+                            <div class="pagination">
+                                <a class="page-btn" th:classappend="${page == 1} ? ' disabled'"
+                                   th:href="@{/admin/scenarios(categoryId=${categoryId},title=${title},status=${status},page=${page - 1},size=${size})}"
+                                   aria-label="이전 페이지">‹</a>
+                                <a th:each="pageNo : ${pageNumbers}"
+                                   class="page-btn"
+                                   th:classappend="${pageNo == page} ? ' active'"
+                                   th:href="@{/admin/scenarios(categoryId=${categoryId},title=${title},status=${status},page=${pageNo},size=${size})}"
+                                   th:text="${pageNo}"
+                                   th:attr="aria-current=${pageNo == page ? 'page' : null}">1</a>
+                                <a class="page-btn" th:classappend="${page == totalPages} ? ' disabled'"
+                                   th:href="@{/admin/scenarios(categoryId=${categoryId},title=${title},status=${status},page=${page + 1},size=${size})}"
+                                   aria-label="다음 페이지">›</a>
+                            </div>
+                        </nav>
+                        <div></div>
+                    </div>
+                </div>
+            </div>
         </main>
         <div th:replace="~{admmgr/common/footer :: adminFooter}"></div>
     </div>
 </div>
+<script th:src="@{/asset/admmgr/style2/js/ADM.ScenarioList.js}" defer></script>
 </body>
 </html>

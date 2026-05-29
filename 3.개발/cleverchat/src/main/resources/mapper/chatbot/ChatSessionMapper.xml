@@ -6,7 +6,75 @@
         SELECT id, anonymous_id, user_id, scenario_id, version_id, current_node_id, state,
                started_at, last_activity_at, expires_at, ip_hash, user_agent_hash, created_at
         FROM chat_session
-        WHERE id = #{id}
+        WHERE id = #{id}::uuid
+    </select>
+    <sql id="sessionListColumns">
+        s.id,
+        left(s.id::text, 8) AS session_key,
+        s.scenario_id,
+        sc.title AS scenario_title,
+        s.state,
+        s.current_node_id,
+        s.started_at,
+        s.last_activity_at,
+        s.expires_at,
+        COALESCE(count(m.id), 0) AS message_count,
+        (
+            SELECT lm.content
+            FROM chat_message lm
+            WHERE lm.session_id = s.id
+            ORDER BY lm.seq DESC, lm.id DESC
+            LIMIT 1
+        ) AS last_message,
+        (
+            SELECT lm.content_ciphertext
+            FROM chat_message lm
+            WHERE lm.session_id = s.id
+            ORDER BY lm.seq DESC, lm.id DESC
+            LIMIT 1
+        ) AS last_message_ciphertext,
+        (
+            SELECT lm.content_key_id
+            FROM chat_message lm
+            WHERE lm.session_id = s.id
+            ORDER BY lm.seq DESC, lm.id DESC
+            LIMIT 1
+        ) AS last_message_key_id,
+        (
+            SELECT lm.content_encryption_version
+            FROM chat_message lm
+            WHERE lm.session_id = s.id
+            ORDER BY lm.seq DESC, lm.id DESC
+            LIMIT 1
+        ) AS last_message_encryption_version
+    </sql>
+    <select id="findHistoryByAnonymousId" resultType="kr.co.cleverchat.domain.chatbot.model.ChatSessionListItem">
+        SELECT <include refid="sessionListColumns"/>
+        FROM chat_session s
+        JOIN scenario sc ON sc.id = s.scenario_id
+        LEFT JOIN chat_message m ON m.session_id = s.id
+        WHERE s.anonymous_id = #{anonymousId}::uuid
+          AND s.created_at &gt;= #{cutoff}
+        GROUP BY s.id, sc.title
+        ORDER BY s.last_activity_at DESC, s.id DESC
+        LIMIT #{limit}
+    </select>
+    <select id="findAdminList" resultType="kr.co.cleverchat.domain.chatbot.model.ChatSessionListItem">
+        SELECT <include refid="sessionListColumns"/>
+        FROM chat_session s
+        JOIN scenario sc ON sc.id = s.scenario_id
+        LEFT JOIN chat_message m ON m.session_id = s.id
+        GROUP BY s.id, sc.title
+        ORDER BY s.last_activity_at DESC, s.id DESC
+        LIMIT #{limit}
+    </select>
+    <select id="findAdminDetail" resultType="kr.co.cleverchat.domain.chatbot.model.ChatSessionListItem">
+        SELECT <include refid="sessionListColumns"/>
+        FROM chat_session s
+        JOIN scenario sc ON sc.id = s.scenario_id
+        LEFT JOIN chat_message m ON m.session_id = s.id
+        WHERE s.id = #{id}::uuid
+        GROUP BY s.id, sc.title
     </select>
     <insert id="insert" parameterType="kr.co.cleverchat.domain.chatbot.model.ChatSession">
         INSERT INTO chat_session (
@@ -14,12 +82,15 @@
             state, expires_at, ip_hash, user_agent_hash
         )
         VALUES (
-            #{id}, #{anonymousId}, #{userId}, #{scenarioId}, #{versionId}, #{currentNodeId},
+            #{id}::uuid, #{anonymousId}::uuid, #{userId}, #{scenarioId}, #{versionId}, #{currentNodeId},
             #{state}, #{expiresAt}, #{ipHash}, #{userAgentHash}
         )
     </insert>
-    <select id="lockSessionByAdvisoryKey" resultType="long">
-        SELECT pg_advisory_xact_lock(hashtext('chat_session:' || #{sessionId}::text))
+    <select id="lockSessionByAdvisoryKey" resultType="int">
+        WITH lock AS (
+            SELECT pg_advisory_xact_lock(hashtext('chat_session:' || #{sessionId}::text))
+        )
+        SELECT 1 FROM lock
     </select>
     <update id="updateCurrentNode">
         UPDATE chat_session
@@ -27,6 +98,30 @@
             state = #{state},
             expires_at = #{expiresAt},
             last_activity_at = now()
-        WHERE id = #{id}
+        WHERE id = #{id}::uuid
     </update>
+    <update id="markExpired">
+        UPDATE chat_session
+        SET state = 'EXPIRED',
+            last_activity_at = now()
+        WHERE id = #{id}::uuid
+          AND state = 'ACTIVE'
+    </update>
+    <update id="expireActiveBefore">
+        UPDATE chat_session
+        SET state = 'EXPIRED',
+            last_activity_at = now()
+        WHERE state = 'ACTIVE'
+          AND expires_at &lt; #{cutoff}
+    </update>
+    <delete id="deleteCreatedBefore">
+        DELETE FROM chat_session
+        WHERE id IN (
+            SELECT id
+            FROM chat_session
+            WHERE created_at &lt; #{cutoff}
+            ORDER BY created_at, id
+            LIMIT #{limit}
+        )
+    </delete>
 </mapper>

@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.cleverchat.domain.ops.mapper.OpsMapper">
+
+    <select id="statisticsSummary" resultType="kr.co.cleverchat.domain.ops.model.OpsMetricRow">
+        SELECT 'chatSessions' AS metric_key,
+               count(*) FILTER (WHERE started_at &gt;= #{todayStart}) AS today_count,
+               count(*) FILTER (WHERE started_at &gt;= #{sevenDaysStart}) AS last7_days_count
+        FROM chat_session
+        UNION ALL
+        SELECT 'chatMessages',
+               count(*) FILTER (WHERE created_at &gt;= #{todayStart}),
+               count(*) FILTER (WHERE created_at &gt;= #{sevenDaysStart})
+        FROM chat_message
+        UNION ALL
+        SELECT 'chatFailures',
+               count(*) FILTER (WHERE created_at &gt;= #{todayStart}),
+               count(*) FILTER (WHERE created_at &gt;= #{sevenDaysStart})
+        FROM chat_failure
+        UNION ALL
+        SELECT 'chatFeedback',
+               count(*) FILTER (WHERE created_at &gt;= #{todayStart}),
+               count(*) FILTER (WHERE created_at &gt;= #{sevenDaysStart})
+        FROM chat_feedback
+        UNION ALL
+        SELECT 'searches',
+               count(*) FILTER (WHERE created_at &gt;= #{todayStart}),
+               count(*) FILTER (WHERE created_at &gt;= #{sevenDaysStart})
+        FROM search_log
+        UNION ALL
+        SELECT 'searchPiiBlocks',
+               count(*) FILTER (WHERE created_at &gt;= #{todayStart}),
+               count(*) FILTER (WHERE created_at &gt;= #{sevenDaysStart})
+        FROM search_block_log
+        UNION ALL
+        SELECT 'crawlFailures',
+               count(*) FILTER (WHERE created_at &gt;= #{todayStart} AND status = 'FAILED'),
+               count(*) FILTER (WHERE created_at &gt;= #{sevenDaysStart} AND status = 'FAILED')
+        FROM crawl_run_log
+        UNION ALL
+        SELECT 'unreviewedCrawlFailures',
+               count(*) FILTER (WHERE created_at &gt;= #{todayStart} AND status = 'FAILED' AND reviewed = FALSE),
+               count(*) FILTER (WHERE created_at &gt;= #{sevenDaysStart} AND status = 'FAILED' AND reviewed = FALSE)
+        FROM crawl_run_log
+        UNION ALL
+        SELECT 'activeScenarios',
+               count(*) FILTER (WHERE status = 'ACTIVE'),
+               count(*) FILTER (WHERE status = 'ACTIVE')
+        FROM scenario
+    </select>
+
+    <select id="findAuditLogs" resultType="kr.co.cleverchat.domain.ops.model.AuditLog">
+        SELECT id,
+               actor,
+               action,
+               target_type,
+               target_id,
+               detail::text AS detail,
+               ip,
+               created_at
+        FROM audit_log
+        <where>
+            <if test="actor != null">
+                actor = #{actor}
+            </if>
+            <if test="action != null">
+                AND action = #{action}
+            </if>
+            <if test="targetType != null">
+                AND target_type = #{targetType}
+            </if>
+            <if test="from != null">
+                AND created_at &gt;= #{from}
+            </if>
+            <if test="to != null">
+                AND created_at &lt;= #{to}
+            </if>
+        </where>
+        ORDER BY created_at DESC, id DESC
+        LIMIT #{limit}
+    </select>
+
+    <sql id="noticeColumns">
+        id, title, content, enabled, starts_at, ends_at, priority, created_by, updated_by, created_at, updated_at
+    </sql>
+
+    <select id="findNotices" resultType="kr.co.cleverchat.domain.ops.model.Notice">
+        SELECT <include refid="noticeColumns"/>
+        FROM notice
+        <where>
+            <if test="enabled != null">
+                enabled = #{enabled}
+            </if>
+        </where>
+        ORDER BY updated_at DESC, id DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="findVisibleNotices" resultType="kr.co.cleverchat.domain.ops.model.Notice">
+        SELECT <include refid="noticeColumns"/>
+        FROM notice
+        WHERE enabled = TRUE
+          AND (starts_at IS NULL OR starts_at &lt;= #{now})
+          AND (ends_at IS NULL OR ends_at &gt;= #{now})
+        ORDER BY priority ASC, id DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="findNoticeById" resultType="kr.co.cleverchat.domain.ops.model.Notice">
+        SELECT <include refid="noticeColumns"/>
+        FROM notice
+        WHERE id = #{id}
+    </select>
+
+    <insert id="insertNotice" parameterType="kr.co.cleverchat.domain.ops.model.Notice" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO notice (title, content, enabled, starts_at, ends_at, priority, created_by, updated_by)
+        VALUES (#{title}, #{content}, #{enabled}, #{startsAt}, #{endsAt}, #{priority}, #{createdBy}, #{updatedBy})
+    </insert>
+
+    <update id="updateNotice" parameterType="kr.co.cleverchat.domain.ops.model.Notice">
+        UPDATE notice
+        SET title = #{title},
+            content = #{content},
+            enabled = #{enabled},
+            starts_at = #{startsAt},
+            ends_at = #{endsAt},
+            priority = #{priority},
+            updated_by = #{updatedBy},
+            updated_at = now()
+        WHERE id = #{id}
+    </update>
+
+    <update id="disableNotice">
+        UPDATE notice
+        SET enabled = FALSE,
+            updated_by = #{updatedBy},
+            updated_at = now()
+        WHERE id = #{id}
+    </update>
+
+    <sql id="notificationChannelColumns">
+        id, name, type, enabled, endpoint_env_key, previous_endpoint_env_key, rate_limit_per_hour, created_by, updated_by, created_at, updated_at
+    </sql>
+
+    <select id="findNotificationChannels" resultType="kr.co.cleverchat.domain.ops.model.NotificationChannel">
+        SELECT <include refid="notificationChannelColumns"/>
+        FROM notification_channel
+        <where>
+            <if test="enabled != null">
+                enabled = #{enabled}
+            </if>
+        </where>
+        ORDER BY updated_at DESC, id DESC
+    </select>
+
+    <select id="findNotificationChannelById" resultType="kr.co.cleverchat.domain.ops.model.NotificationChannel">
+        SELECT <include refid="notificationChannelColumns"/>
+        FROM notification_channel
+        WHERE id = #{id}
+    </select>
+
+    <insert id="insertNotificationChannel" parameterType="kr.co.cleverchat.domain.ops.model.NotificationChannel" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO notification_channel (name, type, enabled, endpoint_env_key, previous_endpoint_env_key, rate_limit_per_hour, created_by, updated_by)
+        VALUES (#{name}, #{type}, #{enabled}, #{endpointEnvKey}, #{previousEndpointEnvKey}, #{rateLimitPerHour}, #{createdBy}, #{updatedBy})
+    </insert>
+
+    <update id="updateNotificationChannel" parameterType="kr.co.cleverchat.domain.ops.model.NotificationChannel">
+        UPDATE notification_channel
+        SET name = #{name},
+            type = #{type},
+            enabled = #{enabled},
+            endpoint_env_key = #{endpointEnvKey},
+            previous_endpoint_env_key = #{previousEndpointEnvKey},
+            rate_limit_per_hour = #{rateLimitPerHour},
+            updated_by = #{updatedBy},
+            updated_at = now()
+        WHERE id = #{id}
+    </update>
+
+    <sql id="notificationEventColumns">
+        id, event_type, source_type, source_id, severity, summary, status, attempt_count, last_error,
+        next_retry_at, reviewed, reviewed_by, reviewed_at, created_at, updated_at
+    </sql>
+
+    <select id="findNotificationEvents" resultType="kr.co.cleverchat.domain.ops.model.NotificationEvent">
+        SELECT <include refid="notificationEventColumns"/>
+        FROM notification_event
+        <where>
+            <if test="status != null and status != ''">
+                status = #{status}
+            </if>
+            <if test="reviewed != null">
+                AND reviewed = #{reviewed}
+            </if>
+        </where>
+        ORDER BY created_at DESC, id DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="findDueNotificationEvents" resultType="kr.co.cleverchat.domain.ops.model.NotificationEvent">
+        SELECT <include refid="notificationEventColumns"/>
+        FROM notification_event
+        WHERE reviewed = FALSE
+          AND status = 'RETRY'
+          AND next_retry_at IS NOT NULL
+          AND next_retry_at &lt;= #{now}
+          AND attempt_count &lt; #{maxAttempts}
+        ORDER BY next_retry_at ASC, id ASC
+        LIMIT #{limit}
+    </select>
+
+    <select id="findNotificationEventById" resultType="kr.co.cleverchat.domain.ops.model.NotificationEvent">
+        SELECT <include refid="notificationEventColumns"/>
+        FROM notification_event
+        WHERE id = #{id}
+    </select>
+
+    <select id="findOpenNotificationEvent" resultType="kr.co.cleverchat.domain.ops.model.NotificationEvent">
+        SELECT <include refid="notificationEventColumns"/>
+        FROM notification_event
+        WHERE event_type = #{eventType}
+          AND source_type = #{sourceType}
+          AND source_id = #{sourceId}
+          AND reviewed = FALSE
+          AND status IN ('PENDING', 'RETRY', 'FAILED')
+        ORDER BY id DESC
+        LIMIT 1
+    </select>
+
+    <insert id="insertNotificationEvent" parameterType="kr.co.cleverchat.domain.ops.model.NotificationEvent" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO notification_event (
+            event_type, source_type, source_id, severity, summary, status, attempt_count,
+            last_error, next_retry_at, reviewed
+        )
+        VALUES (
+            #{eventType}, #{sourceType}, #{sourceId}, #{severity}, #{summary}, #{status}, #{attemptCount},
+            #{lastError}, #{nextRetryAt}, #{reviewed}
+        )
+    </insert>
+
+    <update id="updateNotificationDelivery">
+        UPDATE notification_event
+        SET status = #{status},
+            attempt_count = #{attemptCount},
+            last_error = #{lastError},
+            next_retry_at = #{nextRetryAt},
+            updated_at = now()
+        WHERE id = #{id}
+    </update>
+
+    <update id="reviewNotificationEvent">
+        UPDATE notification_event
+        SET reviewed = TRUE,
+            reviewed_by = #{reviewedBy},
+            reviewed_at = now(),
+            updated_at = now()
+        WHERE id = #{id}
+    </update>
+</mapper>

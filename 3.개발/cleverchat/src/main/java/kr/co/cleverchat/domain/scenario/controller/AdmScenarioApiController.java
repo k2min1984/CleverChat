@@ -37,12 +37,14 @@ public class AdmScenarioApiController {
     }
 
     @PostMapping
-    public ApiResponse<Scenario> scenarioRegistProc(@Valid @RequestBody ScenarioDtos.SaveRequest request) {
+    public ApiResponse<Scenario> scenarioRegistProc(
+            @Valid @RequestBody ScenarioDtos.SaveRequest request) {
         return ApiResponse.ok(scenarioService.create(request));
     }
 
     @PutMapping("/{id}")
-    public ApiResponse<Scenario> scenarioModifyProc(@PathVariable Long id, @Valid @RequestBody ScenarioDtos.SaveRequest request) {
+    public ApiResponse<Scenario> scenarioModifyProc(
+            @PathVariable Long id, @Valid @RequestBody ScenarioDtos.SaveRequest request) {
         return ApiResponse.ok(scenarioService.update(id, request));
     }
 
@@ -58,12 +60,15 @@ public class AdmScenarioApiController {
     }
 
     @GetMapping("/versions/{versionId}/graph")
-    public ApiResponse<ScenarioGraphDtos.SaveRequest> scenarioGraphView(@PathVariable Long versionId) {
+    public ApiResponse<ScenarioGraphDtos.SaveRequest> scenarioGraphView(
+            @PathVariable Long versionId) {
         return ApiResponse.ok(scenarioService.graph(versionId));
     }
 
     @PutMapping("/versions/{versionId}/graph")
-    public ApiResponse<Void> scenarioGraphModifyProc(@PathVariable Long versionId, @Valid @RequestBody ScenarioGraphDtos.SaveRequest request) {
+    public ApiResponse<Void> scenarioGraphModifyProc(
+            @PathVariable Long versionId,
+            @Valid @RequestBody ScenarioGraphDtos.SaveRequest request) {
         scenarioService.saveGraph(versionId, request);
         return ApiResponse.ok();
     }
@@ -75,7 +80,8 @@ public class AdmScenarioApiController {
     }
 
     @PostMapping("/{id}/activate/{versionId}")
-    public ApiResponse<Void> scenarioActivateProc(@PathVariable Long id, @PathVariable Long versionId) {
+    public ApiResponse<Void> scenarioActivateProc(
+            @PathVariable Long id, @PathVariable Long versionId) {
         scenarioService.activate(id, versionId);
         return ApiResponse.ok();
     }

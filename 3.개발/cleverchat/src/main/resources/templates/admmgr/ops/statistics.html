@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admmgr/common/head :: adminHead('Statistics | CleverChat')}"></head>
+<body>
+<div class="admin-wrap">
+    <div th:replace="~{admmgr/common/sidebar :: adminSidebar}"></div>
+    <div class="main-area">
+        <div th:replace="~{admmgr/common/header :: adminHeader}"></div>
+        <div th:replace="~{admmgr/common/navigation :: adminNavigation}"></div>
+        <main class="content-area">
+            <header>
+                <h1>Statistics</h1>
+                <nav class="actions" aria-label="Operations navigation">
+                    <a class="button" th:href="@{/admin/audit-logs}">Audit logs</a>
+                </nav>
+            </header>
+            <p th:text="${'Generated: ' + #temporals.format(summary.generatedAt, 'yyyy-MM-dd HH:mm:ss')}">Generated: 2026-05-27 13:00:00</p>
+            <section class="grid" aria-label="Operations summary">
+                <article class="card" th:each="metric : ${summary.metrics}">
+                    <h2 th:text="${metric.label}">Chat sessions</h2>
+                    <p>
+                        <strong th:text="${metric.today}">0</strong>
+                        <span>today</span>
+                    </p>
+                    <p>
+                        <strong th:text="${metric.last7Days}">0</strong>
+                        <span>last 7 days</span>
+                    </p>
+                </article>
+            </section>
+        </main>
+        <div th:replace="~{admmgr/common/footer :: adminFooter}"></div>
+    </div>
+</div>
+</body>
+</html>

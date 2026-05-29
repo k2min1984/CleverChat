@@ -7,6 +7,7 @@ import java.util.Set;
 import kr.co.cleverchat.common.audit.AuditTrailRecorder;
 import kr.co.cleverchat.common.error.BusinessException;
 import kr.co.cleverchat.common.error.ErrorCode;
+import kr.co.cleverchat.domain.auth.security.RequireRole;
 import kr.co.cleverchat.domain.scenario.dto.ScenarioKeywordDtos.KeywordRequest;
 import kr.co.cleverchat.domain.scenario.dto.ScenarioKeywordDtos.ReplaceRequest;
 import kr.co.cleverchat.domain.scenario.dto.ScenarioKeywordDtos.SynonymRequest;
@@ -29,12 +30,11 @@ public class ScenarioKeywordService {
     private final ScenarioMatchingCacheInvalidator matchingCacheInvalidator;
 
     public ScenarioKeywordService(
-        ScenarioMapper scenarioMapper,
-        ScenarioKeywordMapper keywordMapper,
-        ScenarioSynonymMapper synonymMapper,
-        AuditTrailRecorder auditTrailRecorder,
-        ScenarioMatchingCacheInvalidator matchingCacheInvalidator
-    ) {
+            ScenarioMapper scenarioMapper,
+            ScenarioKeywordMapper keywordMapper,
+            ScenarioSynonymMapper synonymMapper,
+            AuditTrailRecorder auditTrailRecorder,
+            ScenarioMatchingCacheInvalidator matchingCacheInvalidator) {
         this.scenarioMapper = scenarioMapper;
         this.keywordMapper = keywordMapper;
         this.synonymMapper = synonymMapper;
@@ -51,6 +51,7 @@ public class ScenarioKeywordService {
     }
 
     @Transactional
+    @RequireRole("OPERATOR")
     public void replace(Long scenarioId, ReplaceRequest request) {
         if (scenarioMapper.findById(scenarioId) == null) {
             throw new BusinessException(ErrorCode.NOT_FOUND);
@@ -58,7 +59,8 @@ public class ScenarioKeywordService {
         keywordMapper.deleteByScenarioId(scenarioId);
         int synonymCount = 0;
         Set<String> keywords = new LinkedHashSet<>();
-        for (KeywordRequest item : request.keywords() == null ? List.<KeywordRequest>of() : request.keywords()) {
+        for (KeywordRequest item :
+                request.keywords() == null ? List.<KeywordRequest>of() : request.keywords()) {
             String normalized = normalize(item.keyword());
             validateWeight(item.weight());
             if (!keywords.add(normalized)) {
@@ -71,7 +73,8 @@ public class ScenarioKeywordService {
             keyword.setEnabled(item.enabled());
             keywordMapper.insert(keyword);
             Set<String> synonyms = new LinkedHashSet<>();
-            for (SynonymRequest synonymRequest : item.synonyms() == null ? List.<SynonymRequest>of() : item.synonyms()) {
+            for (SynonymRequest synonymRequest :
+                    item.synonyms() == null ? List.<SynonymRequest>of() : item.synonyms()) {
                 String synonymValue = normalize(synonymRequest.synonym());
                 validateWeight(synonymRequest.weight());
                 if (!synonyms.add(synonymValue)) {
@@ -86,10 +89,11 @@ public class ScenarioKeywordService {
                 synonymCount++;
             }
         }
-        auditTrailRecorder.record("SCENARIO_KEYWORD_SAVE", "scenario", scenarioId, Map.of(
-            "keywordCount", keywords.size(),
-            "synonymCount", synonymCount
-        ));
+        auditTrailRecorder.record(
+                "SCENARIO_KEYWORD_SAVE",
+                "scenario",
+                scenarioId,
+                Map.of("keywordCount", keywords.size(), "synonymCount", synonymCount));
         matchingCacheInvalidator.onScenarioChanged(scenarioId);
     }
 

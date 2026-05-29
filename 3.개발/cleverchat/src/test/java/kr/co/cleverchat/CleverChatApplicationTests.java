@@ -17,10 +17,11 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 class CleverChatApplicationTests {
 
     @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16")
-            .withDatabaseName("cleverchat")
-            .withUsername("cleverchat")
-            .withPassword("cleverchat");
+    static PostgreSQLContainer<?> postgres =
+            new PostgreSQLContainer<>("postgres:16")
+                    .withDatabaseName("cleverchat")
+                    .withUsername("cleverchat")
+                    .withPassword("cleverchat");
 
     @DynamicPropertySource
     static void overrideProps(DynamicPropertyRegistry registry) {
@@ -30,6 +31,5 @@ class CleverChatApplicationTests {
     }
 
     @Test
-    void contextLoads() {
-    }
+    void contextLoads() {}
 }

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admmgr/common/head :: adminHead('Popular searches | CleverChat')}"></head>
+<body>
+<div class="admin-wrap">
+    <div th:replace="~{admmgr/common/sidebar :: adminSidebar}"></div>
+    <div class="main-area">
+        <div th:replace="~{admmgr/common/header :: adminHeader}"></div>
+        <div th:replace="~{admmgr/common/navigation :: adminNavigation}"></div>
+        <main class="content-area" data-search-root>
+            <header>
+                <h1>Popular searches</h1>
+                <nav class="actions" aria-label="Popular search navigation">
+                    <a class="button" th:href="@{/admin/search/logs}">Logs</a>
+                    <a class="button" th:href="@{/admin/search/blocks}">Blocked</a>
+                </nav>
+            </header>
+            <form method="get" th:action="@{/admin/search/popular}" aria-label="Popular search filters">
+                <label>
+                    From
+                    <input type="date" name="from" th:value="${from}">
+                </label>
+                <label>
+                    To
+                    <input type="date" name="to" th:value="${to}">
+                </label>
+                <button type="submit">Filter</button>
+            </form>
+            <section aria-label="Search maintenance">
+                <h2>Maintenance</h2>
+                <form id="popularRebuildForm">
+                    <label>
+                        Date
+                        <input type="date" name="statDate" required>
+                    </label>
+                    <button type="submit">Rebuild</button>
+                </form>
+                <form id="expiredDeleteForm">
+                    <label>
+                        Retention days
+                        <input type="number" name="retentionDays" min="30" value="90">
+                    </label>
+                    <label>
+                        <input type="checkbox" name="dryRun" checked>
+                        Dry run
+                    </label>
+                    <button type="submit">Delete expired</button>
+                </form>
+                <p id="searchStatus" role="status" aria-live="polite"></p>
+            </section>
+            <table aria-label="Popular search list">
+                <caption>Popular search list</caption>
+                <thead>
+                <tr>
+                    <th scope="col">Date</th>
+                    <th scope="col">Query</th>
+                    <th scope="col">Count</th>
+                    <th scope="col">No result</th>
+                    <th scope="col">Top scenario</th>
+                    <th scope="col">Updated</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="item : ${popularQueries}">
+                    <td th:text="${item.statDate}">2026-05-27</td>
+                    <td th:text="${item.normalizedQuery}">shipping</td>
+                    <td th:text="${item.searchCount}">10</td>
+                    <td th:text="${item.noResultCount}">1</td>
+                    <td th:text="${item.topResultScenarioId ?: '-'}">10</td>
+                    <td th:text="${#temporals.format(item.updatedAt, 'yyyy-MM-dd HH:mm')}">2026-05-27 13:00</td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(popularQueries)}">
+                    <td colspan="6">No popular searches found.</td>
+                </tr>
+                </tbody>
+            </table>
+        </main>
+        <div th:replace="~{admmgr/common/footer :: adminFooter}"></div>
+    </div>
+</div>
+<script th:src="@{/asset/admmgr/style2/js/ADM.SearchOps.js}" defer></script>
+</body>
+</html>

@@ -9,7 +9,10 @@ import org.apache.ibatis.annotations.Param;
 @Mapper
 public interface ScenarioSynonymMapper {
     List<ScenarioSynonym> findByKeywordId(@Param("keywordId") Long keywordId);
+
     List<ScenarioSynonymRow> findEnabledByScenarioId(@Param("scenarioId") Long scenarioId);
+
     List<ScenarioSynonymRow> findEnabledForActiveScenarios();
+
     void insert(ScenarioSynonym synonym);
 }

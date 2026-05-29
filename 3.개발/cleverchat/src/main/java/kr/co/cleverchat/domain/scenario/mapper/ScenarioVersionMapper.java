@@ -8,11 +8,20 @@ import org.apache.ibatis.annotations.Param;
 @Mapper
 public interface ScenarioVersionMapper {
     List<ScenarioVersion> findByScenarioId(@Param("scenarioId") Long scenarioId);
+
     ScenarioVersion findById(@Param("id") Long id);
+
+    ScenarioVersion findDraftByScenarioId(@Param("scenarioId") Long scenarioId);
+
     ScenarioVersion findPublishedByScenarioId(@Param("scenarioId") Long scenarioId);
+
     int nextVersionNo(@Param("scenarioId") Long scenarioId);
+
     void insert(ScenarioVersion version);
+
     int setStartNode(@Param("id") Long id, @Param("startNodeId") Long startNodeId);
+
     int archivePublished(@Param("scenarioId") Long scenarioId);
+
     int publish(@Param("id") Long id);
 }

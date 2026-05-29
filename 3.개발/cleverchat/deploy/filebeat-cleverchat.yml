@@ -1,0 +1,89 @@
+# Filebeat sample for CleverChat file logs.
+# This sample is intentionally output-to-console only. Add the real Elasticsearch,
+# OpenSearch, Logstash, or Kafka output in environment-specific deployment files.
+# Never place webhook URLs, SMTP secrets, API keys, or passwords in this file.
+
+filebeat.inputs:
+  - type: filestream
+    id: cleverchat-app-log
+    enabled: true
+    paths:
+      - /var/log/cleverchat/app.log
+    fields_under_root: true
+    fields:
+      service: cleverchat
+      environment: ${CLEVERCHAT_ENV:prod}
+      log_channel: app
+      json_channel: false
+      pii_policy: no_body_no_query_no_raw_ip_no_raw_user_agent
+
+  - type: filestream
+    id: cleverchat-error-log
+    enabled: true
+    paths:
+      - /var/log/cleverchat/error.log
+    fields_under_root: true
+    fields:
+      service: cleverchat
+      environment: ${CLEVERCHAT_ENV:prod}
+      log_channel: error
+      json_channel: false
+      pii_policy: no_body_no_query_no_raw_ip_no_raw_user_agent
+
+  - type: filestream
+    id: cleverchat-api-log
+    enabled: true
+    paths:
+      - /var/log/cleverchat/api.log
+    parsers:
+      - ndjson:
+          target: ""
+          add_error_key: true
+    fields_under_root: true
+    fields:
+      service: cleverchat
+      environment: ${CLEVERCHAT_ENV:prod}
+      log_channel: api
+      json_channel: true
+      pii_policy: no_body_no_query_no_raw_ip_no_raw_user_agent
+
+  - type: filestream
+    id: cleverchat-security-log
+    enabled: true
+    paths:
+      - /var/log/cleverchat/security.log
+    parsers:
+      - ndjson:
+          target: ""
+          add_error_key: true
+    fields_under_root: true
+    fields:
+      service: cleverchat
+      environment: ${CLEVERCHAT_ENV:prod}
+      log_channel: security
+      json_channel: true
+      pii_policy: no_body_no_query_no_raw_ip_no_raw_user_agent
+
+  - type: filestream
+    id: cleverchat-slow-query-log
+    enabled: true
+    paths:
+      - /var/log/cleverchat/slow-query.log
+    parsers:
+      - ndjson:
+          target: ""
+          add_error_key: true
+    fields_under_root: true
+    fields:
+      service: cleverchat
+      environment: ${CLEVERCHAT_ENV:prod}
+      log_channel: slow-query
+      json_channel: true
+      pii_policy: no_sql_no_bind_parameters_no_body_no_query
+
+processors:
+  - add_host_metadata: {}
+  - add_process_metadata: {}
+
+output.console:
+  pretty: false

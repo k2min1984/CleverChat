@@ -4,7 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.LocalDateTime;
 import java.util.Set;
+import kr.co.cleverchat.common.ops.OpsEventLogger;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockHttpSession;
@@ -12,7 +14,9 @@ import org.springframework.mock.web.MockHttpSession;
 class CsrfInterceptorTest {
 
     private final CsrfTokenIssuer csrfTokenIssuer = new CsrfTokenIssuer();
-    private final CsrfInterceptor interceptor = new CsrfInterceptor(csrfTokenIssuer);
+    private final OpsEventLogger opsEventLogger = Mockito.mock(OpsEventLogger.class);
+    private final CsrfInterceptor interceptor =
+            new CsrfInterceptor(csrfTokenIssuer, opsEventLogger);
 
     @Test
     void allowsGetRequestWithoutCsrfValidation() throws Exception {
@@ -29,7 +33,8 @@ class CsrfInterceptorTest {
     void allowsPostWithMatchingCsrfAndReissuesSessionAttributesAndHeaders() throws Exception {
         MockHttpSession session = authenticatedSession();
         String token = (String) session.getAttribute(CsrfTokenIssuer.CSRF_TOKEN_SESSION_ATTRIBUTE);
-        String formId = (String) session.getAttribute(CsrfTokenIssuer.CSRF_FORM_ID_SESSION_ATTRIBUTE);
+        String formId =
+                (String) session.getAttribute(CsrfTokenIssuer.CSRF_FORM_ID_SESSION_ATTRIBUTE);
         MockHttpServletRequest request = postRequest(session);
         request.setParameter("csrfToken", token);
         request.setParameter("csrfFormId", formId);
@@ -38,19 +43,22 @@ class CsrfInterceptorTest {
         boolean handled = interceptor.preHandle(request, response, new Object());
 
         assertThat(handled).isTrue();
-        assertThat(session.getAttribute(CsrfTokenIssuer.CSRF_TOKEN_SESSION_ATTRIBUTE)).isNotEqualTo(token);
-        assertThat(session.getAttribute(CsrfTokenIssuer.CSRF_FORM_ID_SESSION_ATTRIBUTE)).isNotEqualTo(formId);
+        assertThat(session.getAttribute(CsrfTokenIssuer.CSRF_TOKEN_SESSION_ATTRIBUTE))
+                .isNotEqualTo(token);
+        assertThat(session.getAttribute(CsrfTokenIssuer.CSRF_FORM_ID_SESSION_ATTRIBUTE))
+                .isNotEqualTo(formId);
         assertThat(response.getHeader("X-CSRF-Token"))
-            .isEqualTo(session.getAttribute(CsrfTokenIssuer.CSRF_TOKEN_SESSION_ATTRIBUTE));
+                .isEqualTo(session.getAttribute(CsrfTokenIssuer.CSRF_TOKEN_SESSION_ATTRIBUTE));
         assertThat(response.getHeader("X-CSRF-FormId"))
-            .isEqualTo(session.getAttribute(CsrfTokenIssuer.CSRF_FORM_ID_SESSION_ATTRIBUTE));
+                .isEqualTo(session.getAttribute(CsrfTokenIssuer.CSRF_FORM_ID_SESSION_ATTRIBUTE));
     }
 
     @Test
     void allowsPostWithMatchingCsrfFromHeadersWhenParameterMissing() throws Exception {
         MockHttpSession session = authenticatedSession();
         String token = (String) session.getAttribute(CsrfTokenIssuer.CSRF_TOKEN_SESSION_ATTRIBUTE);
-        String formId = (String) session.getAttribute(CsrfTokenIssuer.CSRF_FORM_ID_SESSION_ATTRIBUTE);
+        String formId =
+                (String) session.getAttribute(CsrfTokenIssuer.CSRF_FORM_ID_SESSION_ATTRIBUTE);
         MockHttpServletRequest request = postRequest(session);
         request.addHeader("X-CSRF-Token", token);
         request.addHeader("X-CSRF-FormId", formId);
@@ -59,19 +67,22 @@ class CsrfInterceptorTest {
         boolean handled = interceptor.preHandle(request, response, new Object());
 
         assertThat(handled).isTrue();
-        assertThat(session.getAttribute(CsrfTokenIssuer.CSRF_TOKEN_SESSION_ATTRIBUTE)).isNotEqualTo(token);
-        assertThat(session.getAttribute(CsrfTokenIssuer.CSRF_FORM_ID_SESSION_ATTRIBUTE)).isNotEqualTo(formId);
+        assertThat(session.getAttribute(CsrfTokenIssuer.CSRF_TOKEN_SESSION_ATTRIBUTE))
+                .isNotEqualTo(token);
+        assertThat(session.getAttribute(CsrfTokenIssuer.CSRF_FORM_ID_SESSION_ATTRIBUTE))
+                .isNotEqualTo(formId);
         assertThat(response.getHeader("X-CSRF-Token"))
-            .isEqualTo(session.getAttribute(CsrfTokenIssuer.CSRF_TOKEN_SESSION_ATTRIBUTE));
+                .isEqualTo(session.getAttribute(CsrfTokenIssuer.CSRF_TOKEN_SESSION_ATTRIBUTE));
         assertThat(response.getHeader("X-CSRF-FormId"))
-            .isEqualTo(session.getAttribute(CsrfTokenIssuer.CSRF_FORM_ID_SESSION_ATTRIBUTE));
+                .isEqualTo(session.getAttribute(CsrfTokenIssuer.CSRF_FORM_ID_SESSION_ATTRIBUTE));
     }
 
     @Test
     void prefersParameterOverHeaderWhenBothPresent() throws Exception {
         MockHttpSession session = authenticatedSession();
         String token = (String) session.getAttribute(CsrfTokenIssuer.CSRF_TOKEN_SESSION_ATTRIBUTE);
-        String formId = (String) session.getAttribute(CsrfTokenIssuer.CSRF_FORM_ID_SESSION_ATTRIBUTE);
+        String formId =
+                (String) session.getAttribute(CsrfTokenIssuer.CSRF_FORM_ID_SESSION_ATTRIBUTE);
         MockHttpServletRequest request = postRequest(session);
         request.setParameter("csrfToken", token);
         request.setParameter("csrfFormId", formId);
@@ -88,7 +99,8 @@ class CsrfInterceptorTest {
     void rejectsPostWithMismatchedCsrfHeaderToken() throws Exception {
         MockHttpSession session = authenticatedSession();
         String token = (String) session.getAttribute(CsrfTokenIssuer.CSRF_TOKEN_SESSION_ATTRIBUTE);
-        String formId = (String) session.getAttribute(CsrfTokenIssuer.CSRF_FORM_ID_SESSION_ATTRIBUTE);
+        String formId =
+                (String) session.getAttribute(CsrfTokenIssuer.CSRF_FORM_ID_SESSION_ATTRIBUTE);
         MockHttpServletRequest request = postRequest(session);
         request.addHeader("X-CSRF-Token", "wrong-header-token");
         request.addHeader("X-CSRF-FormId", formId);
@@ -98,15 +110,18 @@ class CsrfInterceptorTest {
 
         assertThat(handled).isFalse();
         assertThat(response.getStatus()).isEqualTo(403);
-        assertThat(session.getAttribute(CsrfTokenIssuer.CSRF_TOKEN_SESSION_ATTRIBUTE)).isEqualTo(token);
-        assertThat(session.getAttribute(CsrfTokenIssuer.CSRF_FORM_ID_SESSION_ATTRIBUTE)).isEqualTo(formId);
+        assertThat(session.getAttribute(CsrfTokenIssuer.CSRF_TOKEN_SESSION_ATTRIBUTE))
+                .isEqualTo(token);
+        assertThat(session.getAttribute(CsrfTokenIssuer.CSRF_FORM_ID_SESSION_ATTRIBUTE))
+                .isEqualTo(formId);
     }
 
     @Test
     void rejectsPostWithoutCsrfToken() throws Exception {
         MockHttpSession session = authenticatedSession();
         String token = (String) session.getAttribute(CsrfTokenIssuer.CSRF_TOKEN_SESSION_ATTRIBUTE);
-        String formId = (String) session.getAttribute(CsrfTokenIssuer.CSRF_FORM_ID_SESSION_ATTRIBUTE);
+        String formId =
+                (String) session.getAttribute(CsrfTokenIssuer.CSRF_FORM_ID_SESSION_ATTRIBUTE);
         MockHttpServletRequest request = postRequest(session);
         request.setParameter("csrfFormId", formId);
         MockHttpServletResponse response = new MockHttpServletResponse();
@@ -116,8 +131,10 @@ class CsrfInterceptorTest {
         assertThat(handled).isFalse();
         assertThat(response.getStatus()).isEqualTo(403);
         assertThat(response.getContentAsString()).isEmpty();
-        assertThat(session.getAttribute(CsrfTokenIssuer.CSRF_TOKEN_SESSION_ATTRIBUTE)).isEqualTo(token);
-        assertThat(session.getAttribute(CsrfTokenIssuer.CSRF_FORM_ID_SESSION_ATTRIBUTE)).isEqualTo(formId);
+        assertThat(session.getAttribute(CsrfTokenIssuer.CSRF_TOKEN_SESSION_ATTRIBUTE))
+                .isEqualTo(token);
+        assertThat(session.getAttribute(CsrfTokenIssuer.CSRF_FORM_ID_SESSION_ATTRIBUTE))
+                .isEqualTo(formId);
         assertThat(response.getHeader("X-CSRF-Token")).isNull();
         assertThat(response.getHeader("X-CSRF-FormId")).isNull();
     }
@@ -126,7 +143,8 @@ class CsrfInterceptorTest {
     void rejectsPostWithMismatchedCsrfFormId() throws Exception {
         MockHttpSession session = authenticatedSession();
         String token = (String) session.getAttribute(CsrfTokenIssuer.CSRF_TOKEN_SESSION_ATTRIBUTE);
-        String formId = (String) session.getAttribute(CsrfTokenIssuer.CSRF_FORM_ID_SESSION_ATTRIBUTE);
+        String formId =
+                (String) session.getAttribute(CsrfTokenIssuer.CSRF_FORM_ID_SESSION_ATTRIBUTE);
         MockHttpServletRequest request = postRequest(session);
         request.setParameter("csrfToken", token);
         request.setParameter("csrfFormId", "wrong-form-id");
@@ -136,15 +154,18 @@ class CsrfInterceptorTest {
 
         assertThat(handled).isFalse();
         assertThat(response.getStatus()).isEqualTo(403);
-        assertThat(session.getAttribute(CsrfTokenIssuer.CSRF_TOKEN_SESSION_ATTRIBUTE)).isEqualTo(token);
-        assertThat(session.getAttribute(CsrfTokenIssuer.CSRF_FORM_ID_SESSION_ATTRIBUTE)).isEqualTo(formId);
+        assertThat(session.getAttribute(CsrfTokenIssuer.CSRF_TOKEN_SESSION_ATTRIBUTE))
+                .isEqualTo(token);
+        assertThat(session.getAttribute(CsrfTokenIssuer.CSRF_FORM_ID_SESSION_ATTRIBUTE))
+                .isEqualTo(formId);
     }
 
     @Test
     void returnsJsonForAjaxFailure() throws Exception {
         MockHttpSession session = authenticatedSession();
         String token = (String) session.getAttribute(CsrfTokenIssuer.CSRF_TOKEN_SESSION_ATTRIBUTE);
-        String formId = (String) session.getAttribute(CsrfTokenIssuer.CSRF_FORM_ID_SESSION_ATTRIBUTE);
+        String formId =
+                (String) session.getAttribute(CsrfTokenIssuer.CSRF_FORM_ID_SESSION_ATTRIBUTE);
         MockHttpServletRequest request = postRequest(session);
         request.addHeader("X-Requested-With", "XMLHttpRequest");
         request.setParameter("csrfToken", "wrong-token");
@@ -157,8 +178,10 @@ class CsrfInterceptorTest {
         assertThat(response.getStatus()).isEqualTo(403);
         assertThat(response.getContentType()).contains("application/json");
         assertThat(response.getContentAsString()).contains("CSRF_INVALID", "잘못된 접근입니다.");
-        assertThat(session.getAttribute(CsrfTokenIssuer.CSRF_TOKEN_SESSION_ATTRIBUTE)).isEqualTo(token);
-        assertThat(session.getAttribute(CsrfTokenIssuer.CSRF_FORM_ID_SESSION_ATTRIBUTE)).isEqualTo(formId);
+        assertThat(session.getAttribute(CsrfTokenIssuer.CSRF_TOKEN_SESSION_ATTRIBUTE))
+                .isEqualTo(token);
+        assertThat(session.getAttribute(CsrfTokenIssuer.CSRF_FORM_ID_SESSION_ATTRIBUTE))
+                .isEqualTo(formId);
     }
 
     @Test

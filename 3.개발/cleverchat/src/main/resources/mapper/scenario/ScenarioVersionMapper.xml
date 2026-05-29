@@ -13,6 +13,14 @@
         FROM scenario_version
         WHERE id = #{id}
     </select>
+    <select id="findDraftByScenarioId" resultType="kr.co.cleverchat.domain.scenario.model.ScenarioVersion">
+        SELECT id, scenario_id, version_no, status, start_node_id, created_by, published_at, created_at
+        FROM scenario_version
+        WHERE scenario_id = #{scenarioId}
+          AND status = 'DRAFT'
+        ORDER BY version_no DESC
+        LIMIT 1
+    </select>
     <select id="findPublishedByScenarioId" resultType="kr.co.cleverchat.domain.scenario.model.ScenarioVersion">
         SELECT id, scenario_id, version_no, status, start_node_id, created_by, published_at, created_at
         FROM scenario_version

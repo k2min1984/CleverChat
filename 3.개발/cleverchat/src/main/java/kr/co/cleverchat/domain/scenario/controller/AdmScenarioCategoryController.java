@@ -29,12 +29,14 @@ public class AdmScenarioCategoryController {
     }
 
     @PostMapping
-    public ApiResponse<ScenarioCategory> scenarioCategoryRegistProc(@Valid @RequestBody ScenarioCategoryDtos.SaveRequest request) {
+    public ApiResponse<ScenarioCategory> scenarioCategoryRegistProc(
+            @Valid @RequestBody ScenarioCategoryDtos.SaveRequest request) {
         return ApiResponse.ok(categoryService.create(request));
     }
 
     @PutMapping("/{id}")
-    public ApiResponse<ScenarioCategory> scenarioCategoryModifyProc(@PathVariable Long id, @Valid @RequestBody ScenarioCategoryDtos.SaveRequest request) {
+    public ApiResponse<ScenarioCategory> scenarioCategoryModifyProc(
+            @PathVariable Long id, @Valid @RequestBody ScenarioCategoryDtos.SaveRequest request) {
         return ApiResponse.ok(categoryService.update(id, request));
     }
 }

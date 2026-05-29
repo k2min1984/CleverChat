@@ -201,7 +201,14 @@ a.breadcrumb-item:hover { color:#1a1a2e; }
 .btn-logout:hover { background:#fbeeee; border-color:#f5c6c6; color:#e94560; }
 .btn-logout svg { width:18px; height:18px; fill:currentColor; }
 
+.main-area > .breadcrumb {
+    padding:12px 28px; background:#fff; border-bottom:1px solid #e8e8e8;
+}
 .content-area { flex:1; padding:24px 28px; overflow-x:hidden; }
+.cms-footer {
+    padding:12px 28px; color:#94a3b8; font-size:12px;
+    background:#f8fafc; border-top:1px solid #e5e7eb;
+}
 
 /* ===== Sidebar Collapsed ===== */
 .sidebar.collapsed { width:72px; }

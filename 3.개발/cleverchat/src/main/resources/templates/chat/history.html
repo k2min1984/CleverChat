@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat history | CleverChat</title>
+    <link rel="stylesheet" th:href="@{/asset/chat/chat.css}">
+</head>
+<body>
+<main class="chat-shell" data-history-root>
+    <section class="chat-panel history-panel">
+        <header class="chat-header">
+            <div>
+                <p class="eyebrow">CleverChat</p>
+                <h1>Chat history</h1>
+            </div>
+            <a class="button-link" th:href="@{/chat}">New chat</a>
+        </header>
+
+        <section class="notice-area" aria-labelledby="noticeTitle" th:if="${notices != null and !#lists.isEmpty(notices)}">
+            <h2 id="noticeTitle">Notices</h2>
+            <ul>
+                <li th:each="notice : ${notices}">
+                    <strong th:text="${notice.title}">Notice title</strong>
+                    <span th:text="${notice.content}">Notice content</span>
+                </li>
+            </ul>
+        </section>
+
+        <section class="status-line" id="historyStatus" role="status" aria-live="polite">Loading history.</section>
+        <section class="status-line error" id="historyError" role="alert" hidden></section>
+        <section class="history-list" id="historyList" aria-label="Recent chat history"></section>
+    </section>
+</main>
+<script th:src="@{/asset/chat/history.js}" defer></script>
+</body>
+</html>

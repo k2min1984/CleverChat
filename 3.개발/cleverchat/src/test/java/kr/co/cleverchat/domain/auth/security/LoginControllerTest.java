@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Set;
+import kr.co.cleverchat.common.ops.OpsEventLogger;
 import kr.co.cleverchat.domain.auth.mapper.UserMapper;
 import kr.co.cleverchat.domain.auth.model.UserAccount;
 import kr.co.cleverchat.domain.auth.service.LoginAuditService;
@@ -24,14 +25,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @ExtendWith(MockitoExtension.class)
 class LoginControllerTest {
 
-    @Mock
-    private UserMapper userMapper;
+    @Mock private UserMapper userMapper;
 
-    @Mock
-    private PasswordEncoder passwordEncoder;
+    @Mock private PasswordEncoder passwordEncoder;
 
-    @Mock
-    private LoginAuditService loginAuditService;
+    @Mock private LoginAuditService loginAuditService;
+
+    @Mock private OpsEventLogger opsEventLogger;
 
     private CsrfTokenIssuer csrfTokenIssuer;
     private LoginController controller;
@@ -39,7 +39,13 @@ class LoginControllerTest {
     @BeforeEach
     void setUp() {
         csrfTokenIssuer = new CsrfTokenIssuer();
-        controller = new LoginController(userMapper, passwordEncoder, loginAuditService, csrfTokenIssuer);
+        controller =
+                new LoginController(
+                        userMapper,
+                        passwordEncoder,
+                        loginAuditService,
+                        csrfTokenIssuer,
+                        opsEventLogger);
     }
 
     @Test
@@ -72,25 +78,35 @@ class LoginControllerTest {
 
         assertThat(view).isEqualTo("redirect:/admin");
         assertThat(request.getSession(false).getAttribute(AdminSession.SESSION_KEY))
-            .isInstanceOfSatisfying(AdminSession.class, session -> {
-                assertThat(session.getUsername()).isEqualTo("admin");
-                assertThat(session.getDisplayName()).isEqualTo("관리자");
-                assertThat(session.hasRole("ADMIN")).isTrue();
-                assertThat(session.isMustChangePassword()).isTrue();
-            });
-        assertThat((String) request.getSession(false).getAttribute(CsrfTokenIssuer.CSRF_TOKEN_SESSION_ATTRIBUTE))
-            .hasSize(43)
-            .matches("[A-Za-z0-9_-]+");
-        assertThat((String) request.getSession(false).getAttribute(CsrfTokenIssuer.CSRF_FORM_ID_SESSION_ATTRIBUTE))
-            .hasSize(22)
-            .matches("[A-Za-z0-9_-]+");
+                .isInstanceOfSatisfying(
+                        AdminSession.class,
+                        session -> {
+                            assertThat(session.getUsername()).isEqualTo("admin");
+                            assertThat(session.getDisplayName()).isEqualTo("관리자");
+                            assertThat(session.hasRole("ADMIN")).isTrue();
+                            assertThat(session.isMustChangePassword()).isTrue();
+                        });
+        assertThat(
+                        (String)
+                                request.getSession(false)
+                                        .getAttribute(CsrfTokenIssuer.CSRF_TOKEN_SESSION_ATTRIBUTE))
+                .hasSize(43)
+                .matches("[A-Za-z0-9_-]+");
+        assertThat(
+                        (String)
+                                request.getSession(false)
+                                        .getAttribute(
+                                                CsrfTokenIssuer.CSRF_FORM_ID_SESSION_ATTRIBUTE))
+                .hasSize(22)
+                .matches("[A-Za-z0-9_-]+");
         verify(loginAuditService).recordSuccess("admin", request);
     }
 
     @Test
-    void authenticateReplacesExistingSessionAttributesWithoutInvalidatingSession() {
+    void authenticateRegeneratesExistingSessionIdWithoutInvalidatingSession() {
         MockHttpServletRequest request = new MockHttpServletRequest();
         MockHttpSession existingSession = new MockHttpSession();
+        String oldSessionId = existingSession.getId();
         existingSession.setAttribute(AdminSession.SESSION_KEY, adminSession());
         existingSession.setAttribute(CsrfTokenIssuer.CSRF_TOKEN_SESSION_ATTRIBUTE, "old-token");
         existingSession.setAttribute(CsrfTokenIssuer.CSRF_FORM_ID_SESSION_ATTRIBUTE, "old-form-id");
@@ -104,16 +120,23 @@ class LoginControllerTest {
         assertThat(view).isEqualTo("redirect:/admin");
         assertThat(existingSession.isInvalid()).isFalse();
         assertThat(request.getSession(false)).isSameAs(existingSession);
+        assertThat(existingSession.getId()).isNotEqualTo(oldSessionId);
         assertThat(existingSession.getAttribute(AdminSession.SESSION_KEY))
-            .isInstanceOf(AdminSession.class);
-        assertThat((String) existingSession.getAttribute(CsrfTokenIssuer.CSRF_TOKEN_SESSION_ATTRIBUTE))
-            .isNotEqualTo("old-token")
-            .hasSize(43)
-            .matches("[A-Za-z0-9_-]+");
-        assertThat((String) existingSession.getAttribute(CsrfTokenIssuer.CSRF_FORM_ID_SESSION_ATTRIBUTE))
-            .isNotEqualTo("old-form-id")
-            .hasSize(22)
-            .matches("[A-Za-z0-9_-]+");
+                .isInstanceOf(AdminSession.class);
+        assertThat(
+                        (String)
+                                existingSession.getAttribute(
+                                        CsrfTokenIssuer.CSRF_TOKEN_SESSION_ATTRIBUTE))
+                .isNotEqualTo("old-token")
+                .hasSize(43)
+                .matches("[A-Za-z0-9_-]+");
+        assertThat(
+                        (String)
+                                existingSession.getAttribute(
+                                        CsrfTokenIssuer.CSRF_FORM_ID_SESSION_ATTRIBUTE))
+                .isNotEqualTo("old-form-id")
+                .hasSize(22)
+                .matches("[A-Za-z0-9_-]+");
     }
 
     @Test
@@ -125,7 +148,7 @@ class LoginControllerTest {
 
         assertThat(view).isEqualTo("redirect:/login?error");
         assertThat(request.getSession(false)).isNull();
-        verify(loginAuditService).recordFailure("missing", "사용자를 찾을 수 없습니다.", request);
+        verify(loginAuditService).recordFailure("missing", "User not found.", request);
         verify(passwordEncoder, never()).matches("password", "hash");
     }
 
@@ -139,7 +162,7 @@ class LoginControllerTest {
         String view = controller.authenticate("admin", "password", request);
 
         assertThat(view).isEqualTo("redirect:/login?error");
-        verify(loginAuditService).recordFailure("admin", "계정이 잠겨 있습니다.", request);
+        verify(loginAuditService).recordFailure("admin", "Account is locked.", request);
         verify(passwordEncoder, never()).matches("password", "hash");
     }
 
@@ -153,7 +176,7 @@ class LoginControllerTest {
         String view = controller.authenticate("admin", "wrong", request);
 
         assertThat(view).isEqualTo("redirect:/login?error");
-        verify(loginAuditService).recordFailure("admin", "비밀번호가 일치하지 않습니다.", request);
+        verify(loginAuditService).recordFailure("admin", "Password does not match.", request);
     }
 
     @Test

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admmgr/common/head :: adminHead('Notices | CleverChat')}"></head>
+<body>
+<div class="admin-wrap">
+    <div th:replace="~{admmgr/common/sidebar :: adminSidebar}"></div>
+    <div class="main-area">
+        <div th:replace="~{admmgr/common/header :: adminHeader}"></div>
+        <div th:replace="~{admmgr/common/navigation :: adminNavigation}"></div>
+        <main class="content-area" data-notices-root>
+            <header>
+                <h1>Notices</h1>
+                <nav class="actions" aria-label="Operations navigation">
+                    <a class="button" th:href="@{/admin/statistics}">Statistics</a>
+                    <a class="button" th:href="@{/admin/audit-logs}">Audit logs</a>
+                </nav>
+            </header>
+
+            <section id="noticeStatus" class="status-line" role="status" aria-live="polite"></section>
+
+            <section aria-labelledby="noticeCreateTitle">
+                <h2 id="noticeCreateTitle">Create notice</h2>
+                <form id="noticeCreateForm" aria-label="Create notice">
+                    <label for="noticeTitle">Title</label>
+                    <input id="noticeTitle" name="title" type="text" maxlength="200" required>
+
+                    <label for="noticeContent">Content</label>
+                    <textarea id="noticeContent" name="content" maxlength="4000" required></textarea>
+
+                    <label for="noticePriority">Priority</label>
+                    <input id="noticePriority" name="priority" type="number" min="0" max="10000" value="100">
+
+                    <label for="noticeStartsAt">Starts at</label>
+                    <input id="noticeStartsAt" name="startsAt" type="datetime-local">
+
+                    <label for="noticeEndsAt">Ends at</label>
+                    <input id="noticeEndsAt" name="endsAt" type="datetime-local">
+
+                    <label>
+                        <input name="enabled" type="checkbox" checked>
+                        Enabled
+                    </label>
+
+                    <button type="submit">Create</button>
+                </form>
+            </section>
+
+            <table aria-label="Notice list">
+                <caption>Notice list</caption>
+                <thead>
+                <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col">Title</th>
+                    <th scope="col">Content</th>
+                    <th scope="col">Enabled</th>
+                    <th scope="col">Period</th>
+                    <th scope="col">Priority</th>
+                    <th scope="col">Updated</th>
+                    <th scope="col">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="notice : ${notices}">
+                    <td th:text="${notice.id}">1</td>
+                    <td>
+                        <input th:attr="aria-label=${'Title for notice ' + notice.id}" name="title" maxlength="200"
+                               th:value="${notice.title}" th:data-notice-id="${notice.id}">
+                    </td>
+                    <td>
+                        <textarea th:attr="aria-label=${'Content for notice ' + notice.id}" name="content" maxlength="4000"
+                                  th:text="${notice.content}" th:data-notice-id="${notice.id}"></textarea>
+                    </td>
+                    <td>
+                        <label>
+                            <input name="enabled" type="checkbox" th:checked="${notice.enabled}" th:data-notice-id="${notice.id}">
+                            Enabled
+                        </label>
+                    </td>
+                    <td>
+                        <label>
+                            <span class="sr-only">Starts at</span>
+                            <input name="startsAt" type="datetime-local"
+                                   th:value="${notice.startsAt == null ? '' : #temporals.format(notice.startsAt, 'yyyy-MM-dd''T''HH:mm')}"
+                                   th:data-notice-id="${notice.id}">
+                        </label>
+                        <label>
+                            <span class="sr-only">Ends at</span>
+                            <input name="endsAt" type="datetime-local"
+                                   th:value="${notice.endsAt == null ? '' : #temporals.format(notice.endsAt, 'yyyy-MM-dd''T''HH:mm')}"
+                                   th:data-notice-id="${notice.id}">
+                        </label>
+                    </td>
+                    <td>
+                        <input th:attr="aria-label=${'Priority for notice ' + notice.id}" name="priority" type="number" min="0" max="10000"
+                               th:value="${notice.priority}" th:data-notice-id="${notice.id}">
+                    </td>
+                    <td th:text="${#temporals.format(notice.updatedAt, 'yyyy-MM-dd HH:mm')}">2026-05-27 13:00</td>
+                    <td>
+                        <button type="button" th:data-save-notice-id="${notice.id}">Save</button>
+                        <button type="button" th:data-disable-notice-id="${notice.id}">Disable</button>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(notices)}">
+                    <td colspan="8">No notices found.</td>
+                </tr>
+                </tbody>
+            </table>
+        </main>
+        <div th:replace="~{admmgr/common/footer :: adminFooter}"></div>
+    </div>
+</div>
+<script th:src="@{/asset/admmgr/style2/js/ADM.Notices.js}" defer></script>
+</body>
+</html>

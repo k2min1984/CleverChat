@@ -8,8 +8,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 public final class CurrentAdminProvider {
 
-    private CurrentAdminProvider() {
-    }
+    private CurrentAdminProvider() {}
 
     public static AdminSession current() {
         RequestAttributes attributes = RequestContextHolder.getRequestAttributes();

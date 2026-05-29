@@ -102,6 +102,12 @@ erDiagram
 - `scenario.active_version_id`는 `PUBLISHED` 버전만 지정할 수 있다. 상태 검증은 서비스에서 처리한다.
 - 삭제는 기본적으로 논리 삭제(`DELETED`, `enabled=false`)를 사용한다.
 
+## 2.1 P0 graph 편집 저장 기준
+
+- P0 graph 편집 화면은 기존 `scenario_version`, `scenario_node`, `scenario_node_option` 테이블만 사용하며 DB/Flyway 변경은 없다.
+- graph 저장은 DRAFT 버전에서만 허용하고, 저장 시 해당 버전의 기존 node/option을 교체 저장한다.
+- graph 조회는 DRAFT/PUBLISHED/ARCHIVED 모두 허용하며, 저장된 노드가 없으면 빈 graph payload를 반환한다.
+
 ## 3. Flyway 초안
 
 - 파일명: `V3__scenario_baseline.sql`

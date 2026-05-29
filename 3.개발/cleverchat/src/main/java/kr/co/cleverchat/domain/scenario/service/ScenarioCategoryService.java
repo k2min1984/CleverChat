@@ -3,6 +3,7 @@ package kr.co.cleverchat.domain.scenario.service;
 import java.util.List;
 import kr.co.cleverchat.common.error.BusinessException;
 import kr.co.cleverchat.common.error.ErrorCode;
+import kr.co.cleverchat.domain.auth.security.RequireRole;
 import kr.co.cleverchat.domain.scenario.dto.ScenarioCategoryDtos.SaveRequest;
 import kr.co.cleverchat.domain.scenario.mapper.ScenarioCategoryMapper;
 import kr.co.cleverchat.domain.scenario.model.ScenarioCategory;
@@ -23,6 +24,7 @@ public class ScenarioCategoryService {
     }
 
     @Transactional
+    @RequireRole("OPERATOR")
     public ScenarioCategory create(SaveRequest request) {
         ScenarioCategory category = toCategory(new ScenarioCategory(), request);
         categoryMapper.insert(category);
@@ -30,6 +32,7 @@ public class ScenarioCategoryService {
     }
 
     @Transactional
+    @RequireRole("OPERATOR")
     public ScenarioCategory update(Long id, SaveRequest request) {
         ScenarioCategory category = categoryMapper.findById(id);
         if (category == null) {

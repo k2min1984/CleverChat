@@ -6,13 +6,13 @@ import jakarta.validation.constraints.Size;
 
 public final class ScenarioDtos {
 
-    private ScenarioDtos() {
-    }
+    private ScenarioDtos() {}
 
     public record SaveRequest(
-        @NotNull Long categoryId,
-        @NotBlank @Size(max = 150) String title,
-        @Size(max = 2000) String description
-    ) {
-    }
+            @NotNull Long categoryId,
+            @NotBlank @Size(max = 150) String title,
+            @Size(max = 2000) String description) {}
+
+    public record Publishability(
+            boolean hasGraph, boolean hasStartNode, boolean publishable, String reason) {}
 }

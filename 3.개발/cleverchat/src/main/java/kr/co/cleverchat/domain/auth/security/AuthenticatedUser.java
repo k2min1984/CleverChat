@@ -16,7 +16,11 @@ public class AuthenticatedUser {
         this.id = account.getId();
         this.username = account.getUsername();
         this.displayName = account.getDisplayName();
-        this.roles = normalizeRoles(account.getRoles() == null ? Set.of() : new LinkedHashSet<>(account.getRoles()));
+        this.roles =
+                normalizeRoles(
+                        account.getRoles() == null
+                                ? Set.of()
+                                : new LinkedHashSet<>(account.getRoles()));
         this.mustChangePassword = account.isMustChangePassword();
     }
 

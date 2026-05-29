@@ -1,0 +1,314 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.cleverchat.domain.search.mapper.SearchMapper">
+    <select id="searchScenarios" resultType="kr.co.cleverchat.domain.search.model.SearchResultItem">
+        WITH q AS (
+            SELECT
+                websearch_to_tsquery('simple', #{query}) AS tsq,
+                #{query}::text AS raw,
+                lower(unaccent(#{query})) AS raw_lc,
+                ARRAY[
+                    <foreach collection="terms" item="term" separator=",">
+                        lower(unaccent(#{term}))
+                    </foreach>
+                ]::text[] AS terms
+        ),
+        scenario_matches AS (
+            SELECT
+                'S:' || s.id::text AS result_key,
+                s.id AS scenario_id,
+                s.title AS scenario_title,
+                NULL::bigint AS crawl_document_id,
+                NULL::text AS crawl_url,
+                'SCENARIO' AS matched_field,
+                2 AS field_priority,
+                (
+                    CASE
+                        WHEN lower(unaccent(s.title)) = q.raw_lc THEN 30
+                        WHEN lower(unaccent(s.title)) LIKE q.raw_lc || '%' THEN 18
+                        ELSE 0
+                    END
+                    + (
+                        SELECT count(*)::numeric * 2
+                        FROM unnest(q.terms) AS t(term)
+                        WHERE lower(unaccent(s.title)) LIKE t.term || '%'
+                           OR lower(unaccent(coalesce(s.description, ''))) LIKE t.term || '%'
+                    )
+                    + ts_rank(to_tsvector('simple', coalesce(s.title, '') || ' ' || coalesce(s.description, '')), q.tsq) * 4
+                    + greatest(similarity(s.title, q.raw), similarity(coalesce(s.description, ''), q.raw))
+                ) AS score,
+                regexp_replace(coalesce(s.description, s.title), '\s+', ' ', 'g') AS snippet
+            FROM scenario s
+            JOIN scenario_category c ON c.id = s.category_id
+            CROSS JOIN q
+            WHERE s.status = 'ACTIVE'
+              AND s.active_version_id IS NOT NULL
+              AND c.enabled = TRUE
+              AND (
+                  to_tsvector('simple', coalesce(s.title, '') || ' ' || coalesce(s.description, '')) @@ q.tsq
+                  OR s.title % q.raw
+                  OR coalesce(s.description, '') % q.raw
+                  OR lower(unaccent(s.title)) = q.raw_lc
+                  OR lower(unaccent(s.title)) LIKE q.raw_lc || '%'
+                  OR EXISTS (
+                      SELECT 1
+                      FROM unnest(q.terms) AS t(term)
+                      WHERE lower(unaccent(s.title)) LIKE t.term || '%'
+                         OR lower(unaccent(coalesce(s.description, ''))) LIKE t.term || '%'
+                  )
+              )
+        ),
+        keyword_matches AS (
+            SELECT
+                'S:' || s.id::text AS result_key,
+                s.id AS scenario_id,
+                s.title AS scenario_title,
+                NULL::bigint AS crawl_document_id,
+                NULL::text AS crawl_url,
+                'KEYWORD' AS matched_field,
+                1 AS field_priority,
+                (
+                    CASE
+                        WHEN lower(unaccent(k.keyword)) = q.raw_lc THEN 45
+                        WHEN lower(unaccent(coalesce(sy.synonym, ''))) = q.raw_lc THEN 38
+                        WHEN lower(unaccent(k.keyword)) LIKE q.raw_lc || '%' THEN 26
+                        WHEN lower(unaccent(coalesce(sy.synonym, ''))) LIKE q.raw_lc || '%' THEN 22
+                        ELSE 0
+                    END
+                    + (
+                        SELECT count(*)::numeric * 4
+                        FROM unnest(q.terms) AS t(term)
+                        WHERE lower(unaccent(k.keyword)) LIKE t.term || '%'
+                           OR lower(unaccent(coalesce(sy.synonym, ''))) LIKE t.term || '%'
+                    )
+                    + greatest(similarity(k.keyword, q.raw), similarity(coalesce(sy.synonym, ''), q.raw))
+                    + ((k.weight + coalesce(sy.weight, 0))::numeric / 100)
+                ) AS score,
+                regexp_replace(coalesce(sy.synonym, k.keyword), '\s+', ' ', 'g') AS snippet
+            FROM scenario s
+            JOIN scenario_category c ON c.id = s.category_id
+            JOIN scenario_keyword k ON k.scenario_id = s.id AND k.enabled = TRUE
+            LEFT JOIN scenario_synonym sy ON sy.keyword_id = k.id AND sy.enabled = TRUE
+            CROSS JOIN q
+            WHERE s.status = 'ACTIVE'
+              AND s.active_version_id IS NOT NULL
+              AND c.enabled = TRUE
+              AND (
+                  k.keyword % q.raw
+                  OR coalesce(sy.synonym, '') % q.raw
+                  OR lower(unaccent(k.keyword)) = q.raw_lc
+                  OR lower(unaccent(coalesce(sy.synonym, ''))) = q.raw_lc
+                  OR lower(unaccent(k.keyword)) LIKE q.raw_lc || '%'
+                  OR lower(unaccent(coalesce(sy.synonym, ''))) LIKE q.raw_lc || '%'
+                  OR EXISTS (
+                      SELECT 1
+                      FROM unnest(q.terms) AS t(term)
+                      WHERE lower(unaccent(k.keyword)) LIKE t.term || '%'
+                         OR lower(unaccent(coalesce(sy.synonym, ''))) LIKE t.term || '%'
+                  )
+              )
+        ),
+        node_matches AS (
+            SELECT
+                'S:' || s.id::text AS result_key,
+                s.id AS scenario_id,
+                s.title AS scenario_title,
+                NULL::bigint AS crawl_document_id,
+                NULL::text AS crawl_url,
+                'NODE' AS matched_field,
+                3 AS field_priority,
+                (
+                    CASE
+                        WHEN lower(unaccent(n.title)) = q.raw_lc THEN 24
+                        WHEN lower(unaccent(n.title)) LIKE q.raw_lc || '%' THEN 14
+                        ELSE 0
+                    END
+                    + (
+                        SELECT count(*)::numeric * 1.5
+                        FROM unnest(q.terms) AS t(term)
+                        WHERE lower(unaccent(n.title)) LIKE t.term || '%'
+                           OR lower(unaccent(coalesce(n.content, ''))) LIKE t.term || '%'
+                    )
+                    + ts_rank(to_tsvector('simple', coalesce(n.title, '') || ' ' || coalesce(n.content, '')), q.tsq) * 3
+                    + greatest(similarity(n.title, q.raw), similarity(coalesce(n.content, ''), q.raw))
+                ) AS score,
+                regexp_replace(coalesce(n.content, n.title), '\s+', ' ', 'g') AS snippet
+            FROM scenario s
+            JOIN scenario_category c ON c.id = s.category_id
+            JOIN scenario_version v ON v.id = s.active_version_id
+            JOIN scenario_node n ON n.version_id = v.id
+            CROSS JOIN q
+            WHERE s.status = 'ACTIVE'
+              AND c.enabled = TRUE
+              AND (
+                  to_tsvector('simple', coalesce(n.title, '') || ' ' || coalesce(n.content, '')) @@ q.tsq
+                  OR n.title % q.raw
+                  OR coalesce(n.content, '') % q.raw
+                  OR lower(unaccent(n.title)) = q.raw_lc
+                  OR lower(unaccent(n.title)) LIKE q.raw_lc || '%'
+                  OR EXISTS (
+                      SELECT 1
+                      FROM unnest(q.terms) AS t(term)
+                      WHERE lower(unaccent(n.title)) LIKE t.term || '%'
+                         OR lower(unaccent(coalesce(n.content, ''))) LIKE t.term || '%'
+                  )
+              )
+        ),
+        crawl_document_matches AS (
+            SELECT
+                'C:' || d.id::text AS result_key,
+                NULL::bigint AS scenario_id,
+                coalesce(d.title, d.url) AS scenario_title,
+                d.id AS crawl_document_id,
+                d.url AS crawl_url,
+                'CRAWL_DOCUMENT' AS matched_field,
+                4 AS field_priority,
+                (
+                    CASE
+                        WHEN lower(unaccent(coalesce(d.title, ''))) = q.raw_lc THEN 18
+                        WHEN lower(unaccent(coalesce(d.title, ''))) LIKE q.raw_lc || '%' THEN 10
+                        ELSE 0
+                    END
+                    + (
+                        SELECT count(*)::numeric
+                        FROM unnest(q.terms) AS t(term)
+                        WHERE lower(unaccent(coalesce(d.title, ''))) LIKE t.term || '%'
+                           OR lower(unaccent(coalesce(d.content, ''))) LIKE t.term || '%'
+                    )
+                    + ts_rank(to_tsvector('simple', coalesce(d.title, '') || ' ' || coalesce(d.content, '')), q.tsq) * 2
+                    + greatest(similarity(coalesce(d.title, ''), q.raw), similarity(coalesce(d.content, ''), q.raw))
+                ) AS score,
+                regexp_replace(coalesce(d.content, d.title, d.url), '\s+', ' ', 'g') AS snippet
+            FROM crawl_document d
+            CROSS JOIN q
+            WHERE d.status = 'SUCCESS'
+              AND (
+                  to_tsvector('simple', coalesce(d.title, '') || ' ' || coalesce(d.content, '')) @@ q.tsq
+                  OR coalesce(d.title, '') % q.raw
+                  OR coalesce(d.content, '') % q.raw
+                  OR lower(unaccent(coalesce(d.title, ''))) = q.raw_lc
+                  OR lower(unaccent(coalesce(d.title, ''))) LIKE q.raw_lc || '%'
+                  OR EXISTS (
+                      SELECT 1
+                      FROM unnest(q.terms) AS t(term)
+                      WHERE lower(unaccent(coalesce(d.title, ''))) LIKE t.term || '%'
+                         OR lower(unaccent(coalesce(d.content, ''))) LIKE t.term || '%'
+                  )
+              )
+        ),
+        best_matches AS (
+            SELECT DISTINCT ON (result_key)
+                result_key,
+                scenario_id,
+                scenario_title,
+                crawl_document_id,
+                crawl_url,
+                matched_field,
+                field_priority,
+                score,
+                left(snippet, 220) AS snippet
+            FROM (
+                SELECT * FROM scenario_matches
+                UNION ALL
+                SELECT * FROM keyword_matches
+                UNION ALL
+                SELECT * FROM node_matches
+                UNION ALL
+                SELECT * FROM crawl_document_matches
+            ) all_matches
+            ORDER BY result_key, score DESC, field_priority
+        )
+        SELECT
+            scenario_id,
+            scenario_title,
+            crawl_document_id,
+            crawl_url,
+            matched_field,
+            score,
+            snippet
+        FROM best_matches
+        ORDER BY score DESC, field_priority, matched_field
+        LIMIT #{limit}
+    </select>
+
+    <insert id="insertLog" parameterType="kr.co.cleverchat.domain.search.model.SearchLog" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO search_log (query_text, normalized_query, result_count, top_scenario_id, source, latency_ms, anonymous_id_hash, user_id)
+        VALUES (#{queryText}, #{normalizedQuery}, #{resultCount}, #{topScenarioId}, #{source}, #{latencyMs}, #{anonymousIdHash}, #{userId})
+    </insert>
+
+    <insert id="insertBlockLog" parameterType="kr.co.cleverchat.domain.search.model.SearchBlockLog" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO search_block_log (query_length, pii_types, source, anonymous_id_hash, user_id)
+        VALUES (#{queryLength}, #{piiTypes}, #{source}, #{anonymousIdHash}, #{userId})
+    </insert>
+
+    <select id="findLogs" resultType="kr.co.cleverchat.domain.search.model.SearchLog">
+        SELECT id, query_text, normalized_query, result_count, top_scenario_id, source, latency_ms, anonymous_id_hash, user_id, created_at
+        FROM search_log
+        <where>
+            <if test="query != null and query != ''">
+                normalized_query LIKE concat('%', #{query}, '%')
+            </if>
+            <if test="source != null and source != ''">
+                AND source = #{source}
+            </if>
+        </where>
+        ORDER BY created_at DESC, id DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="findBlockLogs" resultType="kr.co.cleverchat.domain.search.model.SearchBlockLog">
+        SELECT id, query_length, pii_types, source, anonymous_id_hash, user_id, created_at
+        FROM search_block_log
+        <where>
+            <if test="piiType != null and piiType != ''">
+                pii_types LIKE concat('%', #{piiType}, '%')
+            </if>
+            <if test="source != null and source != ''">
+                AND source = #{source}
+            </if>
+        </where>
+        ORDER BY created_at DESC, id DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="findPopular" resultType="kr.co.cleverchat.domain.search.model.PopularQueryDaily">
+        SELECT stat_date, normalized_query, query_text_sample, search_count, no_result_count, top_result_scenario_id, created_at, updated_at
+        FROM popular_query_daily
+        WHERE stat_date BETWEEN #{from} AND #{to}
+        ORDER BY stat_date DESC, search_count DESC, normalized_query
+        LIMIT #{limit}
+    </select>
+
+    <delete id="deletePopularByDate">
+        DELETE FROM popular_query_daily
+        WHERE stat_date = #{statDate}
+    </delete>
+
+    <insert id="rebuildPopularByDate">
+        INSERT INTO popular_query_daily (stat_date, normalized_query, query_text_sample, search_count, no_result_count, top_result_scenario_id)
+        SELECT
+            CAST(created_at AT TIME ZONE 'Asia/Seoul' AS date) AS stat_date,
+            normalized_query,
+            min(query_text) AS query_text_sample,
+            count(*)::int AS search_count,
+            count(*) FILTER (WHERE result_count = 0)::int AS no_result_count,
+            max(top_scenario_id) FILTER (WHERE top_scenario_id IS NOT NULL) AS top_result_scenario_id
+        FROM search_log
+        WHERE CAST(created_at AT TIME ZONE 'Asia/Seoul' AS date) = #{statDate}
+        GROUP BY CAST(created_at AT TIME ZONE 'Asia/Seoul' AS date), normalized_query
+    </insert>
+
+    <select id="countSearchLogsBefore" resultType="long">
+        SELECT count(*) FROM search_log WHERE created_at &lt; #{cutoff}
+    </select>
+    <select id="countBlockLogsBefore" resultType="long">
+        SELECT count(*) FROM search_block_log WHERE created_at &lt; #{cutoff}
+    </select>
+    <delete id="deleteSearchLogsBefore">
+        DELETE FROM search_log WHERE created_at &lt; #{cutoff}
+    </delete>
+    <delete id="deleteBlockLogsBefore">
+        DELETE FROM search_block_log WHERE created_at &lt; #{cutoff}
+    </delete>
+</mapper>

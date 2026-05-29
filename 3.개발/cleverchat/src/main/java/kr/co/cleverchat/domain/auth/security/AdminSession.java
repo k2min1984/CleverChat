@@ -10,8 +10,7 @@ import java.util.Set;
 
 public class AdminSession implements Serializable {
 
-    @Serial
-    private static final long serialVersionUID = 1L;
+    @Serial private static final long serialVersionUID = 1L;
 
     public static final String SESSION_KEY = "CLEVERCHAT_ADMIN_SESSION";
 
@@ -23,13 +22,12 @@ public class AdminSession implements Serializable {
     private final LocalDateTime loginAt;
 
     public AdminSession(
-        Long id,
-        String username,
-        String displayName,
-        Set<String> roles,
-        boolean mustChangePassword,
-        LocalDateTime loginAt
-    ) {
+            Long id,
+            String username,
+            String displayName,
+            Set<String> roles,
+            boolean mustChangePassword,
+            LocalDateTime loginAt) {
         this.id = id;
         this.username = username;
         this.displayName = displayName;

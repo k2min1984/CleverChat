@@ -1,18 +1,18 @@
 package kr.co.cleverchat.domain.scenario.dto;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
 public final class ScenarioCategoryDtos {
 
-    private ScenarioCategoryDtos() {
-    }
+    private ScenarioCategoryDtos() {}
 
     public record SaveRequest(
-        Long parentId,
-        @NotBlank @Size(max = 100) String name,
-        int sortOrder,
-        boolean enabled
-    ) {
-    }
+            @Positive Long parentId,
+            @NotBlank @Size(max = 100) String name,
+            @Min(0) @Max(100000) int sortOrder,
+            boolean enabled) {}
 }

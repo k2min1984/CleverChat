@@ -41,3 +41,20 @@
 - HTML 출력은 Thymeleaf 기본 이스케이프를 사용하고, raw HTML 렌더링은 보안 검토 후 제한적으로 허용한다.
 - 운영 시 HTTPS는 nginx에서 종단하고 애플리케이션은 `server.forward-headers-strategy=framework`로 `X-Forwarded-*` 헤더를 처리한다.
 - `ForwardedHeadersBootCheck`와 같은 부팅 점검 경고는 `prod` 프로파일에서만 출력해 dev/stage 로그 잡음을 줄인다.
+## M7.4 Performance Baseline
+
+- Scenario matching uses local Caffeine caches with a 300 second TTL for enabled options, scenario keywords/synonyms, and active global keyword/synonym data.
+- Chat rate limiting defaults to local memory mode and can switch to Redis mode with `cleverchat.chat.rate-limit.store=redis` for multi-instance deployments.
+- Redis rate limit mode must hash runtime keys and fail open on Redis errors while logging `RATE_LIMIT_REDIS_UNAVAILABLE`.
+- Scenario, graph, publish, activation, and keyword save flows must call `ScenarioMatchingCacheInvalidator` so cached matching data is refreshed after changes.
+- Slow query logging starts at 1000ms by default through `cleverchat.ops.slow-query-threshold-ms`; logs include statement id, duration, success, and request id only.
+- SQL text, bind parameters, request/response bodies, query strings, IP, User-Agent, and PII must not be written to slow query logs.
+- Pre-release load checks use the k6 script under `4.테스트/03.성능`; results guide later tuning rather than blocking normal unit/integration tests.
+
+## M6 Backup and Recovery Baseline
+
+- Initial RPO target is 24 hours through daily PostgreSQL logical backup.
+- Initial RTO target is same business day for operator-facing recovery, subject to database size and DBA restore capacity.
+- Backup automation is outside the application process; application code documents and relies on the on-premise PostgreSQL backup runbook.
+- The baseline agent is an OS scheduler, systemd timer, cron, or Windows Task Scheduler wrapper around the provided `pg_dump` scripts.
+- Restore rehearsal must pair database dumps with the matching field-encryption key material before encrypted chat data is considered recoverable.

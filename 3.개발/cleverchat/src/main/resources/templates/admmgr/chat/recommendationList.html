@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admmgr/common/head :: adminHead('Recommendations | CleverChat')}"></head>
+<body>
+<div class="admin-wrap">
+    <div th:replace="~{admmgr/common/sidebar :: adminSidebar}"></div>
+    <div class="main-area">
+        <div th:replace="~{admmgr/common/header :: adminHeader}"></div>
+        <div th:replace="~{admmgr/common/navigation :: adminNavigation}"></div>
+        <main class="content-area">
+            <header>
+                <h1>Recommendations</h1>
+                <nav class="actions" aria-label="Recommendation filters">
+                    <a class="button" th:href="@{/admin/chat/recommendations}">All</a>
+                    <a class="button" th:href="@{/admin/chat/recommendations(enabled=true)}">Enabled</a>
+                    <a class="button" th:href="@{/admin/chat/recommendations(enabled=false)}">Disabled</a>
+                </nav>
+            </header>
+            <table aria-label="Recommendation list">
+                <caption>Recommendation list</caption>
+                <thead>
+                <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col">Scenario</th>
+                    <th scope="col">Label</th>
+                    <th scope="col">Priority</th>
+                    <th scope="col">Enabled</th>
+                    <th scope="col">Updated</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="item : ${recommendations}">
+                    <td th:text="${item.id}">1</td>
+                    <td th:text="${item.scenarioTitle}">Scenario</td>
+                    <td th:text="${item.label}">Question</td>
+                    <td th:text="${item.priority}">100</td>
+                    <td th:text="${item.enabled}">true</td>
+                    <td th:text="${#temporals.format(item.updatedAt, 'yyyy-MM-dd HH:mm')}">2026-05-27 13:00</td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(recommendations)}">
+                    <td colspan="6">No recommendations found.</td>
+                </tr>
+                </tbody>
+            </table>
+        </main>
+        <div th:replace="~{admmgr/common/footer :: adminFooter}"></div>
+    </div>
+</div>
+</body>
+</html>

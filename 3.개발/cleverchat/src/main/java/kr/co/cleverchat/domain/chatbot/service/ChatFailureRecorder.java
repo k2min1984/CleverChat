@@ -26,7 +26,8 @@ public class ChatFailureRecorder {
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void recordFailure(String sessionId, Long messageId, String reason, Map<String, ?> detail) {
+    public void recordFailure(
+            String sessionId, Long messageId, String reason, Map<String, ?> detail) {
         ChatFailure failure = new ChatFailure();
         failure.setSessionId(sessionId);
         failure.setMessageId(messageId);

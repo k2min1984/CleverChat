@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <body>
-<nav th:fragment="adminNavigation" class="admin-navigation" aria-label="관리자 내비게이션">
-    <a th:href="@{/admin}">홈</a>
-    <a th:href="@{/admin/scenarios}">시나리오</a>
+<nav th:fragment="adminNavigation" class="breadcrumb" aria-label="관리자 경로">
+    <a class="breadcrumb-item" th:href="@{/admin}">관리자</a>
+    <span class="breadcrumb-sep" aria-hidden="true">/</span>
+    <span class="breadcrumb-item current" data-current-admin-page>현재 화면</span>
 </nav>
 </body>
 </html>

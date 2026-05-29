@@ -1,37 +1,60 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{admmgr/common/head :: adminHead('시나리오 편집 | CleverChat')}"></head>
+<head th:replace="~{admmgr/common/head :: adminHead('Scenario edit | CleverChat')}"></head>
 <body>
 <div class="admin-wrap">
     <div th:replace="~{admmgr/common/sidebar :: adminSidebar}"></div>
-    <div class="admin-container">
+    <div class="main-area">
         <div th:replace="~{admmgr/common/header :: adminHeader}"></div>
         <div th:replace="~{admmgr/common/navigation :: adminNavigation}"></div>
-        <main class="admin-content">
-            <header>
-                <h1>시나리오 편집</h1>
-                <a class="button" th:href="@{/admin/scenarios}">목록</a>
-            </header>
-            <form th:object="${scenarioForm}" th:action="@{${formAction}}" method="post">
-                <th:block th:replace="~{admmgr/common/_csrfHidden :: csrfHidden}"></th:block>
-                <label for="categoryId">카테고리
-                    <select id="categoryId" th:field="*{categoryId}" aria-describedby="categoryHelp" required>
-                        <option value="">선택</option>
-                        <option th:each="category : ${categories}" th:value="${category.id}" th:text="${category.name}">기본</option>
-                    </select>
-                </label>
-                <p id="categoryHelp">카테고리가 없으면 API로 먼저 생성해야 합니다.</p>
-                <label for="title">제목
-                    <input id="title" type="text" th:field="*{title}" maxlength="150" required>
-                </label>
-                <label for="description">설명
-                    <textarea id="description" th:field="*{description}" maxlength="2000"></textarea>
-                </label>
-                <div class="actions">
-                    <button type="submit">저장</button>
-                    <a class="button" th:href="@{/admin/scenarios}">취소</a>
-                </div>
-            </form>
+        <main class="content-area">
+            <div class="page-wrap">
+                <form th:object="${scenarioForm}" th:action="@{${formAction}}" method="post">
+                    <th:block th:replace="~{admmgr/common/_csrfHidden :: csrfHidden}"></th:block>
+                    <div class="regist-card">
+                        <div class="regist-header" th:text="${scenario != null ? '시나리오 수정' : '시나리오 등록'}">시나리오 등록</div>
+                        <div class="regist-body">
+                            <table class="tbl-fixed">
+                                <caption class="sr-only">Scenario form</caption>
+                                <tbody>
+                                <tr>
+                                    <th scope="row"><label for="categoryId">카테고리 <em class="required">*</em></label></th>
+                                    <td>
+                                        <select id="categoryId" th:field="*{categoryId}" aria-describedby="categoryHelp" required>
+                                            <option value="">선택</option>
+                                            <option th:each="category : ${categories}" th:value="${category.id}" th:text="${category.name}">민원</option>
+                                        </select>
+                                        <p id="categoryHelp" class="help-text">시나리오가 노출될 상담 분류를 선택합니다.</p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row"><label for="title">제목 <em class="required">*</em></label></th>
+                                    <td>
+                                        <input id="title" type="text" th:field="*{title}" maxlength="150" required placeholder="제목을 입력하세요">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row"><label for="description">설명</label></th>
+                                    <td>
+                                        <textarea id="description" th:field="*{description}" maxlength="2000" placeholder="관리자와 사용자에게 보여줄 설명을 입력하세요"></textarea>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="regist-footer">
+                            <a class="btn btn-md btn-secondary" th:href="@{/admin/scenarios}">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                                목록
+                            </a>
+                            <button type="submit" class="btn btn-md btn-solid btn-primary">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                                저장
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
         </main>
         <div th:replace="~{admmgr/common/footer :: adminFooter}"></div>
     </div>

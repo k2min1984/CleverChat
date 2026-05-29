@@ -60,6 +60,30 @@ logging:
     kr.co.cleverchat: INFO
 
 cleverchat:
+  ai:
+    answer-suggestion:
+      enabled: ${CLEVERCHAT_AI_ANSWER_SUGGESTION_ENABLED:false}
+  external-api:
+    enabled: ${CLEVERCHAT_EXTERNAL_API_ENABLED:false}
+    api-key-sha256: ${CLEVERCHAT_EXTERNAL_API_KEY_SHA256:}
+  security:
+    field-encryption:
+      key-base64: ${CLEVERCHAT_FIELD_ENCRYPTION_KEY_BASE64:}
+      key-id: ${CLEVERCHAT_FIELD_ENCRYPTION_KEY_ID:local-v1}
+      previous-keys: ${CLEVERCHAT_FIELD_ENCRYPTION_PREVIOUS_KEYS:}
+  ops:
+    slow-query-threshold-ms: ${CLEVERCHAT_SLOW_QUERY_THRESHOLD_MS:1000}
+  notification:
+    email:
+      from: ${CLEVERCHAT_NOTIFICATION_EMAIL_FROM:no-reply@localhost}
+  crawl:
+    url-policy:
+      allowed-hosts: ${CLEVERCHAT_CRAWL_ALLOWED_HOSTS:}
+  chat:
+    rate-limit:
+      store: ${CLEVERCHAT_CHAT_RATE_LIMIT_STORE:memory}
+      max-requests: ${CLEVERCHAT_CHAT_RATE_LIMIT_MAX_REQUESTS:30}
+      window-seconds: ${CLEVERCHAT_CHAT_RATE_LIMIT_WINDOW_SECONDS:60}
   auth:
     max-failed-attempts: ${CLEVERCHAT_AUTH_MAX_FAILED_ATTEMPTS:5}
     lock-minutes: ${CLEVERCHAT_AUTH_LOCK_MINUTES:30}

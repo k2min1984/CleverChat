@@ -13,4 +13,37 @@
           AND c.enabled = TRUE
         ORDER BY r.priority, r.id
     </select>
+    <select id="findAdminList" resultType="kr.co.cleverchat.domain.chatbot.model.ChatRecommendationAdminItem">
+        SELECT r.id, r.scenario_id, s.title AS scenario_title, r.label, r.priority, r.enabled, r.created_at, r.updated_at
+        FROM chat_recommendation r
+        JOIN scenario s ON s.id = r.scenario_id
+        <where>
+            <if test="enabled != null">
+                r.enabled = #{enabled}
+            </if>
+        </where>
+        ORDER BY r.priority, r.id
+    </select>
+    <select id="findById" resultType="kr.co.cleverchat.domain.chatbot.model.ChatRecommendation">
+        SELECT id, scenario_id, label, priority, enabled, created_at, updated_at
+        FROM chat_recommendation
+        WHERE id = #{id}
+    </select>
+    <insert id="insert" parameterType="kr.co.cleverchat.domain.chatbot.model.ChatRecommendation" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO chat_recommendation (scenario_id, label, priority, enabled)
+        VALUES (#{scenarioId}, #{label}, #{priority}, #{enabled})
+    </insert>
+    <update id="update" parameterType="kr.co.cleverchat.domain.chatbot.model.ChatRecommendation">
+        UPDATE chat_recommendation
+        SET scenario_id = #{scenarioId},
+            label = #{label},
+            priority = #{priority},
+            enabled = #{enabled},
+            updated_at = now()
+        WHERE id = #{id}
+    </update>
+    <delete id="delete">
+        DELETE FROM chat_recommendation
+        WHERE id = #{id}
+    </delete>
 </mapper>

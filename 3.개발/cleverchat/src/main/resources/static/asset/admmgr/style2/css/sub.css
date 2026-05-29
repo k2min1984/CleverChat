@@ -22,6 +22,99 @@
 .is-error:focus { box-shadow:0 0 0 3px rgba(239,68,68,0.1) !important; border-color:#ef4444 !important; }
 .field-error { font-size:12px; color:#ef4444; margin-top:4px; line-height:1.3; }
 
+/* CleverChat admin screens inherit the source CMS layout and visual grammar. */
+.content-area > header {
+    display:flex; align-items:center; justify-content:space-between; gap:16px;
+    margin-bottom:18px; padding:18px 20px; background:#fff;
+    border:1px solid #e5e7eb; border-radius:6px;
+}
+.content-area > header h1 {
+    margin:0; color:#111827; font-size:20px; font-weight:800; letter-spacing:0;
+}
+.content-area > header h1::before {
+    content:''; display:inline-block; width:4px; height:18px; margin-right:10px;
+    background:#2563eb; border-radius:2px; vertical-align:-3px;
+}
+.actions {
+    display:flex; align-items:center; justify-content:flex-end; gap:8px; flex-wrap:wrap;
+}
+.button,
+a.button,
+button.button,
+.content-area button:not(.nav-group-header):not(.btn-toggle-sidebar):not(.btn-logout):not(.page-btn):not(.btn-sm):not(.btn-delete):not(.btn-regist):not(.btn-update):not(.btn-list):not(.btn-save):not(.btn-icon):not(.mtg-toggle) {
+    display:inline-flex; align-items:center; justify-content:center; gap:6px;
+    min-height:34px; padding:0 14px; border:1px solid #d1d5db; border-radius:6px;
+    background:#fff; color:#374151; font-size:13px; font-weight:600;
+    font-family:inherit; cursor:pointer; white-space:nowrap; transition:all .15s;
+}
+.button:hover,
+a.button:hover,
+button.button:hover,
+.content-area button:not(.nav-group-header):not(.btn-toggle-sidebar):not(.btn-logout):not(.page-btn):not(.btn-sm):not(.btn-delete):not(.btn-regist):not(.btn-update):not(.btn-list):not(.btn-save):not(.btn-icon):not(.mtg-toggle):hover {
+    background:#f3f4f6; border-color:#9ca3af;
+}
+.content-area form[method="get"],
+.content-area section > form,
+.content-area > form {
+    display:flex; align-items:flex-end; gap:10px; flex-wrap:wrap;
+    margin-bottom:16px; padding:16px; background:#fff;
+    border:1px solid #e5e7eb; border-radius:6px;
+}
+.content-area label { color:#475569; font-size:13px; font-weight:600; }
+.content-area input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]),
+.content-area select,
+.content-area textarea {
+    min-height:34px; padding:0 10px; border:1px solid #cbd5e1; border-radius:6px;
+    color:#1f2937; font-size:13px; font-family:inherit; background:#fff;
+}
+.content-area textarea { padding:8px 10px; }
+.content-area input:focus,
+.content-area select:focus,
+.content-area textarea:focus {
+    outline:none; border-color:#2563eb; box-shadow:0 0 0 2px rgba(37,99,235,.15);
+}
+.content-area section {
+    margin-bottom:18px; padding:18px; background:#fff;
+    border:1px solid #e5e7eb; border-radius:6px;
+}
+.content-area section h2 {
+    margin:0 0 14px; color:#1e293b; font-size:16px; font-weight:800;
+}
+.content-area > p {
+    margin:0 0 16px; color:#64748b; font-size:13px;
+}
+.content-area table:not(.view-table):not(.form-table):not(.info-table):not(.tbl-fixed) {
+    width:100%; border-collapse:collapse; margin-top:10px; background:#fff;
+    border:1px solid #e5e7eb; border-radius:6px; overflow:hidden;
+}
+.content-area table:not(.view-table):not(.form-table):not(.info-table):not(.tbl-fixed) caption {
+    position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+    overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;
+}
+.content-area table:not(.view-table):not(.form-table):not(.info-table):not(.tbl-fixed) thead th {
+    padding:12px 10px; text-align:center; color:#64748b; background:#fafbfc;
+    border-bottom:2px solid #e2e8f0; font-size:13px; font-weight:700; white-space:nowrap;
+}
+.content-area table:not(.view-table):not(.form-table):not(.info-table):not(.tbl-fixed) td {
+    padding:10px; color:#1f2937; border-bottom:1px solid #f3f4f6;
+    font-size:13px; text-align:center; vertical-align:middle;
+}
+.content-area table:not(.view-table):not(.form-table):not(.info-table):not(.tbl-fixed) tbody tr:hover td {
+    background:#f9fafb;
+}
+.content-area table:not(.view-table):not(.form-table):not(.info-table):not(.tbl-fixed) .td-left {
+    text-align:left;
+}
+.content-area .grid {
+    display:grid; grid-template-columns:repeat(4, minmax(180px, 1fr)); gap:16px;
+}
+.content-area .card {
+    background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:20px;
+    box-shadow:0 2px 8px rgba(0,0,0,.04);
+}
+.content-area .card h2 { margin:0 0 8px; color:#475569; font-size:14px; font-weight:700; }
+.content-area .card strong { color:#0f172a; font-size:26px; font-weight:800; }
+
 /* Dashboard Page Specific Background (수출통제 대시보드만 적용) */
 .dashboard-premium-wrapper {
     background-image:
@@ -390,6 +483,8 @@
     .admin-table { min-width:900px; }
     /* 검색영역 반응형 */
     .search-card { overflow-x:hidden; }
+    .search-card-horizontal { grid-template-columns:1fr; }
+    .search-card-horizontal .search-actions { justify-content:flex-start; }
     .search-row { flex-wrap:wrap; gap:6px; }
     .search-row .search-input, .search-row .search-select { min-width:100px; flex:1 1 140px; }
     .search-row > .search-label { min-width:60px; }
@@ -512,9 +607,9 @@
 /* ========================================
    Tree Management Common Styles (코드/메뉴 공통)
    ======================================== */
-.tree-wrap { display:flex; gap:16px; padding:20px; width:100%; }
+.tree-wrap { display:flex; gap:16px; padding:20px; width:100%; overflow-x:auto; }
 .tree-col {
-    flex:1; min-width:0; background:#fff;
+    flex:1 0 320px; min-width:320px; background:#fff;
     border:1px solid rgba(226,232,240,0.8);
     border-radius:12px; overflow:hidden;
     box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
@@ -562,13 +657,19 @@
 }
 
 .tree-list { max-height:calc(100vh - 300px); overflow-y:auto; scrollbar-width:thin; }
-.tree-list table { width:100%; border-collapse:collapse; table-layout:fixed; }
+.content-area .tree-list table:not(.view-table):not(.form-table):not(.info-table):not(.tbl-fixed),
+.tree-list table {
+    width:100%; border-collapse:collapse; table-layout:fixed;
+    margin-top:0; border:0; border-radius:0; overflow:visible;
+}
+.content-area .tree-list table:not(.view-table):not(.form-table):not(.info-table):not(.tbl-fixed) thead th,
 .tree-list th {
     padding:10px 4px; font-size:11px; font-weight:600; color:#64748b;
     text-align:center; background:#f8fafc; border-bottom:1px solid #e2e8f0;
     position:sticky; top:0; z-index:10;
     white-space:nowrap; overflow:hidden;
 }
+.content-area .tree-list table:not(.view-table):not(.form-table):not(.info-table):not(.tbl-fixed) td,
 .tree-list td {
     padding:8px 6px; font-size:13px; color:#334155;
     border-bottom:1px solid #f8fafc; cursor:pointer;
@@ -579,8 +680,8 @@
 .tree-list tr.selected td { background:#eff6ff; font-weight:700; color:#1e40af; }
 .tree-list .col-no   { width:40px; text-align:center; color:#94a3b8; }
 .tree-list .col-name { text-align:left; }
-.tree-list .col-act  { width:36px; text-align:center; overflow:visible; text-overflow:clip; }
-.tree-list .col-drag { width:32px; text-align:center; overflow:visible; text-overflow:clip; }
+.tree-list .col-act  { width:44px; text-align:center; overflow:visible; text-overflow:clip; }
+.tree-list .col-drag { width:44px; text-align:center; overflow:visible; text-overflow:clip; }
 .tree-list tr.dragging { opacity:0.5; background:#f8fafc; outline:2px dashed #3b82f6; }
 
 .drag-handle {
@@ -595,7 +696,7 @@ td.col-act, td.col-drag { padding:4px 0 !important; }
 td.col-act .btn-icon, td.col-drag .drag-handle { display:flex; align-items:center; justify-content:center; margin:0 auto; }
 .btn-icon {
     width:28px; height:28px; display:inline-flex; align-items:center; justify-content:center;
-    border:none; background:none; border-radius:6px; cursor:pointer; padding:0;
+    border:none; background:transparent; border-radius:6px; cursor:pointer; padding:0;
     transition: all 0.2s; margin:0 auto; overflow:hidden;
 }
 .btn-icon:hover {
@@ -667,10 +768,16 @@ td.col-act .btn-icon, td.col-drag .drag-handle { display:flex; align-items:cente
     background: #fff; border: 1px solid #e5e7eb;
     border-radius: 6px; padding: 16px 20px; margin-bottom: 20px;
 }
+.content-area form.search-card-horizontal,
+.search-card-horizontal {
+    display:grid; grid-template-columns:auto minmax(0, 1fr) auto;
+    align-items:center; column-gap:18px; row-gap:12px;
+}
 .search-card .box-title {
     display: flex; align-items: center; gap: 6px;
     font-size: 13px; font-weight: 600; color: #4b5563; margin-bottom: 12px;
 }
+.search-card-horizontal .box-title { margin-bottom:0; }
 .search-card .box-title svg { width: 16px; height: 16px; color: #2563eb; }
 /* 도움말 아이콘 + 툴팁 (공통 fragment: common/fragments :: help) */
 .help-tip {
@@ -753,7 +860,9 @@ input[type="date"] { width:175px; flex:0 0 175px; box-sizing:border-box; }
     font-family: inherit;
 }
 .btn-date:hover { background: #f3f4f6; }
-.search-actions { display: flex; justify-content: center; gap: 8px; margin-top: 12px; }
+.search-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+.search-card-horizontal .search-row { margin-bottom:0; }
+.search-card-horizontal .search-actions { margin-top:0; }
 .btn-reset {
     display: inline-flex; align-items: center; justify-content: center;
     gap: 6px; height: 36px; line-height: 1; padding: 0 20px;
@@ -780,7 +889,7 @@ input[type="date"] { width:175px; flex:0 0 175px; box-sizing:border-box; }
 }
 .result-count { font-size: 13px; color: #4b5563; }
 .result-count strong { color: #1f2937; }
-.result-actions { display: flex; gap: 8px; }
+.result-actions { display: flex; gap: 8px; padding-right: 12px; }
 .btn-sm {
     display: inline-flex; align-items: center; justify-content: center;
     gap: 4px; height: 32px; line-height: 1;
@@ -810,8 +919,8 @@ input[type="date"] { width:175px; flex:0 0 175px; box-sizing:border-box; }
 .table-wrap { overflow-x: auto; }
 .admin-table { width: 100%; border-collapse: collapse; }
 .admin-table thead th {
-    padding: 11px 10px; font-size: 13px; font-weight: 600; color: #fff;
-    text-align: center; background: #2563eb; white-space: nowrap;
+    padding: 12px 10px; font-size: 13px; font-weight: 700; color: #64748b;
+    text-align: center; background: #fafbfc; border-bottom: 2px solid #e2e8f0; white-space: nowrap;
 }
 .admin-table td {
     padding: 10px 10px; font-size: 13px; color: #1f2937;
@@ -821,6 +930,8 @@ input[type="date"] { width:175px; flex:0 0 175px; box-sizing:border-box; }
 .admin-table tr:last-child td { border-bottom: none; }
 .admin-table tbody tr:hover td { background: #f9fafb; }
 .admin-table .td-empty td { text-align: center; color: #9ca3af; padding: 40px; }
+.admin-table .row-actions { display:inline-flex; align-items:center; justify-content:center; gap:6px; flex-wrap:wrap; }
+.admin-table .row-actions form { display:inline-flex; align-items:center; gap:6px; margin:0; }
 .link-detail { color: #2563eb; text-decoration: underline; cursor: pointer; font-weight: 500; }
 .link-detail:hover { color: #1d4ed8; }
 .table-footer {
@@ -840,6 +951,7 @@ input[type="date"] { width:175px; flex:0 0 175px; box-sizing:border-box; }
 .page-btn:hover { background:#f3f4f6; }
 .page-btn.active { background:#2563eb; color:#fff; border-color:#2563eb; font-weight:600; cursor:default; }
 .page-btn.active:hover { background:#2563eb; }
+.page-btn.disabled { opacity:.45; pointer-events:none; cursor:not-allowed; }
 .page-btn svg { width:14px; height:14px; }
 
 /* ========================================
@@ -1017,7 +1129,7 @@ input[type="date"] { width:175px; flex:0 0 175px; box-sizing:border-box; }
     flex-shrink:0;
 }
 .layer-header h3 { font-size:15px; font-weight:600; }
-.layer-header .btn-group { display:flex; gap:8px; align-items:center; }
+.layer-header .btn-group { display:flex; gap:8px; align-items:center; flex-shrink:0; }
 .layer-header .btn-group button {
     height:36px; padding:0 20px; border:none; border-radius:8px;
     font-size:13px; font-weight:600; cursor:pointer; transition:all 0.2s;
@@ -1031,6 +1143,123 @@ input[type="date"] { width:175px; flex:0 0 175px; box-sizing:border-box; }
 .btn-close-x:hover { background:rgba(255,255,255,0.1); color:#fff; }
 .btn-close-x svg { width:18px; height:18px; }
 .layer-body { padding:20px 24px; background:#f9fafb; flex:1; overflow-y:auto; min-height:0; }
+
+.scenario-preview-layer { min-width: 520px; max-width: 720px; background: #f9fafb; }
+.scenario-preview-layer .layer-header h1 { margin:0; font-size:16px; font-weight:700; }
+.scenario-preview-layer .layer-header p { margin:4px 0 0; color:rgba(255,255,255,.72); font-size:12px; }
+.scenario-preview-layer .layer-header .btn-secondary {
+    background:#fff; border-color:#fff; color:#1f2937;
+}
+.scenario-preview-layer .layer-header .btn-secondary:hover {
+    background:#f1f5f9; border-color:#f1f5f9; color:#111827;
+}
+.scenario-preview-layer .layer-header .btn-group button.preview-close-btn {
+    height:32px; min-width:auto; padding:6px 12px; border-radius:6px;
+    font-size:12px; line-height:1; border:1px solid #fff;
+}
+.scenario-preview-layer .preview-card,
+.scenario-preview-layer .preview-empty {
+    background:#fff; border:1px solid #e5e7eb; border-radius:6px; padding:20px;
+    box-shadow:0 1px 2px rgba(15,23,42,.04);
+}
+.scenario-preview-layer .preview-node-type {
+    display:inline-flex; align-items:center; height:24px; padding:0 10px; margin-bottom:10px;
+    border-radius:999px; background:#eff6ff; color:#2563eb; font-size:11px; font-weight:700;
+}
+.scenario-preview-layer .preview-card h2 { margin:0 0 10px; font-size:18px; color:#111827; }
+.scenario-preview-layer .preview-card p { margin:0 0 16px; color:#334155; line-height:1.6; white-space:pre-wrap; }
+.scenario-preview-layer .preview-options { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:14px; }
+.scenario-preview-layer .preview-empty p { margin:0; color:#64748b; line-height:1.6; }
+
+/* Scenario Graph Editor */
+.graph-editor-section { overflow:visible; }
+.graph-start-row {
+    display:grid; grid-template-columns:120px minmax(220px, 420px); gap:10px;
+    align-items:center;
+}
+.graph-start-row label { color:#334155; font-weight:700; }
+.graph-editor-header {
+    align-items:flex-start; margin-bottom:14px; padding:0; border:0; background:transparent;
+}
+.graph-editor-header h2 { margin:0 0 4px; }
+.graph-node-list { display:flex; flex-direction:column; gap:14px; }
+.graph-node-card {
+    background:#fff; border:1px solid #dbe3ef; border-radius:6px;
+    box-shadow:0 1px 2px rgba(15,23,42,.04); overflow:hidden;
+}
+.graph-node-card-header {
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    padding:12px 14px; border-bottom:1px solid #e5e7eb; background:#f8fafc;
+}
+.graph-node-card-header > div { display:flex; align-items:center; gap:8px; min-width:0; }
+.graph-node-card-header strong {
+    color:#0f172a; font-size:14px; font-weight:800; word-break:break-all;
+}
+.graph-field-grid {
+    display:grid; grid-template-columns:minmax(180px, 1fr) minmax(150px, 220px) minmax(120px, 160px);
+    gap:12px; padding:14px;
+}
+.graph-field {
+    display:flex; flex-direction:column; gap:6px;
+    color:#475569; font-size:13px; font-weight:700;
+}
+.graph-field input,
+.graph-field select,
+.graph-field textarea,
+.graph-option-row input,
+.graph-metadata-row input {
+    width:100%; box-sizing:border-box;
+}
+.graph-field-wide { grid-column:1 / -1; }
+.graph-subheader {
+    display:flex; align-items:flex-start; justify-content:space-between; gap:12px;
+    margin-bottom:10px;
+}
+.graph-subheader strong { color:#1e293b; font-size:13px; font-weight:800; }
+.graph-subheader .help-text { margin:4px 0 0; }
+.graph-metadata-box,
+.graph-options-box {
+    margin:0 14px 14px; padding:12px; border:1px solid #e5e7eb;
+    border-radius:6px; background:#fbfdff;
+}
+.graph-metadata-list,
+.graph-option-list { display:flex; flex-direction:column; gap:8px; }
+.graph-metadata-row {
+    display:grid; grid-template-columns:minmax(160px, 220px) minmax(200px, 1fr) auto;
+    gap:8px; align-items:center;
+}
+.graph-option-row {
+    display:grid; grid-template-columns:minmax(140px, 1.1fr) minmax(140px, 1fr) minmax(150px, 1.2fr) 82px 78px auto;
+    gap:8px; align-items:end; padding:10px; border:1px solid #eef2f7;
+    border-radius:6px; background:#fff;
+}
+.graph-option-row label {
+    display:flex; flex-direction:column; gap:5px;
+    color:#64748b; font-size:12px; font-weight:700;
+}
+.graph-option-row .graph-check {
+    min-height:34px; flex-direction:row; align-items:center; justify-content:center;
+    color:#334155;
+}
+.graph-option-row input[type="checkbox"] {
+    width:16px; height:16px; min-height:0;
+}
+.graph-empty {
+    padding:24px; text-align:center; color:#64748b; background:#fff;
+    border:1px dashed #cbd5e1; border-radius:6px;
+}
+
+@media (max-width:1200px) {
+    .graph-field-grid { grid-template-columns:1fr 1fr; }
+    .graph-option-row { grid-template-columns:1fr 1fr; }
+}
+@media (max-width:760px) {
+    .graph-start-row,
+    .graph-field-grid,
+    .graph-metadata-row,
+    .graph-option-row { grid-template-columns:1fr; }
+    .graph-subheader { flex-direction:column; }
+}
 
 /* form-table 레이어 전용 오버라이드 */
 .layer-body .form-table th, .layer-body .form-table td {
@@ -1163,6 +1392,13 @@ input[type="date"] { width:175px; flex:0 0 175px; box-sizing:border-box; }
     outline:none; border-color:#3b82f6; background:#fff;
     box-shadow:0 0 0 3px rgba(59,130,246,0.15);
 }
+.detail-body label {
+    display:inline-flex; align-items:center; gap:5px;
+    margin-right:16px; color:#334155; font-size:13px; cursor:pointer;
+}
+.detail-body input[type="radio"] {
+    width:15px; height:15px; accent-color:#2563eb;
+}
 
 /* 레이어 푸터 (취소 좌측, 액션 우측) */
 .detail-footer,
@@ -1233,6 +1469,8 @@ input[type="date"] { width:175px; flex:0 0 175px; box-sizing:border-box; }
 
 /* Sizes */
 .btn-xs { padding:4px 10px; font-size:11px; border-radius:4px; }
+.btn-xs.red { color:#dc2626; border-color:#fca5a5; background:#fef2f2; }
+.btn-xs.red:hover { background:#fee2e2; border-color:#f87171; }
 .btn-sm { padding:6px 12px; font-size:12px; border-radius:6px; }
 .btn-sm svg { width:14px; height:14px; }
 .btn-md { padding:8px 24px; font-size:13px; border-radius:6px; letter-spacing:-0.3px; }
@@ -1290,6 +1528,18 @@ input[type="date"] { width:175px; flex:0 0 175px; box-sizing:border-box; }
     min-width:24px; height:24px; padding:0 8px; border-radius:12px;
     background:#e5e7eb; color:#6b7280; font-size:11px; font-weight:700;
 }
+.selected-auth-badge {
+    display:inline-flex; align-items:center; justify-content:center;
+    min-width:92px; max-width:220px; height:26px; padding:0 12px;
+    border:1px solid #bfdbfe; border-radius:999px;
+    background:#eff6ff; color:#1d4ed8;
+    font-size:12px; font-weight:800; line-height:1;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.selected-auth-badge.is-selected {
+    border-color:#93c5fd; background:#dbeafe; color:#1e40af;
+    box-shadow:0 1px 2px rgba(37,99,235,0.12);
+}
 .auth-list-panel { flex:0 0 280px; min-width:280px; }
 .auth-tree-panel { flex:1; min-width:400px; }
 
@@ -1333,6 +1583,207 @@ input[type="date"] { width:175px; flex:0 0 175px; box-sizing:border-box; }
 .tree-node .perm-group label { display:flex; align-items:center; gap:2px; font-size:11px; color:#6b7280; cursor:pointer; }
 .tree-node .perm-group label input { width:14px; height:14px; accent-color:#2563eb; }
 .tree-empty { text-align:center; padding:40px; color:#9ca3af; font-size:13px; }
+
+.manage-create-row select {
+    min-width:110px;
+    height:36px;
+    padding:0 28px 0 10px;
+    border:1px solid #cbd5e1;
+    border-radius:8px;
+    font-size:13px;
+    background:#fff;
+}
+.manage-create-row input[type="text"] {
+    min-width:0;
+}
+.tree-list input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]) {
+    width:100%;
+    min-height:30px;
+    padding:0 8px;
+    border:1px solid #e2e8f0;
+    border-radius:6px;
+    font-size:12px;
+}
+.tree-list input[type="checkbox"] {
+    width:16px;
+    height:16px;
+    accent-color:#2563eb;
+}
+.tree-list .btn-icon {
+    color:#2563eb;
+    font-weight:800;
+    border:none;
+    background:transparent;
+    border-radius:6px;
+    box-shadow:none;
+    padding:0;
+}
+.tree-list .btn-icon.danger {
+    color:#e11d48;
+}
+
+.modern-tree-grid {
+    width:100%;
+    min-width:640px;
+    border:1px solid #e5e7eb;
+    border-radius:8px;
+    overflow:hidden;
+    background:#fff;
+    box-shadow:0 1px 3px rgba(0,0,0,0.05);
+}
+.mtg-header {
+    display:flex;
+    background:#f3f4f6;
+    padding:12px 14px;
+    border-bottom:2px solid #e5e7eb;
+    font-size:13px;
+    font-weight:600;
+    color:#374151;
+    align-items:center;
+}
+.auth-tree-body {
+    overflow:auto;
+}
+.mtg-col-name {
+    flex:1 1 auto;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    min-width:0;
+    padding-right:10px;
+}
+.mtg-col-name label,
+.mtg-menu-nm {
+    white-space:nowrap;
+}
+.mtg-col-perms,
+.modern-tree-grid .perm-group {
+    display:grid;
+    grid-template-columns:repeat(5, 56px);
+    gap:0;
+    column-gap:0;
+    width:280px;
+    justify-content:end;
+    align-items:center;
+    flex-shrink:0;
+}
+.mtg-col-perms span,
+.modern-tree-grid .perm-group label {
+    text-align:center;
+    justify-content:center;
+    display:flex;
+    align-items:center;
+}
+.mtg-row {
+    display:flex;
+    padding:6px 14px;
+    border-bottom:1px solid #f3f4f6;
+    align-items:center;
+    transition:background-color 0.2s;
+    min-height:36px;
+}
+.mtg-row.is-hidden {
+    display:none;
+}
+.mtg-row:last-child { border-bottom:none; }
+.mtg-row:hover { background-color:#f9fafb; }
+.mtg-toggle {
+    width:18px;
+    height:18px;
+    min-width:18px;
+    min-height:18px;
+    flex:0 0 18px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    border:0;
+    background:transparent;
+    color:#64748b;
+    padding:0;
+    cursor:pointer;
+    box-shadow:none;
+    border-radius:4px;
+}
+.mtg-toggle-spacer {
+    width:18px;
+    height:18px;
+    flex:0 0 18px;
+}
+.mtg-toggle svg {
+    width:14px;
+    height:14px;
+    flex:0 0 14px;
+    stroke:currentColor;
+    stroke-width:2;
+    fill:none;
+    transition:transform .15s ease;
+}
+.mtg-toggle[aria-expanded="true"] svg {
+    transform:rotate(90deg);
+}
+.mtg-toggle:disabled {
+    cursor:default;
+    opacity:0;
+}
+.mtg-menu-nm[role="button"] {
+    cursor:pointer;
+}
+.mtg-menu-nm[role="button"]:focus-visible,
+.mtg-toggle:focus-visible {
+    outline:2px solid #2563eb;
+    outline-offset:2px;
+    border-radius:4px;
+}
+.mtg-indent {
+    display:inline-block;
+    width:24px;
+    flex-shrink:0;
+}
+.mtg-depth-icon {
+    color:#9ca3af;
+    margin-right:6px;
+    font-weight:400;
+}
+.modern-tree-grid .tree-check,
+.modern-tree-grid .perm-check {
+    width:14px;
+    height:14px;
+    flex:0 0 14px;
+    accent-color:#2563eb;
+    cursor:pointer;
+    margin:0;
+}
+.modern-tree-grid .perm-check:disabled {
+    cursor:not-allowed;
+    opacity:.7;
+}
+.mtg-menu-nm {
+    font-size:14px;
+    color:#1f2937;
+    font-weight:500;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+.mtg-row[data-depth="1"] {
+    background-color:#fcfcfc;
+}
+.mtg-row[data-depth="1"] .mtg-menu-nm {
+    font-weight:700;
+    color:#111827;
+}
+
+@media (max-width: 900px) {
+    .auth-wrap {
+        flex-direction:column;
+    }
+    .auth-list-panel,
+    .auth-tree-panel {
+        flex:1 1 auto;
+        min-width:0;
+        width:100%;
+    }
+}
 
 /* ========================================
    File Upload Component (ADM.FileUpload)
@@ -1450,6 +1901,7 @@ input[type="date"] { width:175px; flex:0 0 175px; box-sizing:border-box; }
 
 /* 상세 공통 */
 .view-body { white-space:pre-wrap; }
+.view-body.compact-body { min-height:0; padding:18px 28px; }
 .view-meta-sep { margin:0 2px; color:#cbd5e1; }
 .view-meta-icon { width:13px; height:13px; vertical-align:-2px; }
 .view-meta-date { margin-left:12px; }
@@ -1457,6 +1909,8 @@ input[type="date"] { width:175px; flex:0 0 175px; box-sizing:border-box; }
 .view-hist-header { padding:16px 28px 12px; display:flex; align-items:center; justify-content:space-between; }
 .view-hist-title { font-size:15px; display:flex; align-items:center; }
 .view-hist-cnt { font-size:13px; font-weight:400; color:#94a3b8; margin-left:4px; }
+.keyword-chip-list { list-style:none; margin:0; padding:0; display:flex; flex-wrap:wrap; gap:8px; }
+.keyword-chip-list li { margin:0; padding:0; }
 
 /* 등록 결과 테이블 고정 레이아웃 */
 .regist-body table.tbl-fixed { table-layout:fixed; }
@@ -1761,4 +2215,58 @@ input[type="date"].form-input::placeholder {
     background:#fff; border:1px solid #cbd5e1;
     max-height:240px; overflow-y:auto;
     box-shadow:0 4px 8px rgba(0,0,0,.08); border-radius:6px;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+    outline:3px solid #f59e0b !important;
+    outline-offset:3px;
+    box-shadow:0 0 0 4px rgba(245,158,11,.25) !important;
+}
+
+[data-admin-manage-root] #codeCreateForm,
+[data-admin-manage-root] #menuCreateForm {
+    display:grid;
+    grid-template-columns:minmax(100px,140px) minmax(180px,1fr) minmax(100px,140px) minmax(180px,1fr);
+    gap:12px 14px;
+    align-items:center;
+}
+
+[data-admin-manage-root] section {
+    overflow-x:auto;
+}
+
+[data-admin-manage-root] table {
+    min-width:980px;
+}
+
+[data-admin-manage-root] #codeCreateForm label,
+[data-admin-manage-root] #menuCreateForm label {
+    margin:0;
+    font-weight:700;
+    color:#4b5563;
+}
+
+[data-admin-manage-root] #codeCreateForm label:has(input[type="checkbox"]),
+[data-admin-manage-root] #menuCreateForm label:has(input[type="checkbox"]) {
+    display:inline-flex;
+    gap:8px;
+    align-items:center;
+    font-weight:600;
+}
+
+[data-admin-manage-root] #codeCreateForm button,
+[data-admin-manage-root] #menuCreateForm button {
+    justify-self:start;
+}
+
+@media (max-width:900px) {
+    [data-admin-manage-root] #codeCreateForm,
+    [data-admin-manage-root] #menuCreateForm {
+        grid-template-columns:1fr;
+    }
 }

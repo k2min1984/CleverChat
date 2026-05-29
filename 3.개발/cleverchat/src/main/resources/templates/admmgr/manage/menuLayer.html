@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<body>
+<form method="post" th:action="@{/admmgr/manage/menuLayerRegistProc.do}" data-manage-layer="menu">
+    <input type="hidden" name="menuNo" th:value="${rMap.menuNo}">
+    <input type="hidden" name="menuDepth" th:value="${rMap.menuDepth}">
+    <input type="hidden" name="relUrl" th:value="${rMap.menuUrl}">
+    <div class="detail-header">
+        <div class="title">
+            메뉴 설정
+            <span class="sub-text" th:text="'관리번호 ' + ${rMap.menuNo}">관리번호</span>
+        </div>
+        <button type="button" class="btn-close-x" data-close-layer aria-label="닫기">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M18 6L6 18"></path>
+                <path d="M6 6l12 12"></path>
+            </svg>
+        </button>
+    </div>
+    <div class="detail-body">
+        <table class="info-table">
+            <caption class="sr-only">메뉴 설정 입력</caption>
+            <tbody>
+            <tr>
+                <th scope="row">관리번호</th>
+                <td><span class="menu-no-val" th:text="${rMap.menuNo}">0</span></td>
+            </tr>
+            <tr>
+                <th scope="row"><em class="required">*</em> 메뉴명</th>
+                <td>
+                    <input type="text" name="menuNm" class="form-input" maxlength="100"
+                           data-layer-required data-label="메뉴명" th:value="${rMap.menuNm}">
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">노출여부</th>
+                <td>
+                    <label><input type="radio" name="openYn" value="Y" th:checked="${rMap.openYn != 'N'}"> 노출</label>
+                    <label><input type="radio" name="openYn" value="N" th:checked="${rMap.openYn == 'N'}"> 숨김</label>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">새창여부</th>
+                <td>
+                    <label><input type="radio" name="targetBlankYn" value="Y" th:checked="${rMap.targetBlankYn == 'Y'}"> 새창</label>
+                    <label><input type="radio" name="targetBlankYn" value="N" th:checked="${rMap.targetBlankYn != 'Y'}"> 현재창</label>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">메뉴구분</th>
+                <td>
+                    <label><input type="radio" name="menuType" value="ADM" th:checked="${rMap.menuType == null or rMap.menuType == 'ADM'}"> 관리자</label>
+                    <label><input type="radio" name="menuType" value="BOARD" th:checked="${rMap.menuType == 'BOARD'}"> 게시판</label>
+                    <label><input type="radio" name="menuType" value="N/A" th:checked="${rMap.menuType == 'N/A'}"> 링크없음</label>
+                </td>
+            </tr>
+            <tr data-related-url-row>
+                <th scope="row">연결 URL</th>
+                <td><input type="text" name="boardMngNo" class="form-input" maxlength="100" th:value="${rMap.relUrl}"></td>
+            </tr>
+            <tr>
+                <th scope="row">메뉴 URL</th>
+                <td><input type="text" name="menuUrl" class="form-input" maxlength="255" th:value="${rMap.menuUrl}"></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="detail-footer">
+        <button type="button" class="btn btn-md btn-secondary btn-cancel" data-close-layer>취소</button>
+        <button type="button" class="btn btn-md btn-primary" data-save-layer>저장</button>
+    </div>
+</form>
+</body>
+</html>

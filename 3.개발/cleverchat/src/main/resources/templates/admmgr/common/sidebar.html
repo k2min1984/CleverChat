@@ -1,10 +1,48 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <body>
-<aside th:fragment="adminSidebar" class="admin-sidebar" aria-label="관리자 사이드바">
-    <nav>
-        <a th:href="@{/admin}">관리자 홈</a>
-        <a th:href="@{/admin/scenarios}">시나리오</a>
+<aside th:fragment="adminSidebar" class="sidebar" aria-label="Admin sidebar">
+    <div class="sidebar-logo">
+        <button type="button" class="btn-toggle-sidebar" aria-label="Toggle sidebar" data-sidebar-toggle>
+            <span aria-hidden="true">☰</span>
+        </button>
+        <a class="logo-text-wrap" th:href="@{/admin}">
+            <div class="logo-text">CleverChat</div>
+            <div class="logo-sub">Administration CMS</div>
+        </a>
+    </div>
+
+    <nav class="sidebar-nav" aria-label="Admin menu">
+        <div th:if="${#lists.isEmpty(adminSidebarMenus)}">
+            <a class="nav-dashboard" th:href="@{/admin}" data-title="Dashboard">
+                <span class="menu-text">Dashboard</span>
+            </a>
+        </div>
+
+        <div th:each="menu, menuStat : ${adminSidebarMenus}">
+            <div th:if="${menuStat.index > 0}" class="nav-divider"></div>
+
+            <a th:if="${#lists.isEmpty(menu.children) and menu.url != null}"
+               class="nav-dashboard"
+               th:href="@{${menu.url}}"
+               th:data-title="${menu.title}">
+                <span class="menu-text" th:text="${menu.title}">Menu</span>
+            </a>
+
+            <div th:if="${!#lists.isEmpty(menu.children)}" class="nav-group open">
+                <button type="button" class="nav-group-header" th:data-title="${menu.title}">
+                    <span class="menu-text" th:text="${menu.title}">Menu group</span>
+                    <span class="arrow" aria-hidden="true">▾</span>
+                </button>
+                <div class="nav-sub">
+                    <a th:each="child : ${menu.children}"
+                       th:if="${child.url != null}"
+                       class="nav-sub-item"
+                       th:href="@{${child.url}}"
+                       th:text="${child.title}">Sub menu</a>
+                </div>
+            </div>
+        </div>
     </nav>
 </aside>
 </body>

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admmgr/common/head :: adminHead('Chat sessions | CleverChat')}"></head>
+<body>
+<div class="admin-wrap">
+    <div th:replace="~{admmgr/common/sidebar :: adminSidebar}"></div>
+    <div class="main-area">
+        <div th:replace="~{admmgr/common/header :: adminHeader}"></div>
+        <div th:replace="~{admmgr/common/navigation :: adminNavigation}"></div>
+        <main class="content-area">
+            <header>
+                <h1>Chat sessions</h1>
+            </header>
+            <table aria-label="Chat session list">
+                <caption>Chat session list</caption>
+                <thead>
+                <tr>
+                    <th scope="col">Session</th>
+                    <th scope="col">Scenario</th>
+                    <th scope="col">State</th>
+                    <th scope="col">Messages</th>
+                    <th scope="col">Last activity</th>
+                    <th scope="col">Detail</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="session : ${sessions}">
+                    <td th:text="${session.sessionKey}">abcdef12</td>
+                    <td th:text="${session.scenarioTitle}">Scenario</td>
+                    <td th:text="${session.state}">ACTIVE</td>
+                    <td th:text="${session.messageCount}">2</td>
+                    <td th:text="${#temporals.format(session.lastActivityAt, 'yyyy-MM-dd HH:mm')}">2026-05-27 13:00</td>
+                    <td><a class="button" th:href="@{/admin/chat/sessions/{id}(id=${session.id})}">Open</a></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(sessions)}">
+                    <td colspan="6">No sessions found.</td>
+                </tr>
+                </tbody>
+            </table>
+        </main>
+        <div th:replace="~{admmgr/common/footer :: adminFooter}"></div>
+    </div>
+</div>
+</body>
+</html>
