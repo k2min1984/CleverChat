@@ -42,7 +42,7 @@ class CrawlServiceTest {
                                         new TargetRequest(
                                                 "https://example.com/help",
                                                 "Help",
-                                                true,
+                                                "Y",
                                                 false,
                                                 1440,
                                                 "INTERVAL",
@@ -88,7 +88,7 @@ class CrawlServiceTest {
         CrawlTarget target = target(10L);
         target.setUrl("https://example.com/help");
         CrawlDocument duplicate = new CrawlDocument();
-        duplicate.setId(99L);
+        duplicate.setCrawlDocumentNo(99L);
         duplicate.setStatus("SUCCESS");
         when(crawlMapper.findTargetById(10L)).thenReturn(target);
         when(urlPolicy.validateAndNormalize("https://example.com/help"))
@@ -111,8 +111,8 @@ class CrawlServiceTest {
         verify(crawlMapper).insertRunLog(runCaptor.capture());
         assertThat(runCaptor.getValue().getStatus()).isEqualTo("DUPLICATE");
         assertThat(runCaptor.getValue().getFailureCode()).isEqualTo("DUP_HASH");
-        assertThat(runCaptor.getValue().getDocumentId()).isEqualTo(99L);
-        assertThat(response.document().getId()).isEqualTo(99L);
+        assertThat(runCaptor.getValue().getDocumentNo()).isEqualTo(99L);
+        assertThat(response.document().getCrawlDocumentNo()).isEqualTo(99L);
     }
 
     @Test
@@ -160,7 +160,7 @@ class CrawlServiceTest {
         org.mockito.Mockito.doAnswer(
                         invocation -> {
                             CrawlRunLog runLog = invocation.getArgument(0);
-                            runLog.setId(77L);
+                            runLog.setCrawlRunLogNo(77L);
                             return null;
                         })
                 .when(crawlMapper)
@@ -170,7 +170,7 @@ class CrawlServiceTest {
 
         ArgumentCaptor<CrawlRunLog> notificationCaptor = ArgumentCaptor.forClass(CrawlRunLog.class);
         verify(notificationService).notifyCrawlFailure(notificationCaptor.capture());
-        assertThat(notificationCaptor.getValue().getId()).isEqualTo(77L);
+        assertThat(notificationCaptor.getValue().getCrawlRunLogNo()).isEqualTo(77L);
         assertThat(notificationCaptor.getValue().getStatus()).isEqualTo("FAILED");
     }
 
@@ -375,7 +375,7 @@ class CrawlServiceTest {
     @Test
     void reviewFailureMarksFailedRunReviewed() {
         CrawlRunLog reviewed = new CrawlRunLog();
-        reviewed.setId(7L);
+        reviewed.setCrawlRunLogNo(7L);
         reviewed.setReviewed(true);
         reviewed.setReviewedBy(10L);
         when(crawlMapper.reviewRunLog(7L, 10L, "checked")).thenReturn(1);
@@ -425,9 +425,9 @@ class CrawlServiceTest {
 
     private CrawlTarget target(Long id) {
         CrawlTarget target = new CrawlTarget();
-        target.setId(id);
+        target.setCrawlTargetNo(id);
         target.setUrl("https://example.com");
-        target.setEnabled(true);
+        target.setUseYn("Y");
         target.setScheduleMode("INTERVAL");
         target.setScheduleIntervalMinutes(1440);
         return target;

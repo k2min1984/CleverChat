@@ -74,6 +74,6 @@ class ScenarioGraphValidatorTest {
     }
 
     private OptionRequest option(String label, String nextNodeKey) {
-        return new OptionRequest(label, nextNodeKey, null, 0, true);
+        return new OptionRequest(label, nextNodeKey, null, 0, "Y");
     }
 }

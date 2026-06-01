@@ -28,7 +28,7 @@ public class ScenarioCategoryService {
     public ScenarioCategory create(SaveRequest request) {
         ScenarioCategory category = toCategory(new ScenarioCategory(), request);
         categoryMapper.insert(category);
-        return categoryMapper.findById(category.getId());
+        return categoryMapper.findById(category.getScenarioCategoryNo());
     }
 
     @Transactional
@@ -44,10 +44,10 @@ public class ScenarioCategoryService {
     }
 
     private ScenarioCategory toCategory(ScenarioCategory category, SaveRequest request) {
-        category.setParentId(request.parentId());
+        category.setPScenarioCategoryNo(request.pScenarioCategoryNo());
         category.setName(request.name().trim());
         category.setSortOrder(request.sortOrder());
-        category.setEnabled(request.enabled());
+        category.setUseYn(request.useYn());
         return category;
     }
 }

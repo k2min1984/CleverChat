@@ -61,18 +61,18 @@
                 </thead>
                 <tbody>
                 <tr th:each="notice : ${notices}">
-                    <td th:text="${notice.id}">1</td>
+                    <td th:text="${notice.noticeNo}">1</td>
                     <td>
-                        <input th:attr="aria-label=${'Title for notice ' + notice.id}" name="title" maxlength="200"
-                               th:value="${notice.title}" th:data-notice-id="${notice.id}">
+                        <input th:attr="aria-label=${'Title for notice ' + notice.noticeNo}" name="title" maxlength="200"
+                               th:value="${notice.title}" th:data-notice-id="${notice.noticeNo}">
                     </td>
                     <td>
-                        <textarea th:attr="aria-label=${'Content for notice ' + notice.id}" name="content" maxlength="4000"
-                                  th:text="${notice.content}" th:data-notice-id="${notice.id}"></textarea>
+                        <textarea th:attr="aria-label=${'Content for notice ' + notice.noticeNo}" name="content" maxlength="4000"
+                                  th:text="${notice.content}" th:data-notice-id="${notice.noticeNo}"></textarea>
                     </td>
                     <td>
                         <label>
-                            <input name="enabled" type="checkbox" th:checked="${notice.enabled}" th:data-notice-id="${notice.id}">
+                            <input name="enabled" type="checkbox" th:checked="${notice.useYn == 'Y'}" th:data-notice-id="${notice.noticeNo}">
                             Enabled
                         </label>
                     </td>
@@ -81,23 +81,23 @@
                             <span class="sr-only">Starts at</span>
                             <input name="startsAt" type="datetime-local"
                                    th:value="${notice.startsAt == null ? '' : #temporals.format(notice.startsAt, 'yyyy-MM-dd''T''HH:mm')}"
-                                   th:data-notice-id="${notice.id}">
+                                   th:data-notice-id="${notice.noticeNo}">
                         </label>
                         <label>
                             <span class="sr-only">Ends at</span>
                             <input name="endsAt" type="datetime-local"
                                    th:value="${notice.endsAt == null ? '' : #temporals.format(notice.endsAt, 'yyyy-MM-dd''T''HH:mm')}"
-                                   th:data-notice-id="${notice.id}">
+                                   th:data-notice-id="${notice.noticeNo}">
                         </label>
                     </td>
                     <td>
-                        <input th:attr="aria-label=${'Priority for notice ' + notice.id}" name="priority" type="number" min="0" max="10000"
-                               th:value="${notice.priority}" th:data-notice-id="${notice.id}">
+                        <input th:attr="aria-label=${'Priority for notice ' + notice.noticeNo}" name="priority" type="number" min="0" max="10000"
+                               th:value="${notice.priority}" th:data-notice-id="${notice.noticeNo}">
                     </td>
-                    <td th:text="${#temporals.format(notice.updatedAt, 'yyyy-MM-dd HH:mm')}">2026-05-27 13:00</td>
+                    <td th:text="${#temporals.format(notice.lstChgDt, 'yyyy-MM-dd HH:mm')}">2026-05-27 13:00</td>
                     <td>
-                        <button type="button" th:data-save-notice-id="${notice.id}">Save</button>
-                        <button type="button" th:data-disable-notice-id="${notice.id}">Disable</button>
+                        <button type="button" th:data-save-notice-id="${notice.noticeNo}">Save</button>
+                        <button type="button" th:data-disable-notice-id="${notice.noticeNo}">Disable</button>
                     </td>
                 </tr>
                 <tr th:if="${#lists.isEmpty(notices)}">

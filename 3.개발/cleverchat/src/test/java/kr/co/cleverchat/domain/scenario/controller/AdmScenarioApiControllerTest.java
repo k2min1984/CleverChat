@@ -85,7 +85,7 @@ class AdmScenarioApiControllerTest {
                               "nextNodeKey": "end",
                               "conditionExpr": null,
                               "sortOrder": 1,
-                              "enabled": true
+                              "useYn": "Y"
                             }
                           ]
                         },
@@ -146,7 +146,7 @@ class AdmScenarioApiControllerTest {
         mockMvc.perform(post("/admin/api/scenarios/1/versions"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.id").value(10))
+                .andExpect(jsonPath("$.data.scenarioVersionNo").value(10))
                 .andExpect(jsonPath("$.data.status").value("DRAFT"));
     }
 
@@ -179,8 +179,8 @@ class AdmScenarioApiControllerTest {
 
     private ScenarioVersion version(Long id, Long scenarioId, String status) {
         ScenarioVersion version = new ScenarioVersion();
-        version.setId(id);
-        version.setScenarioId(scenarioId);
+        version.setScenarioVersionNo(id);
+        version.setScenarioNo(scenarioId);
         version.setVersionNo(1);
         version.setStatus(status);
         return version;

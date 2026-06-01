@@ -71,10 +71,10 @@ class AdmOpsControllerTest {
     @Test
     void notificationsRendersModel() throws Exception {
         NotificationChannel channel = new NotificationChannel();
-        channel.setId(1L);
+        channel.setNotificationChannelNo(1L);
         channel.setName("Slack");
         channel.setType("SLACK_WEBHOOK");
-        channel.setEnabled(true);
+        channel.setUseYn("Y");
         channel.setEndpointEnvKey("OPS_SLACK_WEBHOOK_URL");
         channel.setPreviousEndpointEnvKey("OPS_SLACK_WEBHOOK_OLD_URL");
         channel.setRateLimitPerHour(60);

@@ -10,7 +10,7 @@ import org.apache.ibatis.annotations.Param;
 
 @Mapper
 public interface CrawlMapper {
-    List<CrawlTarget> findTargets(@Param("enabled") Boolean enabled);
+    List<CrawlTarget> findTargets(@Param("useYn") String useYn);
 
     List<CrawlTarget> findDueTargets(@Param("limit") int limit);
 

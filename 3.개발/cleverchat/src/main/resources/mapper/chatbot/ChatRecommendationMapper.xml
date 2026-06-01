@@ -3,47 +3,47 @@
     "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="kr.co.cleverchat.domain.chatbot.mapper.ChatRecommendationMapper">
     <select id="findEnabledForActiveScenarios" resultType="kr.co.cleverchat.domain.chatbot.model.ChatRecommendation">
-        SELECT r.id, r.scenario_id, r.label, r.priority, r.enabled, r.created_at, r.updated_at
-        FROM chat_recommendation r
-        JOIN scenario s ON s.id = r.scenario_id
-        JOIN scenario_category c ON c.id = s.category_id
-        WHERE r.enabled = TRUE
+        SELECT r.chat_recommendation_no, r.scenario_no, r.label, r.priority, r.use_yn, r.frst_reg_dt, r.lst_chg_dt
+        FROM tb_chat_recommendation r
+        JOIN tb_scenario s ON s.scenario_no = r.scenario_no
+        JOIN tb_scenario_category c ON c.scenario_category_no = s.category_no
+        WHERE r.use_yn = 'Y'
           AND s.status = 'ACTIVE'
-          AND s.active_version_id IS NOT NULL
-          AND c.enabled = TRUE
-        ORDER BY r.priority, r.id
+          AND s.active_version_no IS NOT NULL
+          AND c.use_yn = 'Y'
+        ORDER BY r.priority, r.chat_recommendation_no
     </select>
     <select id="findAdminList" resultType="kr.co.cleverchat.domain.chatbot.model.ChatRecommendationAdminItem">
-        SELECT r.id, r.scenario_id, s.title AS scenario_title, r.label, r.priority, r.enabled, r.created_at, r.updated_at
-        FROM chat_recommendation r
-        JOIN scenario s ON s.id = r.scenario_id
+        SELECT r.chat_recommendation_no, r.scenario_no, s.title AS scenario_title, r.label, r.priority, r.use_yn, r.frst_reg_dt, r.lst_chg_dt
+        FROM tb_chat_recommendation r
+        JOIN tb_scenario s ON s.scenario_no = r.scenario_no
         <where>
             <if test="enabled != null">
-                r.enabled = #{enabled}
+                r.use_yn = <choose><when test="enabled">'Y'</when><otherwise>'N'</otherwise></choose>
             </if>
         </where>
-        ORDER BY r.priority, r.id
+        ORDER BY r.priority, r.chat_recommendation_no
     </select>
     <select id="findById" resultType="kr.co.cleverchat.domain.chatbot.model.ChatRecommendation">
-        SELECT id, scenario_id, label, priority, enabled, created_at, updated_at
-        FROM chat_recommendation
-        WHERE id = #{id}
+        SELECT chat_recommendation_no, scenario_no, label, priority, use_yn, frst_reg_dt, lst_chg_dt
+        FROM tb_chat_recommendation
+        WHERE chat_recommendation_no = #{id}
     </select>
-    <insert id="insert" parameterType="kr.co.cleverchat.domain.chatbot.model.ChatRecommendation" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO chat_recommendation (scenario_id, label, priority, enabled)
-        VALUES (#{scenarioId}, #{label}, #{priority}, #{enabled})
+    <insert id="insert" parameterType="kr.co.cleverchat.domain.chatbot.model.ChatRecommendation" useGeneratedKeys="true" keyProperty="chatRecommendationNo">
+        INSERT INTO tb_chat_recommendation (scenario_no, label, priority, use_yn)
+        VALUES (#{scenarioNo}, #{label}, #{priority}, #{useYn})
     </insert>
     <update id="update" parameterType="kr.co.cleverchat.domain.chatbot.model.ChatRecommendation">
-        UPDATE chat_recommendation
-        SET scenario_id = #{scenarioId},
+        UPDATE tb_chat_recommendation
+        SET scenario_no = #{scenarioNo},
             label = #{label},
             priority = #{priority},
-            enabled = #{enabled},
-            updated_at = now()
-        WHERE id = #{id}
+            use_yn = #{useYn},
+            lst_chg_dt = now()
+        WHERE chat_recommendation_no = #{id}
     </update>
     <delete id="delete">
-        DELETE FROM chat_recommendation
-        WHERE id = #{id}
+        DELETE FROM tb_chat_recommendation
+        WHERE chat_recommendation_no = #{id}
     </delete>
 </mapper>

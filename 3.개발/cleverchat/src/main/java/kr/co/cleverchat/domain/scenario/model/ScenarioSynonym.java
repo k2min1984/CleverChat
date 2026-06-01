@@ -4,28 +4,28 @@ import java.time.OffsetDateTime;
 
 public class ScenarioSynonym {
 
-    private Long id;
-    private Long keywordId;
+    private Long scenarioSynonymNo;
+    private Long keywordNo;
     private String synonym;
     private int weight;
-    private boolean enabled;
-    private OffsetDateTime createdAt;
-    private OffsetDateTime updatedAt;
+    private String useYn;
+    private OffsetDateTime frstRegDt;
+    private OffsetDateTime lstChgDt;
 
-    public Long getId() {
-        return id;
+    public Long getScenarioSynonymNo() {
+        return scenarioSynonymNo;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setScenarioSynonymNo(Long scenarioSynonymNo) {
+        this.scenarioSynonymNo = scenarioSynonymNo;
     }
 
-    public Long getKeywordId() {
-        return keywordId;
+    public Long getKeywordNo() {
+        return keywordNo;
     }
 
-    public void setKeywordId(Long keywordId) {
-        this.keywordId = keywordId;
+    public void setKeywordNo(Long keywordNo) {
+        this.keywordNo = keywordNo;
     }
 
     public String getSynonym() {
@@ -44,27 +44,27 @@ public class ScenarioSynonym {
         this.weight = weight;
     }
 
-    public boolean isEnabled() {
-        return enabled;
+    public String getUseYn() {
+        return useYn;
     }
 
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
+    public void setUseYn(String useYn) {
+        this.useYn = useYn;
     }
 
-    public OffsetDateTime getCreatedAt() {
-        return createdAt;
+    public OffsetDateTime getFrstRegDt() {
+        return frstRegDt;
     }
 
-    public void setCreatedAt(OffsetDateTime createdAt) {
-        this.createdAt = createdAt;
+    public void setFrstRegDt(OffsetDateTime frstRegDt) {
+        this.frstRegDt = frstRegDt;
     }
 
-    public OffsetDateTime getUpdatedAt() {
-        return updatedAt;
+    public OffsetDateTime getLstChgDt() {
+        return lstChgDt;
     }
 
-    public void setUpdatedAt(OffsetDateTime updatedAt) {
-        this.updatedAt = updatedAt;
+    public void setLstChgDt(OffsetDateTime lstChgDt) {
+        this.lstChgDt = lstChgDt;
     }
 }

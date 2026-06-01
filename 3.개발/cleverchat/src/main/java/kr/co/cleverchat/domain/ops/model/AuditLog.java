@@ -4,21 +4,21 @@ import java.time.OffsetDateTime;
 
 public class AuditLog {
 
-    private Long id;
+    private Long auditLogNo;
     private String actor;
     private String action;
     private String targetType;
     private String targetId;
     private String detail;
     private String ip;
-    private OffsetDateTime createdAt;
+    private OffsetDateTime frstRegDt;
 
-    public Long getId() {
-        return id;
+    public Long getAuditLogNo() {
+        return auditLogNo;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setAuditLogNo(Long auditLogNo) {
+        this.auditLogNo = auditLogNo;
     }
 
     public String getActor() {
@@ -69,11 +69,11 @@ public class AuditLog {
         this.ip = ip;
     }
 
-    public OffsetDateTime getCreatedAt() {
-        return createdAt;
+    public OffsetDateTime getFrstRegDt() {
+        return frstRegDt;
     }
 
-    public void setCreatedAt(OffsetDateTime createdAt) {
-        this.createdAt = createdAt;
+    public void setFrstRegDt(OffsetDateTime frstRegDt) {
+        this.frstRegDt = frstRegDt;
     }
 }

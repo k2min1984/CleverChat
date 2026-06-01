@@ -193,11 +193,11 @@ class LoginControllerTest {
 
     private UserAccount account() {
         UserAccount account = new UserAccount();
-        account.setId(1L);
+        account.setUserNo(1L);
         account.setUsername("admin");
         account.setDisplayName("관리자");
         account.setPasswordHash("hash");
-        account.setEnabled(true);
+        account.setUseYn("Y");
         account.setMustChangePassword(true);
         account.setRoles(List.of("ADMIN"));
         return account;

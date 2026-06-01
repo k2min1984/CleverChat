@@ -109,10 +109,10 @@ public class SearchService {
         log.setQueryText(query);
         log.setNormalizedQuery(query);
         log.setResultCount(results.size());
-        log.setTopScenarioId(results.isEmpty() ? null : results.get(0).getScenarioId());
+        log.setTopScenarioNo(results.isEmpty() ? null : results.get(0).getScenarioNo());
         log.setSource(source);
         log.setLatencyMs(latencyMs);
-        log.setUserId(userId);
+        log.setUserNo(userId);
         log.setAnonymousIdHash(anonymousIdHash);
         searchMapper.insertLog(log);
     }
@@ -127,7 +127,7 @@ public class SearchService {
         log.setQueryLength(query.length());
         log.setPiiTypes(String.join(",", piiTypes));
         log.setSource(source);
-        log.setUserId(userId);
+        log.setUserNo(userId);
         log.setAnonymousIdHash(anonymousIdHash);
         searchMapper.insertBlockLog(log);
     }

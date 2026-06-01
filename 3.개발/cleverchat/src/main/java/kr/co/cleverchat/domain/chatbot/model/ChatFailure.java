@@ -4,9 +4,9 @@ import java.time.OffsetDateTime;
 
 public class ChatFailure {
 
-    private Long id;
-    private String sessionId;
-    private Long messageId;
+    private Long chatFailureNo;
+    private String sessionNo;
+    private Long messageNo;
     private String reason;
     private String detail;
     private boolean reviewed;
@@ -16,30 +16,30 @@ public class ChatFailure {
     private String reviewCommentCiphertext;
     private String reviewCommentKeyId;
     private Integer reviewCommentEncryptionVersion;
-    private OffsetDateTime createdAt;
+    private OffsetDateTime frstRegDt;
 
-    public Long getId() {
-        return id;
+    public Long getChatFailureNo() {
+        return chatFailureNo;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setChatFailureNo(Long chatFailureNo) {
+        this.chatFailureNo = chatFailureNo;
     }
 
-    public String getSessionId() {
-        return sessionId;
+    public String getSessionNo() {
+        return sessionNo;
     }
 
-    public void setSessionId(String sessionId) {
-        this.sessionId = sessionId;
+    public void setSessionNo(String sessionNo) {
+        this.sessionNo = sessionNo;
     }
 
-    public Long getMessageId() {
-        return messageId;
+    public Long getMessageNo() {
+        return messageNo;
     }
 
-    public void setMessageId(Long messageId) {
-        this.messageId = messageId;
+    public void setMessageNo(Long messageNo) {
+        this.messageNo = messageNo;
     }
 
     public String getReason() {
@@ -114,11 +114,11 @@ public class ChatFailure {
         this.reviewCommentEncryptionVersion = reviewCommentEncryptionVersion;
     }
 
-    public OffsetDateTime getCreatedAt() {
-        return createdAt;
+    public OffsetDateTime getFrstRegDt() {
+        return frstRegDt;
     }
 
-    public void setCreatedAt(OffsetDateTime createdAt) {
-        this.createdAt = createdAt;
+    public void setFrstRegDt(OffsetDateTime frstRegDt) {
+        this.frstRegDt = frstRegDt;
     }
 }

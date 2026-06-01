@@ -33,6 +33,9 @@ mybatis:
   mapper-locations: classpath:mapper/**/*.xml
 
 management:
+  health:
+    redis:
+      enabled: ${CLEVERCHAT_REDIS_HEALTH_ENABLED:false}
   endpoints:
     web:
       exposure:

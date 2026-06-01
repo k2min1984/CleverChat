@@ -54,15 +54,15 @@ class ChatRuntimeServiceIntegrationTest {
         jdbcTemplate.execute(
                 """
             TRUNCATE TABLE
-                chat_failure,
-                chat_message,
-                chat_session,
-                chat_recommendation,
-                scenario_node_option,
-                scenario_node,
-                scenario_version,
-                scenario,
-                scenario_category
+                tb_chat_failure,
+                tb_chat_message,
+                tb_chat_session,
+                tb_chat_recommendation,
+                tb_scenario_node_option,
+                tb_scenario_node,
+                tb_scenario_version,
+                tb_scenario,
+                tb_scenario_category
             CASCADE
             """);
     }
@@ -85,8 +85,8 @@ class ChatRuntimeServiceIntegrationTest {
                 jdbcTemplate.queryForObject(
                         """
             SELECT COUNT(*)
-            FROM chat_failure
-            WHERE session_id = CAST(? AS uuid)
+            FROM tb_chat_failure
+            WHERE session_no = CAST(? AS uuid)
               AND reason = 'INVALID_OPTION'
               AND detail ->> 'requestedOptionId' = '999'
             """,
@@ -94,7 +94,7 @@ class ChatRuntimeServiceIntegrationTest {
                         SESSION_ID.toString());
         Integer messageCount =
                 jdbcTemplate.queryForObject(
-                        "SELECT COUNT(*) FROM chat_message WHERE session_id = CAST(? AS uuid)",
+                        "SELECT COUNT(*) FROM tb_chat_message WHERE session_no = CAST(? AS uuid)",
                         Integer.class,
                         SESSION_ID.toString());
 
@@ -105,43 +105,47 @@ class ChatRuntimeServiceIntegrationTest {
     private void seedActiveSession() {
         Long categoryId =
                 jdbcTemplate.queryForObject(
-                        "INSERT INTO scenario_category (name) VALUES ('rollback-test') RETURNING id",
+                        "INSERT INTO tb_scenario_category (name) VALUES ('rollback-test') RETURNING scenario_category_no",
                         Long.class);
         Long scenarioId =
                 jdbcTemplate.queryForObject(
                         """
-            INSERT INTO scenario (category_id, title, status)
+            INSERT INTO tb_scenario (category_no, title, status)
             VALUES (?, 'rollback scenario', 'ACTIVE')
-            RETURNING id
+            RETURNING scenario_no
             """,
                         Long.class,
                         categoryId);
         Long versionId =
                 jdbcTemplate.queryForObject(
                         """
-            INSERT INTO scenario_version (scenario_id, version_no, status, created_by)
+            INSERT INTO tb_scenario_version (scenario_no, version_no, status, frst_regr_empno)
             VALUES (?, 1, 'PUBLISHED', 'integration-test')
-            RETURNING id
+            RETURNING scenario_version_no
             """,
                         Long.class,
                         scenarioId);
         Long nodeId =
                 jdbcTemplate.queryForObject(
                         """
-            INSERT INTO scenario_node (version_id, node_key, node_type, title, content, metadata)
+            INSERT INTO tb_scenario_node (version_no, node_key, node_type, title, content, metadata)
             VALUES (?, 'start', 'QUESTION', 'start', 'start', '{}'::jsonb)
-            RETURNING id
+            RETURNING scenario_node_no
             """,
                         Long.class,
                         versionId);
         jdbcTemplate.update(
-                "UPDATE scenario_version SET start_node_id = ? WHERE id = ?", nodeId, versionId);
+                "UPDATE tb_scenario_version SET start_node_no = ? WHERE scenario_version_no = ?",
+                nodeId,
+                versionId);
         jdbcTemplate.update(
-                "UPDATE scenario SET active_version_id = ? WHERE id = ?", versionId, scenarioId);
+                "UPDATE tb_scenario SET active_version_no = ? WHERE scenario_no = ?",
+                versionId,
+                scenarioId);
         jdbcTemplate.update(
                 """
-            INSERT INTO chat_session (
-                id, anonymous_id, scenario_id, version_id, current_node_id,
+            INSERT INTO tb_chat_session (
+                chat_session_no, anonymous_id, scenario_no, version_no, current_node_no,
                 state, expires_at, ip_hash, user_agent_hash
             )
             VALUES (CAST(? AS uuid), CAST(? AS uuid), ?, ?, ?, 'ACTIVE', ?, repeat('0', 64), repeat('1', 64))

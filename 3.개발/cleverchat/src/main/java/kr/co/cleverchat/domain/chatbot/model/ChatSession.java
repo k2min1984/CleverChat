@@ -4,26 +4,26 @@ import java.time.OffsetDateTime;
 
 public class ChatSession {
 
-    private String id;
+    private String chatSessionNo;
     private String anonymousId;
-    private Long userId;
-    private Long scenarioId;
-    private Long versionId;
-    private Long currentNodeId;
+    private Long userNo;
+    private Long scenarioNo;
+    private Long versionNo;
+    private Long currentNodeNo;
     private String state;
     private OffsetDateTime startedAt;
     private OffsetDateTime lastActivityAt;
     private OffsetDateTime expiresAt;
     private String ipHash;
     private String userAgentHash;
-    private OffsetDateTime createdAt;
+    private OffsetDateTime frstRegDt;
 
-    public String getId() {
-        return id;
+    public String getChatSessionNo() {
+        return chatSessionNo;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public void setChatSessionNo(String chatSessionNo) {
+        this.chatSessionNo = chatSessionNo;
     }
 
     public String getAnonymousId() {
@@ -34,36 +34,36 @@ public class ChatSession {
         this.anonymousId = anonymousId;
     }
 
-    public Long getUserId() {
-        return userId;
+    public Long getUserNo() {
+        return userNo;
     }
 
-    public void setUserId(Long userId) {
-        this.userId = userId;
+    public void setUserNo(Long userNo) {
+        this.userNo = userNo;
     }
 
-    public Long getScenarioId() {
-        return scenarioId;
+    public Long getScenarioNo() {
+        return scenarioNo;
     }
 
-    public void setScenarioId(Long scenarioId) {
-        this.scenarioId = scenarioId;
+    public void setScenarioNo(Long scenarioNo) {
+        this.scenarioNo = scenarioNo;
     }
 
-    public Long getVersionId() {
-        return versionId;
+    public Long getVersionNo() {
+        return versionNo;
     }
 
-    public void setVersionId(Long versionId) {
-        this.versionId = versionId;
+    public void setVersionNo(Long versionNo) {
+        this.versionNo = versionNo;
     }
 
-    public Long getCurrentNodeId() {
-        return currentNodeId;
+    public Long getCurrentNodeNo() {
+        return currentNodeNo;
     }
 
-    public void setCurrentNodeId(Long currentNodeId) {
-        this.currentNodeId = currentNodeId;
+    public void setCurrentNodeNo(Long currentNodeNo) {
+        this.currentNodeNo = currentNodeNo;
     }
 
     public String getState() {
@@ -114,11 +114,11 @@ public class ChatSession {
         this.userAgentHash = userAgentHash;
     }
 
-    public OffsetDateTime getCreatedAt() {
-        return createdAt;
+    public OffsetDateTime getFrstRegDt() {
+        return frstRegDt;
     }
 
-    public void setCreatedAt(OffsetDateTime createdAt) {
-        this.createdAt = createdAt;
+    public void setFrstRegDt(OffsetDateTime frstRegDt) {
+        this.frstRegDt = frstRegDt;
     }
 }

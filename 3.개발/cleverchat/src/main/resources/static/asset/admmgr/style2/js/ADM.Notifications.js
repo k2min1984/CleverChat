@@ -33,7 +33,7 @@
         return {
             name: scope.querySelector('[name="name"]').value,
             type: scope.querySelector('[name="type"]').value,
-            enabled: scope.querySelector('[name="enabled"]').checked,
+            useYn: scope.querySelector('[name="enabled"]').checked ? 'Y' : 'N',
             endpointEnvKey: scope.querySelector('[name="endpointEnvKey"]').value,
             previousEndpointEnvKey: scope.querySelector('[name="previousEndpointEnvKey"]').value || null,
             rateLimitPerHour: Number(scope.querySelector('[name="rateLimitPerHour"]').value || 60)

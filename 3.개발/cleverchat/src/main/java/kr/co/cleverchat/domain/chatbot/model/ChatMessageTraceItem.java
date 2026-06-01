@@ -4,39 +4,39 @@ import java.time.OffsetDateTime;
 
 public class ChatMessageTraceItem {
 
-    private Long id;
-    private String sessionId;
+    private Long chatMessageNo;
+    private String sessionNo;
     private int seq;
     private String direction;
-    private Long nodeId;
-    private Long optionId;
+    private Long nodeNo;
+    private Long optionNo;
     private String content;
     private String contentCiphertext;
     private String contentKeyId;
     private Integer contentEncryptionVersion;
     private String payload;
     private Integer latencyMs;
-    private OffsetDateTime createdAt;
+    private OffsetDateTime frstRegDt;
     private String feedbackRating;
     private String feedbackComment;
     private String feedbackCommentCiphertext;
     private String feedbackCommentKeyId;
     private Integer feedbackCommentEncryptionVersion;
 
-    public Long getId() {
-        return id;
+    public Long getChatMessageNo() {
+        return chatMessageNo;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setChatMessageNo(Long chatMessageNo) {
+        this.chatMessageNo = chatMessageNo;
     }
 
-    public String getSessionId() {
-        return sessionId;
+    public String getSessionNo() {
+        return sessionNo;
     }
 
-    public void setSessionId(String sessionId) {
-        this.sessionId = sessionId;
+    public void setSessionNo(String sessionNo) {
+        this.sessionNo = sessionNo;
     }
 
     public int getSeq() {
@@ -55,20 +55,20 @@ public class ChatMessageTraceItem {
         this.direction = direction;
     }
 
-    public Long getNodeId() {
-        return nodeId;
+    public Long getNodeNo() {
+        return nodeNo;
     }
 
-    public void setNodeId(Long nodeId) {
-        this.nodeId = nodeId;
+    public void setNodeNo(Long nodeNo) {
+        this.nodeNo = nodeNo;
     }
 
-    public Long getOptionId() {
-        return optionId;
+    public Long getOptionNo() {
+        return optionNo;
     }
 
-    public void setOptionId(Long optionId) {
-        this.optionId = optionId;
+    public void setOptionNo(Long optionNo) {
+        this.optionNo = optionNo;
     }
 
     public String getContent() {
@@ -119,12 +119,12 @@ public class ChatMessageTraceItem {
         this.latencyMs = latencyMs;
     }
 
-    public OffsetDateTime getCreatedAt() {
-        return createdAt;
+    public OffsetDateTime getFrstRegDt() {
+        return frstRegDt;
     }
 
-    public void setCreatedAt(OffsetDateTime createdAt) {
-        this.createdAt = createdAt;
+    public void setFrstRegDt(OffsetDateTime frstRegDt) {
+        this.frstRegDt = frstRegDt;
     }
 
     public String getFeedbackRating() {

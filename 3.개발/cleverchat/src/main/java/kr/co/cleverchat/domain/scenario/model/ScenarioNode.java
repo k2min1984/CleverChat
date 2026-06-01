@@ -4,31 +4,31 @@ import java.time.OffsetDateTime;
 
 public class ScenarioNode {
 
-    private Long id;
-    private Long versionId;
+    private Long scenarioNodeNo;
+    private Long versionNo;
     private String nodeKey;
     private String nodeType;
     private String title;
     private String content;
     private int sortOrder;
     private String metadata = "{}";
-    private OffsetDateTime createdAt;
-    private OffsetDateTime updatedAt;
+    private OffsetDateTime frstRegDt;
+    private OffsetDateTime lstChgDt;
 
-    public Long getId() {
-        return id;
+    public Long getScenarioNodeNo() {
+        return scenarioNodeNo;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setScenarioNodeNo(Long scenarioNodeNo) {
+        this.scenarioNodeNo = scenarioNodeNo;
     }
 
-    public Long getVersionId() {
-        return versionId;
+    public Long getVersionNo() {
+        return versionNo;
     }
 
-    public void setVersionId(Long versionId) {
-        this.versionId = versionId;
+    public void setVersionNo(Long versionNo) {
+        this.versionNo = versionNo;
     }
 
     public String getNodeKey() {
@@ -79,19 +79,19 @@ public class ScenarioNode {
         this.metadata = metadata;
     }
 
-    public OffsetDateTime getCreatedAt() {
-        return createdAt;
+    public OffsetDateTime getFrstRegDt() {
+        return frstRegDt;
     }
 
-    public void setCreatedAt(OffsetDateTime createdAt) {
-        this.createdAt = createdAt;
+    public void setFrstRegDt(OffsetDateTime frstRegDt) {
+        this.frstRegDt = frstRegDt;
     }
 
-    public OffsetDateTime getUpdatedAt() {
-        return updatedAt;
+    public OffsetDateTime getLstChgDt() {
+        return lstChgDt;
     }
 
-    public void setUpdatedAt(OffsetDateTime updatedAt) {
-        this.updatedAt = updatedAt;
+    public void setLstChgDt(OffsetDateTime lstChgDt) {
+        this.lstChgDt = lstChgDt;
     }
 }

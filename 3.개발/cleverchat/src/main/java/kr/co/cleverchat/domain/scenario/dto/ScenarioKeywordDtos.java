@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import java.util.List;
 
@@ -17,11 +18,11 @@ public final class ScenarioKeywordDtos {
     public record KeywordRequest(
             @NotBlank @Size(max = 100) String keyword,
             @NotNull @Min(0) @Max(100000) Integer weight,
-            boolean enabled,
+            @Pattern(regexp = "Y|N") String useYn,
             @Valid @Size(max = 50) List<SynonymRequest> synonyms) {}
 
     public record SynonymRequest(
             @NotBlank @Size(max = 100) String synonym,
             @NotNull @Min(0) @Max(100000) Integer weight,
-            boolean enabled) {}
+            @Pattern(regexp = "Y|N") String useYn) {}
 }

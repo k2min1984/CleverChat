@@ -7,59 +7,59 @@
         SELECT 'chatSessions' AS metric_key,
                count(*) FILTER (WHERE started_at &gt;= #{todayStart}) AS today_count,
                count(*) FILTER (WHERE started_at &gt;= #{sevenDaysStart}) AS last7_days_count
-        FROM chat_session
+        FROM tb_chat_session
         UNION ALL
         SELECT 'chatMessages',
-               count(*) FILTER (WHERE created_at &gt;= #{todayStart}),
-               count(*) FILTER (WHERE created_at &gt;= #{sevenDaysStart})
-        FROM chat_message
+               count(*) FILTER (WHERE frst_reg_dt &gt;= #{todayStart}),
+               count(*) FILTER (WHERE frst_reg_dt &gt;= #{sevenDaysStart})
+        FROM tb_chat_message
         UNION ALL
         SELECT 'chatFailures',
-               count(*) FILTER (WHERE created_at &gt;= #{todayStart}),
-               count(*) FILTER (WHERE created_at &gt;= #{sevenDaysStart})
-        FROM chat_failure
+               count(*) FILTER (WHERE frst_reg_dt &gt;= #{todayStart}),
+               count(*) FILTER (WHERE frst_reg_dt &gt;= #{sevenDaysStart})
+        FROM tb_chat_failure
         UNION ALL
         SELECT 'chatFeedback',
-               count(*) FILTER (WHERE created_at &gt;= #{todayStart}),
-               count(*) FILTER (WHERE created_at &gt;= #{sevenDaysStart})
-        FROM chat_feedback
+               count(*) FILTER (WHERE frst_reg_dt &gt;= #{todayStart}),
+               count(*) FILTER (WHERE frst_reg_dt &gt;= #{sevenDaysStart})
+        FROM tb_chat_feedback
         UNION ALL
         SELECT 'searches',
-               count(*) FILTER (WHERE created_at &gt;= #{todayStart}),
-               count(*) FILTER (WHERE created_at &gt;= #{sevenDaysStart})
-        FROM search_log
+               count(*) FILTER (WHERE frst_reg_dt &gt;= #{todayStart}),
+               count(*) FILTER (WHERE frst_reg_dt &gt;= #{sevenDaysStart})
+        FROM tb_search_log
         UNION ALL
         SELECT 'searchPiiBlocks',
-               count(*) FILTER (WHERE created_at &gt;= #{todayStart}),
-               count(*) FILTER (WHERE created_at &gt;= #{sevenDaysStart})
-        FROM search_block_log
+               count(*) FILTER (WHERE frst_reg_dt &gt;= #{todayStart}),
+               count(*) FILTER (WHERE frst_reg_dt &gt;= #{sevenDaysStart})
+        FROM tb_search_block_log
         UNION ALL
         SELECT 'crawlFailures',
-               count(*) FILTER (WHERE created_at &gt;= #{todayStart} AND status = 'FAILED'),
-               count(*) FILTER (WHERE created_at &gt;= #{sevenDaysStart} AND status = 'FAILED')
-        FROM crawl_run_log
+               count(*) FILTER (WHERE frst_reg_dt &gt;= #{todayStart} AND status = 'FAILED'),
+               count(*) FILTER (WHERE frst_reg_dt &gt;= #{sevenDaysStart} AND status = 'FAILED')
+        FROM tb_crawl_run_log
         UNION ALL
         SELECT 'unreviewedCrawlFailures',
-               count(*) FILTER (WHERE created_at &gt;= #{todayStart} AND status = 'FAILED' AND reviewed = FALSE),
-               count(*) FILTER (WHERE created_at &gt;= #{sevenDaysStart} AND status = 'FAILED' AND reviewed = FALSE)
-        FROM crawl_run_log
+               count(*) FILTER (WHERE frst_reg_dt &gt;= #{todayStart} AND status = 'FAILED' AND reviewed = FALSE),
+               count(*) FILTER (WHERE frst_reg_dt &gt;= #{sevenDaysStart} AND status = 'FAILED' AND reviewed = FALSE)
+        FROM tb_crawl_run_log
         UNION ALL
         SELECT 'activeScenarios',
                count(*) FILTER (WHERE status = 'ACTIVE'),
                count(*) FILTER (WHERE status = 'ACTIVE')
-        FROM scenario
+        FROM tb_scenario
     </select>
 
     <select id="findAuditLogs" resultType="kr.co.cleverchat.domain.ops.model.AuditLog">
-        SELECT id,
+        SELECT audit_log_no,
                actor,
                action,
                target_type,
                target_id,
                detail::text AS detail,
                ip,
-               created_at
-        FROM audit_log
+               frst_reg_dt
+        FROM tb_audit_log
         <where>
             <if test="actor != null">
                 actor = #{actor}
@@ -71,121 +71,123 @@
                 AND target_type = #{targetType}
             </if>
             <if test="from != null">
-                AND created_at &gt;= #{from}
+                AND frst_reg_dt &gt;= #{from}
             </if>
             <if test="to != null">
-                AND created_at &lt;= #{to}
+                AND frst_reg_dt &lt;= #{to}
             </if>
         </where>
-        ORDER BY created_at DESC, id DESC
+        ORDER BY frst_reg_dt DESC, audit_log_no DESC
         LIMIT #{limit}
     </select>
 
     <sql id="noticeColumns">
-        id, title, content, enabled, starts_at, ends_at, priority, created_by, updated_by, created_at, updated_at
+        notice_no, title, content, use_yn, starts_at, ends_at, priority,
+        frst_regr_empno, lst_chgr_empno, frst_reg_dt, lst_chg_dt
     </sql>
 
     <select id="findNotices" resultType="kr.co.cleverchat.domain.ops.model.Notice">
         SELECT <include refid="noticeColumns"/>
-        FROM notice
+        FROM tb_notice
         <where>
             <if test="enabled != null">
-                enabled = #{enabled}
+                use_yn = <if test="enabled">'Y'</if><if test="!enabled">'N'</if>
             </if>
         </where>
-        ORDER BY updated_at DESC, id DESC
+        ORDER BY lst_chg_dt DESC, notice_no DESC
         LIMIT #{limit}
     </select>
 
     <select id="findVisibleNotices" resultType="kr.co.cleverchat.domain.ops.model.Notice">
         SELECT <include refid="noticeColumns"/>
-        FROM notice
-        WHERE enabled = TRUE
+        FROM tb_notice
+        WHERE use_yn = 'Y'
           AND (starts_at IS NULL OR starts_at &lt;= #{now})
           AND (ends_at IS NULL OR ends_at &gt;= #{now})
-        ORDER BY priority ASC, id DESC
+        ORDER BY priority ASC, notice_no DESC
         LIMIT #{limit}
     </select>
 
     <select id="findNoticeById" resultType="kr.co.cleverchat.domain.ops.model.Notice">
         SELECT <include refid="noticeColumns"/>
-        FROM notice
-        WHERE id = #{id}
+        FROM tb_notice
+        WHERE notice_no = #{id}
     </select>
 
-    <insert id="insertNotice" parameterType="kr.co.cleverchat.domain.ops.model.Notice" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO notice (title, content, enabled, starts_at, ends_at, priority, created_by, updated_by)
-        VALUES (#{title}, #{content}, #{enabled}, #{startsAt}, #{endsAt}, #{priority}, #{createdBy}, #{updatedBy})
+    <insert id="insertNotice" parameterType="kr.co.cleverchat.domain.ops.model.Notice" useGeneratedKeys="true" keyProperty="noticeNo">
+        INSERT INTO tb_notice (title, content, use_yn, starts_at, ends_at, priority, frst_regr_empno, lst_chgr_empno)
+        VALUES (#{title}, #{content}, #{useYn}, #{startsAt}, #{endsAt}, #{priority}, #{frstRegrEmpno}, #{lstChgrEmpno})
     </insert>
 
     <update id="updateNotice" parameterType="kr.co.cleverchat.domain.ops.model.Notice">
-        UPDATE notice
+        UPDATE tb_notice
         SET title = #{title},
             content = #{content},
-            enabled = #{enabled},
+            use_yn = #{useYn},
             starts_at = #{startsAt},
             ends_at = #{endsAt},
             priority = #{priority},
-            updated_by = #{updatedBy},
-            updated_at = now()
-        WHERE id = #{id}
+            lst_chgr_empno = #{lstChgrEmpno},
+            lst_chg_dt = now()
+        WHERE notice_no = #{noticeNo}
     </update>
 
     <update id="disableNotice">
-        UPDATE notice
-        SET enabled = FALSE,
-            updated_by = #{updatedBy},
-            updated_at = now()
-        WHERE id = #{id}
+        UPDATE tb_notice
+        SET use_yn = 'N',
+            lst_chgr_empno = #{updatedBy},
+            lst_chg_dt = now()
+        WHERE notice_no = #{id}
     </update>
 
     <sql id="notificationChannelColumns">
-        id, name, type, enabled, endpoint_env_key, previous_endpoint_env_key, rate_limit_per_hour, created_by, updated_by, created_at, updated_at
+        notification_channel_no, name, type, use_yn, endpoint_env_key, previous_endpoint_env_key, rate_limit_per_hour,
+        frst_regr_empno, lst_chgr_empno, frst_reg_dt, lst_chg_dt
     </sql>
 
     <select id="findNotificationChannels" resultType="kr.co.cleverchat.domain.ops.model.NotificationChannel">
         SELECT <include refid="notificationChannelColumns"/>
-        FROM notification_channel
+        FROM tb_notification_channel
         <where>
             <if test="enabled != null">
-                enabled = #{enabled}
+                use_yn = <if test="enabled">'Y'</if><if test="!enabled">'N'</if>
             </if>
         </where>
-        ORDER BY updated_at DESC, id DESC
+        ORDER BY lst_chg_dt DESC, notification_channel_no DESC
     </select>
 
     <select id="findNotificationChannelById" resultType="kr.co.cleverchat.domain.ops.model.NotificationChannel">
         SELECT <include refid="notificationChannelColumns"/>
-        FROM notification_channel
-        WHERE id = #{id}
+        FROM tb_notification_channel
+        WHERE notification_channel_no = #{id}
     </select>
 
-    <insert id="insertNotificationChannel" parameterType="kr.co.cleverchat.domain.ops.model.NotificationChannel" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO notification_channel (name, type, enabled, endpoint_env_key, previous_endpoint_env_key, rate_limit_per_hour, created_by, updated_by)
-        VALUES (#{name}, #{type}, #{enabled}, #{endpointEnvKey}, #{previousEndpointEnvKey}, #{rateLimitPerHour}, #{createdBy}, #{updatedBy})
+    <insert id="insertNotificationChannel" parameterType="kr.co.cleverchat.domain.ops.model.NotificationChannel" useGeneratedKeys="true" keyProperty="notificationChannelNo">
+        INSERT INTO tb_notification_channel (name, type, use_yn, endpoint_env_key, previous_endpoint_env_key, rate_limit_per_hour, frst_regr_empno, lst_chgr_empno)
+        VALUES (#{name}, #{type}, #{useYn}, #{endpointEnvKey}, #{previousEndpointEnvKey}, #{rateLimitPerHour}, #{frstRegrEmpno}, #{lstChgrEmpno})
     </insert>
 
     <update id="updateNotificationChannel" parameterType="kr.co.cleverchat.domain.ops.model.NotificationChannel">
-        UPDATE notification_channel
+        UPDATE tb_notification_channel
         SET name = #{name},
             type = #{type},
-            enabled = #{enabled},
+            use_yn = #{useYn},
             endpoint_env_key = #{endpointEnvKey},
             previous_endpoint_env_key = #{previousEndpointEnvKey},
             rate_limit_per_hour = #{rateLimitPerHour},
-            updated_by = #{updatedBy},
-            updated_at = now()
-        WHERE id = #{id}
+            lst_chgr_empno = #{lstChgrEmpno},
+            lst_chg_dt = now()
+        WHERE notification_channel_no = #{notificationChannelNo}
     </update>
 
     <sql id="notificationEventColumns">
-        id, event_type, source_type, source_id, severity, summary, status, attempt_count, last_error,
-        next_retry_at, reviewed, reviewed_by, reviewed_at, created_at, updated_at
+        notification_event_no, event_type, source_type, source_id, severity, summary, status, attempt_count, last_error,
+        next_retry_at, reviewed, reviewed_by, reviewed_at, frst_reg_dt, lst_chg_dt
     </sql>
 
     <select id="findNotificationEvents" resultType="kr.co.cleverchat.domain.ops.model.NotificationEvent">
         SELECT <include refid="notificationEventColumns"/>
-        FROM notification_event
+        FROM tb_notification_event
         <where>
             <if test="status != null and status != ''">
                 status = #{status}
@@ -194,42 +196,42 @@
                 AND reviewed = #{reviewed}
             </if>
         </where>
-        ORDER BY created_at DESC, id DESC
+        ORDER BY frst_reg_dt DESC, notification_event_no DESC
         LIMIT #{limit}
     </select>
 
     <select id="findDueNotificationEvents" resultType="kr.co.cleverchat.domain.ops.model.NotificationEvent">
         SELECT <include refid="notificationEventColumns"/>
-        FROM notification_event
+        FROM tb_notification_event
         WHERE reviewed = FALSE
           AND status = 'RETRY'
           AND next_retry_at IS NOT NULL
           AND next_retry_at &lt;= #{now}
           AND attempt_count &lt; #{maxAttempts}
-        ORDER BY next_retry_at ASC, id ASC
+        ORDER BY next_retry_at ASC, notification_event_no ASC
         LIMIT #{limit}
     </select>
 
     <select id="findNotificationEventById" resultType="kr.co.cleverchat.domain.ops.model.NotificationEvent">
         SELECT <include refid="notificationEventColumns"/>
-        FROM notification_event
-        WHERE id = #{id}
+        FROM tb_notification_event
+        WHERE notification_event_no = #{id}
     </select>
 
     <select id="findOpenNotificationEvent" resultType="kr.co.cleverchat.domain.ops.model.NotificationEvent">
         SELECT <include refid="notificationEventColumns"/>
-        FROM notification_event
+        FROM tb_notification_event
         WHERE event_type = #{eventType}
           AND source_type = #{sourceType}
           AND source_id = #{sourceId}
           AND reviewed = FALSE
           AND status IN ('PENDING', 'RETRY', 'FAILED')
-        ORDER BY id DESC
+        ORDER BY notification_event_no DESC
         LIMIT 1
     </select>
 
-    <insert id="insertNotificationEvent" parameterType="kr.co.cleverchat.domain.ops.model.NotificationEvent" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO notification_event (
+    <insert id="insertNotificationEvent" parameterType="kr.co.cleverchat.domain.ops.model.NotificationEvent" useGeneratedKeys="true" keyProperty="notificationEventNo">
+        INSERT INTO tb_notification_event (
             event_type, source_type, source_id, severity, summary, status, attempt_count,
             last_error, next_retry_at, reviewed
         )
@@ -240,21 +242,21 @@
     </insert>
 
     <update id="updateNotificationDelivery">
-        UPDATE notification_event
+        UPDATE tb_notification_event
         SET status = #{status},
             attempt_count = #{attemptCount},
             last_error = #{lastError},
             next_retry_at = #{nextRetryAt},
-            updated_at = now()
-        WHERE id = #{id}
+            lst_chg_dt = now()
+        WHERE notification_event_no = #{id}
     </update>
 
     <update id="reviewNotificationEvent">
-        UPDATE notification_event
+        UPDATE tb_notification_event
         SET reviewed = TRUE,
             reviewed_by = #{reviewedBy},
             reviewed_at = now(),
-            updated_at = now()
-        WHERE id = #{id}
+            lst_chg_dt = now()
+        WHERE notification_event_no = #{id}
     </update>
 </mapper>

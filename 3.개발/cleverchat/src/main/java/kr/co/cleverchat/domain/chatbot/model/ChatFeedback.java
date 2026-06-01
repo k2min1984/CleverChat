@@ -4,30 +4,30 @@ import java.time.OffsetDateTime;
 
 public class ChatFeedback {
 
-    private Long id;
-    private Long messageId;
+    private Long chatFeedbackNo;
+    private Long messageNo;
     private String rating;
     private String comment;
     private String commentCiphertext;
     private String commentKeyId;
     private Integer commentEncryptionVersion;
-    private OffsetDateTime createdAt;
+    private OffsetDateTime frstRegDt;
     private String ipHash;
 
-    public Long getId() {
-        return id;
+    public Long getChatFeedbackNo() {
+        return chatFeedbackNo;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setChatFeedbackNo(Long chatFeedbackNo) {
+        this.chatFeedbackNo = chatFeedbackNo;
     }
 
-    public Long getMessageId() {
-        return messageId;
+    public Long getMessageNo() {
+        return messageNo;
     }
 
-    public void setMessageId(Long messageId) {
-        this.messageId = messageId;
+    public void setMessageNo(Long messageNo) {
+        this.messageNo = messageNo;
     }
 
     public String getRating() {
@@ -70,12 +70,12 @@ public class ChatFeedback {
         this.commentEncryptionVersion = commentEncryptionVersion;
     }
 
-    public OffsetDateTime getCreatedAt() {
-        return createdAt;
+    public OffsetDateTime getFrstRegDt() {
+        return frstRegDt;
     }
 
-    public void setCreatedAt(OffsetDateTime createdAt) {
-        this.createdAt = createdAt;
+    public void setFrstRegDt(OffsetDateTime frstRegDt) {
+        this.frstRegDt = frstRegDt;
     }
 
     public String getIpHash() {

@@ -55,9 +55,9 @@ class AdmCrawlApiControllerTest {
     @Test
     void createTargetReturnsEnvelope() throws Exception {
         CrawlTarget target = new CrawlTarget();
-        target.setId(1L);
+        target.setCrawlTargetNo(1L);
         target.setUrl("https://example.com/help");
-        target.setEnabled(true);
+        target.setUseYn("Y");
         when(crawlService.createTarget(org.mockito.Mockito.any(), org.mockito.Mockito.eq(10L)))
                 .thenReturn(target);
 
@@ -65,10 +65,10 @@ class AdmCrawlApiControllerTest {
                         post("/admin/api/crawl-targets")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(
-                                        "{\"url\":\"https://example.com/help\",\"label\":\"Help\",\"enabled\":true}"))
+                                        "{\"url\":\"https://example.com/help\",\"label\":\"Help\",\"useYn\":\"Y\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.id").value(1));
+                .andExpect(jsonPath("$.data.crawlTargetNo").value(1));
     }
 
     @Test
@@ -76,32 +76,32 @@ class AdmCrawlApiControllerTest {
         CrawlRunLog runLog = new CrawlRunLog();
         runLog.setStatus("SUCCESS");
         CrawlDocument document = new CrawlDocument();
-        document.setId(9L);
+        document.setCrawlDocumentNo(9L);
         when(crawlService.run(1L)).thenReturn(new RunResponse(runLog, document));
 
         mockMvc.perform(post("/admin/api/crawl-targets/1/run"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.run.status").value("SUCCESS"))
-                .andExpect(jsonPath("$.data.document.id").value(9));
+                .andExpect(jsonPath("$.data.document.crawlDocumentNo").value(9));
     }
 
     @Test
     void documentsReturnEnvelope() throws Exception {
         CrawlDocument document = new CrawlDocument();
-        document.setId(9L);
+        document.setCrawlDocumentNo(9L);
         when(crawlService.documents(1L)).thenReturn(List.of(document));
 
         mockMvc.perform(get("/admin/api/crawl-documents").param("targetId", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data[0].id").value(9));
+                .andExpect(jsonPath("$.data[0].crawlDocumentNo").value(9));
     }
 
     @Test
     void updateScheduleReturnsEnvelope() throws Exception {
         CrawlTarget target = new CrawlTarget();
-        target.setId(1L);
+        target.setCrawlTargetNo(1L);
         target.setScheduleEnabled(true);
         target.setScheduleIntervalMinutes(60);
         target.setScheduleMode("INTERVAL");
@@ -122,7 +122,7 @@ class AdmCrawlApiControllerTest {
     @Test
     void updateScheduleAcceptsCronMode() throws Exception {
         CrawlTarget target = new CrawlTarget();
-        target.setId(1L);
+        target.setCrawlTargetNo(1L);
         target.setScheduleEnabled(true);
         target.setScheduleMode("CRON");
         target.setScheduleCron("0 */10 * * * *");
@@ -189,7 +189,7 @@ class AdmCrawlApiControllerTest {
     @Test
     void runsReturnEnvelope() throws Exception {
         CrawlRunLog runLog = new CrawlRunLog();
-        runLog.setId(3L);
+        runLog.setCrawlRunLogNo(3L);
         runLog.setStatus("FAILED");
         runLog.setFailureCode("HTTP_ERROR");
         when(crawlService.runLogs(1L, "FAILED", "HTTP_ERROR", 20)).thenReturn(List.of(runLog));
@@ -202,7 +202,7 @@ class AdmCrawlApiControllerTest {
                                 .param("limit", "20"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data[0].id").value(3))
+                .andExpect(jsonPath("$.data[0].crawlRunLogNo").value(3))
                 .andExpect(jsonPath("$.data[0].failureCode").value("HTTP_ERROR"));
     }
 
@@ -220,7 +220,7 @@ class AdmCrawlApiControllerTest {
     @Test
     void failuresReturnEnvelope() throws Exception {
         CrawlRunLog runLog = new CrawlRunLog();
-        runLog.setId(4L);
+        runLog.setCrawlRunLogNo(4L);
         runLog.setStatus("FAILED");
         runLog.setFailureCode("ROBOTS_BLOCKED");
         when(crawlService.failedRunLogs(false, "ROBOTS_BLOCKED", 10)).thenReturn(List.of(runLog));
@@ -239,7 +239,7 @@ class AdmCrawlApiControllerTest {
     @Test
     void reviewFailureReturnsEnvelope() throws Exception {
         CrawlRunLog runLog = new CrawlRunLog();
-        runLog.setId(4L);
+        runLog.setCrawlRunLogNo(4L);
         runLog.setReviewed(true);
         when(crawlService.reviewFailure(
                         org.mockito.Mockito.eq(4L),

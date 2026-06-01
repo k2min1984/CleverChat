@@ -4,32 +4,32 @@ import java.time.OffsetDateTime;
 
 public class ChatFeedbackQueueItem {
 
-    private Long id;
-    private Long messageId;
+    private Long chatFeedbackNo;
+    private Long messageNo;
     private String sessionKey;
-    private Long scenarioId;
+    private Long scenarioNo;
     private String scenarioTitle;
     private String rating;
     private String comment;
     private String commentCiphertext;
     private String commentKeyId;
     private Integer commentEncryptionVersion;
-    private OffsetDateTime createdAt;
+    private OffsetDateTime frstRegDt;
 
-    public Long getId() {
-        return id;
+    public Long getChatFeedbackNo() {
+        return chatFeedbackNo;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setChatFeedbackNo(Long chatFeedbackNo) {
+        this.chatFeedbackNo = chatFeedbackNo;
     }
 
-    public Long getMessageId() {
-        return messageId;
+    public Long getMessageNo() {
+        return messageNo;
     }
 
-    public void setMessageId(Long messageId) {
-        this.messageId = messageId;
+    public void setMessageNo(Long messageNo) {
+        this.messageNo = messageNo;
     }
 
     public String getSessionKey() {
@@ -40,12 +40,12 @@ public class ChatFeedbackQueueItem {
         this.sessionKey = sessionKey;
     }
 
-    public Long getScenarioId() {
-        return scenarioId;
+    public Long getScenarioNo() {
+        return scenarioNo;
     }
 
-    public void setScenarioId(Long scenarioId) {
-        this.scenarioId = scenarioId;
+    public void setScenarioNo(Long scenarioNo) {
+        this.scenarioNo = scenarioNo;
     }
 
     public String getScenarioTitle() {
@@ -96,11 +96,11 @@ public class ChatFeedbackQueueItem {
         this.commentEncryptionVersion = commentEncryptionVersion;
     }
 
-    public OffsetDateTime getCreatedAt() {
-        return createdAt;
+    public OffsetDateTime getFrstRegDt() {
+        return frstRegDt;
     }
 
-    public void setCreatedAt(OffsetDateTime createdAt) {
-        this.createdAt = createdAt;
+    public void setFrstRegDt(OffsetDateTime frstRegDt) {
+        this.frstRegDt = frstRegDt;
     }
 }

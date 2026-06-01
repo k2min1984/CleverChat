@@ -28,7 +28,7 @@ class SearchServiceTest {
     @Test
     void searchNormalizesQueryAndRecordsLog() {
         SearchResultItem result = new SearchResultItem();
-        result.setScenarioId(10L);
+        result.setScenarioNo(10L);
         result.setScenarioTitle("FAQ");
         when(piiGuard.detectTypes("shipping help")).thenReturn(List.of());
         when(searchMapper.searchScenarios("shipping help", List.of("shipping", "help"), 5))
@@ -41,14 +41,14 @@ class SearchServiceTest {
         assertThat(response.resultCount()).isEqualTo(1);
         verify(searchMapper).searchScenarios("shipping help", List.of("shipping", "help"), 5);
         verify(searchMapper).insertLog(logCaptor.capture());
-        assertThat(logCaptor.getValue().getTopScenarioId()).isEqualTo(10L);
+        assertThat(logCaptor.getValue().getTopScenarioNo()).isEqualTo(10L);
         assertThat(logCaptor.getValue().getSource()).isEqualTo("ADMIN_TEST");
     }
 
     @Test
     void searchPassesDistinctTokenizedTermsToMapper() {
         SearchResultItem result = new SearchResultItem();
-        result.setScenarioId(11L);
+        result.setScenarioNo(11L);
         result.setScenarioTitle("Password reset");
         when(piiGuard.detectTypes("password reset password")).thenReturn(List.of());
         when(searchMapper.searchScenarios(
@@ -65,7 +65,7 @@ class SearchServiceTest {
     @Test
     void searchCanReturnCrawlDocumentWithoutTopScenario() {
         SearchResultItem result = new SearchResultItem();
-        result.setCrawlDocumentId(30L);
+        result.setCrawlDocumentNo(30L);
         result.setScenarioTitle("Policy document");
         result.setMatchedField("CRAWL_DOCUMENT");
         when(piiGuard.detectTypes("policy")).thenReturn(List.of());
@@ -78,7 +78,7 @@ class SearchServiceTest {
         assertThat(response.resultCount()).isEqualTo(1);
         assertThat(response.results().get(0).getMatchedField()).isEqualTo("CRAWL_DOCUMENT");
         verify(searchMapper).insertLog(logCaptor.capture());
-        assertThat(logCaptor.getValue().getTopScenarioId()).isNull();
+        assertThat(logCaptor.getValue().getTopScenarioNo()).isNull();
     }
 
     @Test

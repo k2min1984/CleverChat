@@ -3,26 +3,26 @@
     "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="kr.co.cleverchat.domain.scenario.mapper.ScenarioCategoryMapper">
     <select id="findAll" resultType="kr.co.cleverchat.domain.scenario.model.ScenarioCategory">
-        SELECT id, parent_id, name, sort_order, enabled, created_at, updated_at
-        FROM scenario_category
-        ORDER BY COALESCE(parent_id, 0), sort_order, id
+        SELECT scenario_category_no, p_scenario_category_no, name, sort_order, use_yn, frst_reg_dt, lst_chg_dt
+        FROM tb_scenario_category
+        ORDER BY COALESCE(p_scenario_category_no, 0), sort_order, scenario_category_no
     </select>
     <select id="findById" resultType="kr.co.cleverchat.domain.scenario.model.ScenarioCategory">
-        SELECT id, parent_id, name, sort_order, enabled, created_at, updated_at
-        FROM scenario_category
-        WHERE id = #{id}
+        SELECT scenario_category_no, p_scenario_category_no, name, sort_order, use_yn, frst_reg_dt, lst_chg_dt
+        FROM tb_scenario_category
+        WHERE scenario_category_no = #{id}
     </select>
-    <insert id="insert" parameterType="kr.co.cleverchat.domain.scenario.model.ScenarioCategory" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO scenario_category (parent_id, name, sort_order, enabled)
-        VALUES (#{parentId}, #{name}, #{sortOrder}, #{enabled})
+    <insert id="insert" parameterType="kr.co.cleverchat.domain.scenario.model.ScenarioCategory" useGeneratedKeys="true" keyProperty="scenarioCategoryNo">
+        INSERT INTO tb_scenario_category (p_scenario_category_no, name, sort_order, use_yn)
+        VALUES (#{pScenarioCategoryNo}, #{name}, #{sortOrder}, #{useYn})
     </insert>
     <update id="update" parameterType="kr.co.cleverchat.domain.scenario.model.ScenarioCategory">
-        UPDATE scenario_category
-        SET parent_id = #{parentId},
+        UPDATE tb_scenario_category
+        SET p_scenario_category_no = #{pScenarioCategoryNo},
             name = #{name},
             sort_order = #{sortOrder},
-            enabled = #{enabled},
-            updated_at = now()
-        WHERE id = #{id}
+            use_yn = #{useYn},
+            lst_chg_dt = now()
+        WHERE scenario_category_no = #{scenarioCategoryNo}
     </update>
 </mapper>

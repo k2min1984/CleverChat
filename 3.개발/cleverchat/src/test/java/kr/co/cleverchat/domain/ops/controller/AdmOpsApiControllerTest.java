@@ -77,7 +77,7 @@ class AdmOpsApiControllerTest {
     @Test
     void auditLogsReturnsEnvelopeWithFilters() throws Exception {
         AuditLog log = new AuditLog();
-        log.setId(7L);
+        log.setAuditLogNo(7L);
         log.setActor("admin");
         log.setAction("CREATE");
         OffsetDateTime from = OffsetDateTime.parse("2026-05-01T00:00:00+09:00");
@@ -95,7 +95,7 @@ class AdmOpsApiControllerTest {
                                 .param("limit", "20"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data[0].id").value(7))
+                .andExpect(jsonPath("$.data[0].auditLogNo").value(7))
                 .andExpect(jsonPath("$.data[0].actor").value("admin"));
     }
 
@@ -123,7 +123,7 @@ class AdmOpsApiControllerTest {
 
     @Test
     void createNoticeReturnsEnvelope() throws Exception {
-        NoticeRequest request = new NoticeRequest("Notice", "Content", true, null, null, 100);
+        NoticeRequest request = new NoticeRequest("Notice", "Content", "Y", null, null, 100);
         when(opsService.createNotice(request, 7L)).thenReturn(notice(2L, "Notice"));
 
         mockMvc.perform(
@@ -132,12 +132,12 @@ class AdmOpsApiControllerTest {
                                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.id").value(2));
+                .andExpect(jsonPath("$.data.noticeNo").value(2));
     }
 
     @Test
     void updateNoticeReturnsEnvelope() throws Exception {
-        NoticeRequest request = new NoticeRequest("Updated", "Content", false, null, null, 20);
+        NoticeRequest request = new NoticeRequest("Updated", "Content", "N", null, null, 20);
         when(opsService.updateNotice(3L, request, 7L)).thenReturn(notice(3L, "Updated"));
 
         mockMvc.perform(
@@ -169,7 +169,7 @@ class AdmOpsApiControllerTest {
                                                 new NoticeRequest(
                                                         "x".repeat(201),
                                                         "Content",
-                                                        true,
+                                                        "Y",
                                                         null,
                                                         null,
                                                         100))))
@@ -195,7 +195,7 @@ class AdmOpsApiControllerTest {
     @Test
     void createNotificationChannelReturnsEnvelope() throws Exception {
         NotificationChannelRequest request =
-                new NotificationChannelRequest("Ops", "WEBHOOK", true, "OPS_WEBHOOK_URL", null, 60);
+                new NotificationChannelRequest("Ops", "WEBHOOK", "Y", "OPS_WEBHOOK_URL", null, 60);
         when(notificationService.createChannel(request, 7L)).thenReturn(channel(2L, "Ops"));
 
         mockMvc.perform(
@@ -204,7 +204,7 @@ class AdmOpsApiControllerTest {
                                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.id").value(2));
+                .andExpect(jsonPath("$.data.notificationChannelNo").value(2));
     }
 
     @Test
@@ -213,7 +213,7 @@ class AdmOpsApiControllerTest {
                 new NotificationChannelRequest(
                         "Slack",
                         "SLACK_WEBHOOK",
-                        true,
+                        "Y",
                         "OPS_SLACK_WEBHOOK_URL",
                         "OPS_SLACK_WEBHOOK_OLD_URL",
                         60);
@@ -238,7 +238,7 @@ class AdmOpsApiControllerTest {
     void createEmailNotificationChannelReturnsEnvelope() throws Exception {
         NotificationChannelRequest request =
                 new NotificationChannelRequest(
-                        "Email", "EMAIL_SMTP", true, "OPS_ALERT_EMAIL_TO", null, 60);
+                        "Email", "EMAIL_SMTP", "Y", "OPS_ALERT_EMAIL_TO", null, 60);
         NotificationChannel channel = channel(4L, "Email");
         channel.setType("EMAIL_SMTP");
         channel.setEndpointEnvKey("OPS_ALERT_EMAIL_TO");
@@ -257,7 +257,7 @@ class AdmOpsApiControllerTest {
     @Test
     void notificationChannelValidationRejectsBadEnvKey() throws Exception {
         NotificationChannelRequest request =
-                new NotificationChannelRequest("Ops", "WEBHOOK", true, "bad-key", null, 60);
+                new NotificationChannelRequest("Ops", "WEBHOOK", "Y", "bad-key", null, 60);
 
         mockMvc.perform(
                         post("/admin/api/notifications/channels")
@@ -271,7 +271,7 @@ class AdmOpsApiControllerTest {
     void notificationChannelValidationRejectsBadPreviousEnvKey() throws Exception {
         NotificationChannelRequest request =
                 new NotificationChannelRequest(
-                        "Ops", "SLACK_WEBHOOK", true, "OPS_WEBHOOK_URL", "bad-key", 60);
+                        "Ops", "SLACK_WEBHOOK", "Y", "OPS_WEBHOOK_URL", "bad-key", 60);
 
         mockMvc.perform(
                         post("/admin/api/notifications/channels")
@@ -284,7 +284,7 @@ class AdmOpsApiControllerTest {
     @Test
     void notificationChannelValidationRejectsUnsupportedType() throws Exception {
         NotificationChannelRequest request =
-                new NotificationChannelRequest("Ops", "EMAIL", true, "OPS_WEBHOOK_URL", null, 60);
+                new NotificationChannelRequest("Ops", "EMAIL", "Y", "OPS_WEBHOOK_URL", null, 60);
         when(notificationService.createChannel(request, 7L))
                 .thenThrow(new IllegalArgumentException("Unsupported notification channel type."));
 
@@ -299,7 +299,7 @@ class AdmOpsApiControllerTest {
     @Test
     void notificationEventsAndReviewReturnEnvelope() throws Exception {
         NotificationEvent event = new NotificationEvent();
-        event.setId(9L);
+        event.setNotificationEventNo(9L);
         event.setEventType("CRAWL_RUN_FAILED");
         event.setStatus("FAILED");
         when(notificationService.events("FAILED", false, 20)).thenReturn(List.of(event));
@@ -311,7 +311,7 @@ class AdmOpsApiControllerTest {
                                 .param("reviewed", "false")
                                 .param("limit", "20"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data[0].id").value(9));
+                .andExpect(jsonPath("$.data[0].notificationEventNo").value(9));
 
         mockMvc.perform(put("/admin/api/notifications/events/9/review"))
                 .andExpect(status().isOk())
@@ -320,20 +320,20 @@ class AdmOpsApiControllerTest {
 
     private Notice notice(Long id, String title) {
         Notice notice = new Notice();
-        notice.setId(id);
+        notice.setNoticeNo(id);
         notice.setTitle(title);
         notice.setContent("Content");
-        notice.setEnabled(true);
+        notice.setUseYn("Y");
         notice.setPriority(100);
         return notice;
     }
 
     private NotificationChannel channel(Long id, String name) {
         NotificationChannel channel = new NotificationChannel();
-        channel.setId(id);
+        channel.setNotificationChannelNo(id);
         channel.setName(name);
         channel.setType("WEBHOOK");
-        channel.setEnabled(true);
+        channel.setUseYn("Y");
         channel.setEndpointEnvKey("OPS_WEBHOOK_URL");
         channel.setRateLimitPerHour(60);
         return channel;

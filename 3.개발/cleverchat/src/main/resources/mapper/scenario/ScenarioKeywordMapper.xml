@@ -3,35 +3,35 @@
     "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="kr.co.cleverchat.domain.scenario.mapper.ScenarioKeywordMapper">
     <select id="findByScenarioId" resultType="kr.co.cleverchat.domain.scenario.model.ScenarioKeyword">
-        SELECT id, scenario_id, keyword, weight, enabled, created_at, updated_at
-        FROM scenario_keyword
-        WHERE scenario_id = #{scenarioId}
+        SELECT scenario_keyword_no, scenario_no, keyword, weight, use_yn, frst_reg_dt, lst_chg_dt
+        FROM tb_scenario_keyword
+        WHERE scenario_no = #{scenarioId}
         ORDER BY weight DESC, keyword
     </select>
     <select id="findEnabledByScenarioId" resultType="kr.co.cleverchat.domain.scenario.model.ScenarioKeyword">
-        SELECT id, scenario_id, keyword, weight, enabled, created_at, updated_at
-        FROM scenario_keyword
-        WHERE scenario_id = #{scenarioId}
-          AND enabled = TRUE
+        SELECT scenario_keyword_no, scenario_no, keyword, weight, use_yn, frst_reg_dt, lst_chg_dt
+        FROM tb_scenario_keyword
+        WHERE scenario_no = #{scenarioId}
+          AND use_yn = 'Y'
         ORDER BY weight DESC, keyword
     </select>
     <select id="findEnabledForActiveScenarios" resultType="kr.co.cleverchat.domain.scenario.model.ScenarioKeyword">
-        SELECT k.id, k.scenario_id, k.keyword, k.weight, k.enabled, k.created_at, k.updated_at
-        FROM scenario_keyword k
-        JOIN scenario s ON s.id = k.scenario_id
-        JOIN scenario_category c ON c.id = s.category_id
+        SELECT k.scenario_keyword_no, k.scenario_no, k.keyword, k.weight, k.use_yn, k.frst_reg_dt, k.lst_chg_dt
+        FROM tb_scenario_keyword k
+        JOIN tb_scenario s ON s.scenario_no = k.scenario_no
+        JOIN tb_scenario_category c ON c.scenario_category_no = s.category_no
         WHERE s.status = 'ACTIVE'
-          AND s.active_version_id IS NOT NULL
-          AND c.enabled = TRUE
-          AND k.enabled = TRUE
-        ORDER BY k.scenario_id, k.weight DESC, k.keyword
+          AND s.active_version_no IS NOT NULL
+          AND c.use_yn = 'Y'
+          AND k.use_yn = 'Y'
+        ORDER BY k.scenario_no, k.weight DESC, k.keyword
     </select>
-    <insert id="insert" parameterType="kr.co.cleverchat.domain.scenario.model.ScenarioKeyword" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO scenario_keyword (scenario_id, keyword, weight, enabled)
-        VALUES (#{scenarioId}, #{keyword}, #{weight}, #{enabled})
+    <insert id="insert" parameterType="kr.co.cleverchat.domain.scenario.model.ScenarioKeyword" useGeneratedKeys="true" keyProperty="scenarioKeywordNo">
+        INSERT INTO tb_scenario_keyword (scenario_no, keyword, weight, use_yn)
+        VALUES (#{scenarioNo}, #{keyword}, #{weight}, #{useYn})
     </insert>
     <delete id="deleteByScenarioId">
-        DELETE FROM scenario_keyword
-        WHERE scenario_id = #{scenarioId}
+        DELETE FROM tb_scenario_keyword
+        WHERE scenario_no = #{scenarioId}
     </delete>
 </mapper>

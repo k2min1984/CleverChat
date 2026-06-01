@@ -4,11 +4,11 @@
 <mapper namespace="kr.co.cleverchat.domain.auth.mapper.UserMapper">
 
     <resultMap id="UserAccountMap" type="kr.co.cleverchat.domain.auth.model.UserAccount">
-        <id property="id" column="id"/>
+        <id property="userNo" column="user_no"/>
         <result property="username" column="username"/>
         <result property="passwordHash" column="password_hash"/>
         <result property="displayName" column="display_name"/>
-        <result property="enabled" column="enabled"/>
+        <result property="useYn" column="use_yn"/>
         <result property="failedAttempts" column="failed_attempts"/>
         <result property="lockedUntil" column="locked_until"/>
         <result property="lastLoginAt" column="last_login_at"/>
@@ -20,72 +20,72 @@
 
     <select id="findByUsername" resultMap="UserAccountMap">
         SELECT
-            u.id,
+            u.user_no,
             u.username,
             u.password_hash,
             u.display_name,
-            u.enabled,
+            u.use_yn,
             u.failed_attempts,
             u.locked_until,
             u.last_login_at,
             u.must_change_password,
             r.code AS role_code
-        FROM users u
-        LEFT JOIN user_roles ur ON ur.user_id = u.id
-        LEFT JOIN roles r ON r.id = ur.role_id
+        FROM tb_user u
+        LEFT JOIN tb_user_role ur ON ur.user_no = u.user_no
+        LEFT JOIN tb_role r ON r.role_no = ur.role_no
         WHERE u.username = #{username}
     </select>
 
     <select id="countByUsername" resultType="int">
         SELECT COUNT(1)
-        FROM users
+        FROM tb_user
         WHERE username = #{username}
     </select>
 
-    <insert id="insertUser" parameterType="kr.co.cleverchat.domain.auth.model.UserAccount" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO users (
+    <insert id="insertUser" parameterType="kr.co.cleverchat.domain.auth.model.UserAccount" useGeneratedKeys="true" keyProperty="userNo" keyColumn="user_no">
+        INSERT INTO tb_user (
             username,
             password_hash,
             display_name,
-            enabled,
+            use_yn,
             must_change_password
         ) VALUES (
             #{username},
             #{passwordHash},
             #{displayName},
-            #{enabled},
+            #{useYn},
             #{mustChangePassword}
         )
     </insert>
 
     <insert id="insertUserRole">
-        INSERT INTO user_roles (user_id, role_id)
-        SELECT #{userId}, id
-        FROM roles
+        INSERT INTO tb_user_role (user_no, role_no)
+        SELECT #{userId}, role_no
+        FROM tb_role
         WHERE code = #{roleCode}
         ON CONFLICT DO NOTHING
     </insert>
 
     <update id="resetLoginSuccess">
-        UPDATE users
+        UPDATE tb_user
         SET failed_attempts = 0,
             locked_until = NULL,
             last_login_at = NOW(),
-            updated_at = NOW()
+            lst_chg_dt = NOW()
         WHERE username = #{username}
     </update>
 
     <update id="increaseFailedAttempt">
-        UPDATE users
+        UPDATE tb_user
         SET failed_attempts = failed_attempts + 1,
-            updated_at = NOW()
+            lst_chg_dt = NOW()
         WHERE username = #{username}
     </update>
 
     <update id="lockUser">
-        UPDATE users
+        UPDATE tb_user
         SET locked_until = NOW() + (#{lockMinutes} * INTERVAL '1 minute'),
-            updated_at = NOW()
+            lst_chg_dt = NOW()
         WHERE username = #{username}
     </update>
 </mapper>

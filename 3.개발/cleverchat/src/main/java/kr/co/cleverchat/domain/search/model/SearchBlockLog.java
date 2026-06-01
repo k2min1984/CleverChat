@@ -4,20 +4,20 @@ import java.time.OffsetDateTime;
 
 public class SearchBlockLog {
 
-    private Long id;
+    private Long searchBlockLogNo;
     private int queryLength;
     private String piiTypes;
     private String source;
     private String anonymousIdHash;
-    private Long userId;
-    private OffsetDateTime createdAt;
+    private Long userNo;
+    private OffsetDateTime frstRegDt;
 
-    public Long getId() {
-        return id;
+    public Long getSearchBlockLogNo() {
+        return searchBlockLogNo;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setSearchBlockLogNo(Long searchBlockLogNo) {
+        this.searchBlockLogNo = searchBlockLogNo;
     }
 
     public int getQueryLength() {
@@ -52,19 +52,19 @@ public class SearchBlockLog {
         this.anonymousIdHash = anonymousIdHash;
     }
 
-    public Long getUserId() {
-        return userId;
+    public Long getUserNo() {
+        return userNo;
     }
 
-    public void setUserId(Long userId) {
-        this.userId = userId;
+    public void setUserNo(Long userNo) {
+        this.userNo = userNo;
     }
 
-    public OffsetDateTime getCreatedAt() {
-        return createdAt;
+    public OffsetDateTime getFrstRegDt() {
+        return frstRegDt;
     }
 
-    public void setCreatedAt(OffsetDateTime createdAt) {
-        this.createdAt = createdAt;
+    public void setFrstRegDt(OffsetDateTime frstRegDt) {
+        this.frstRegDt = frstRegDt;
     }
 }

@@ -4,29 +4,29 @@ import java.time.OffsetDateTime;
 
 public class ScenarioVersion {
 
-    private Long id;
-    private Long scenarioId;
+    private Long scenarioVersionNo;
+    private Long scenarioNo;
     private int versionNo;
     private String status;
-    private Long startNodeId;
-    private String createdBy;
+    private Long startNodeNo;
+    private String frstRegrEmpno;
     private OffsetDateTime publishedAt;
-    private OffsetDateTime createdAt;
+    private OffsetDateTime frstRegDt;
 
-    public Long getId() {
-        return id;
+    public Long getScenarioVersionNo() {
+        return scenarioVersionNo;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setScenarioVersionNo(Long scenarioVersionNo) {
+        this.scenarioVersionNo = scenarioVersionNo;
     }
 
-    public Long getScenarioId() {
-        return scenarioId;
+    public Long getScenarioNo() {
+        return scenarioNo;
     }
 
-    public void setScenarioId(Long scenarioId) {
-        this.scenarioId = scenarioId;
+    public void setScenarioNo(Long scenarioNo) {
+        this.scenarioNo = scenarioNo;
     }
 
     public int getVersionNo() {
@@ -45,20 +45,20 @@ public class ScenarioVersion {
         this.status = status;
     }
 
-    public Long getStartNodeId() {
-        return startNodeId;
+    public Long getStartNodeNo() {
+        return startNodeNo;
     }
 
-    public void setStartNodeId(Long startNodeId) {
-        this.startNodeId = startNodeId;
+    public void setStartNodeNo(Long startNodeNo) {
+        this.startNodeNo = startNodeNo;
     }
 
-    public String getCreatedBy() {
-        return createdBy;
+    public String getFrstRegrEmpno() {
+        return frstRegrEmpno;
     }
 
-    public void setCreatedBy(String createdBy) {
-        this.createdBy = createdBy;
+    public void setFrstRegrEmpno(String frstRegrEmpno) {
+        this.frstRegrEmpno = frstRegrEmpno;
     }
 
     public OffsetDateTime getPublishedAt() {
@@ -69,11 +69,11 @@ public class ScenarioVersion {
         this.publishedAt = publishedAt;
     }
 
-    public OffsetDateTime getCreatedAt() {
-        return createdAt;
+    public OffsetDateTime getFrstRegDt() {
+        return frstRegDt;
     }
 
-    public void setCreatedAt(OffsetDateTime createdAt) {
-        this.createdAt = createdAt;
+    public void setFrstRegDt(OffsetDateTime frstRegDt) {
+        this.frstRegDt = frstRegDt;
     }
 }

@@ -51,9 +51,9 @@ public class AiAnswerSuggestionService {
                 "CRAWL_DOCUMENT".equals(item.getMatchedField()) ? "CRAWL_DOCUMENT" : "SCENARIO";
         return new AiAnswerCitation(
                 sourceType,
-                item.getScenarioId(),
+                item.getScenarioNo(),
                 item.getScenarioTitle(),
-                item.getCrawlDocumentId(),
+                item.getCrawlDocumentNo(),
                 item.getCrawlUrl(),
                 item.getMatchedField(),
                 item.getSnippet());

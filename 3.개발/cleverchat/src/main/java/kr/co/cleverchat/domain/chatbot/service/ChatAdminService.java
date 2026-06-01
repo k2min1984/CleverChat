@@ -134,11 +134,11 @@ public class ChatAdminService {
 
     private ChatRecommendation toRecommendation(Long id, RecommendationSaveRequest request) {
         ChatRecommendation recommendation = new ChatRecommendation();
-        recommendation.setId(id);
-        recommendation.setScenarioId(request.scenarioId());
+        recommendation.setChatRecommendationNo(id);
+        recommendation.setScenarioNo(request.scenarioId());
         recommendation.setLabel(request.label());
         recommendation.setPriority(request.priority() == null ? 100 : request.priority());
-        recommendation.setEnabled(request.enabled() == null || request.enabled());
+        recommendation.setUseYn(request.enabled() == null || request.enabled() ? "Y" : "N");
         return recommendation;
     }
 

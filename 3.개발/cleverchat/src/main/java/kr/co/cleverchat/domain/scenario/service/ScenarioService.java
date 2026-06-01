@@ -93,12 +93,12 @@ public class ScenarioService {
         if (!"DRAFT".equals(version.getStatus())) {
             return new Publishability(false, false, false, "초안 버전만 게시할 수 있습니다.");
         }
-        List<ScenarioNode> nodes = nodeMapper.findByVersionId(version.getId());
+        List<ScenarioNode> nodes = nodeMapper.findByVersionId(version.getScenarioVersionNo());
         boolean hasGraph = !nodes.isEmpty();
         boolean hasStartNode =
-                version.getStartNodeId() != null
+                version.getStartNodeNo() != null
                         && nodes.stream()
-                                .anyMatch(node -> version.getStartNodeId().equals(node.getId()));
+                                .anyMatch(node -> version.getStartNodeNo().equals(node.getScenarioNodeNo()));
         if (!hasGraph) {
             return new Publishability(false, false, false, "그래프 저장 후 게시할 수 있습니다.");
         }
@@ -112,7 +112,7 @@ public class ScenarioService {
         ScenarioVersion version = version(versionId);
         ScenarioGraphDtos.SaveRequest graph = readPersistedGraph(version);
         if ("DRAFT".equals(version.getStatus()) && graph.nodes().isEmpty()) {
-            ScenarioVersion source = latestSourceVersion(version.getScenarioId(), version.getId());
+            ScenarioVersion source = latestSourceVersion(version.getScenarioNo(), version.getScenarioVersionNo());
             if (source != null) {
                 return readPersistedGraph(source);
             }
@@ -124,7 +124,7 @@ public class ScenarioService {
     @RequireRole("OPERATOR")
     public Scenario create(SaveRequest request) {
         Scenario scenario = new Scenario();
-        scenario.setCategoryId(request.categoryId());
+        scenario.setCategoryNo(request.categoryNo());
         scenario.setTitle(request.title().trim());
         scenario.setDescription(request.description());
         scenario.setStatus("DRAFT");
@@ -132,14 +132,14 @@ public class ScenarioService {
         auditTrailRecorder.record(
                 "SCENARIO_CREATE",
                 "scenario",
-                scenario.getId(),
+                scenario.getScenarioNo(),
                 Map.of(
                         "after",
                         Map.of(
                                 "title", scenario.getTitle(),
-                                "categoryId", scenario.getCategoryId())));
-        createVersion(scenario.getId());
-        return get(scenario.getId());
+                                "categoryId", scenario.getCategoryNo())));
+        createVersion(scenario.getScenarioNo());
+        return get(scenario.getScenarioNo());
     }
 
     @Transactional
@@ -151,8 +151,8 @@ public class ScenarioService {
                     ErrorCode.STATE_CONFLICT, "DRAFT 또는 INACTIVE 시나리오만 수정할 수 있습니다.");
         }
         Scenario scenario = new Scenario();
-        scenario.setId(id);
-        scenario.setCategoryId(request.categoryId());
+        scenario.setScenarioNo(id);
+        scenario.setCategoryNo(request.categoryNo());
         scenario.setTitle(request.title().trim());
         scenario.setDescription(request.description());
         scenarioMapper.update(scenario);
@@ -195,24 +195,25 @@ public class ScenarioService {
         }
         ScenarioVersion existingDraft = versionMapper.findDraftByScenarioId(scenarioId);
         if (existingDraft != null) {
-            List<ScenarioNode> draftNodes = nodeMapper.findByVersionId(existingDraft.getId());
+            List<ScenarioNode> draftNodes = nodeMapper.findByVersionId(existingDraft.getScenarioVersionNo());
             if (draftNodes == null || draftNodes.isEmpty()) {
                 copyLatestGraphToDraft(
-                        latestSourceVersion(scenarioId, existingDraft.getId()), existingDraft.getId());
-                ScenarioVersion refreshed = versionMapper.findById(existingDraft.getId());
+                        latestSourceVersion(scenarioId, existingDraft.getScenarioVersionNo()),
+                        existingDraft.getScenarioVersionNo());
+                ScenarioVersion refreshed = versionMapper.findById(existingDraft.getScenarioVersionNo());
                 return refreshed == null ? existingDraft : refreshed;
             }
             return existingDraft;
         }
         ScenarioVersion sourceVersion = latestSourceVersion(scenarioId, null);
         ScenarioVersion version = new ScenarioVersion();
-        version.setScenarioId(scenarioId);
+        version.setScenarioNo(scenarioId);
         version.setVersionNo(versionMapper.nextVersionNo(scenarioId));
         version.setStatus("DRAFT");
-        version.setCreatedBy(currentUsername());
+        version.setFrstRegrEmpno(currentUsername());
         versionMapper.insert(version);
-        copyLatestGraphToDraft(sourceVersion, version.getId());
-        return versionMapper.findById(version.getId());
+        copyLatestGraphToDraft(sourceVersion, version.getScenarioVersionNo());
+        return versionMapper.findById(version.getScenarioVersionNo());
     }
 
     @Transactional
@@ -226,7 +227,7 @@ public class ScenarioService {
         Map<String, ScenarioNode> savedNodes = new LinkedHashMap<>();
         for (NodeRequest nodeRequest : request.nodes()) {
             ScenarioNode node = new ScenarioNode();
-            node.setVersionId(versionId);
+            node.setVersionNo(versionId);
             node.setNodeKey(nodeRequest.nodeKey());
             node.setNodeType(nodeRequest.nodeType());
             node.setTitle(nodeRequest.title());
@@ -245,29 +246,29 @@ public class ScenarioService {
                             ? List.<OptionRequest>of()
                             : nodeRequest.options()) {
                 ScenarioNodeOption option = new ScenarioNodeOption();
-                option.setNodeId(node.getId());
-                option.setNextNodeId(
+                option.setNodeNo(node.getScenarioNodeNo());
+                option.setNextNodeNo(
                         hasText(optionRequest.nextNodeKey())
-                                ? savedNodes.get(optionRequest.nextNodeKey()).getId()
+                                ? savedNodes.get(optionRequest.nextNodeKey()).getScenarioNodeNo()
                                 : null);
                 option.setLabel(optionRequest.label());
                 option.setConditionExpr(optionRequest.conditionExpr());
                 option.setSortOrder(optionRequest.sortOrder());
-                option.setEnabled(optionRequest.enabled());
+                option.setUseYn(optionRequest.useYn());
                 optionMapper.insert(option);
                 optionCount++;
             }
         }
-        versionMapper.setStartNode(versionId, savedNodes.get(request.startNodeKey()).getId());
+        versionMapper.setStartNode(versionId, savedNodes.get(request.startNodeKey()).getScenarioNodeNo());
         auditTrailRecorder.record(
                 "SCENARIO_VERSION_SAVE",
                 "scenario_version",
                 versionId,
                 Map.of(
-                        "scenarioId", version.getScenarioId(),
+                        "scenarioId", version.getScenarioNo(),
                         "nodeCount", savedNodes.size(),
                         "optionCount", optionCount));
-        matchingCacheInvalidator.onScenarioChanged(version.getScenarioId());
+        matchingCacheInvalidator.onScenarioChanged(version.getScenarioNo());
     }
 
     @Transactional
@@ -279,7 +280,7 @@ public class ScenarioService {
             throw new BusinessException(ErrorCode.VALIDATION_ERROR, "저장된 그래프가 없습니다.");
         }
         graphValidator.validateForPublish(graph);
-        versionMapper.archivePublished(version.getScenarioId());
+        versionMapper.archivePublished(version.getScenarioNo());
         versionMapper.publish(versionId);
         auditTrailRecorder.record(
                 "SCENARIO_VERSION_PUBLISH",
@@ -288,7 +289,7 @@ public class ScenarioService {
                 Map.of(
                         "before", Map.of("status", "DRAFT"),
                         "after", Map.of("status", "PUBLISHED")));
-        matchingCacheInvalidator.onScenarioChanged(version.getScenarioId());
+        matchingCacheInvalidator.onScenarioChanged(version.getScenarioNo());
     }
 
     @Transactional
@@ -301,7 +302,7 @@ public class ScenarioService {
         }
         ScenarioVersion version = versionMapper.findById(versionId);
         if (version == null
-                || !scenarioId.equals(version.getScenarioId())
+                || !scenarioId.equals(version.getScenarioNo())
                 || !"PUBLISHED".equals(version.getStatus())) {
             throw new BusinessException(ErrorCode.STATE_CONFLICT, "게시된 버전만 활성화할 수 있습니다.");
         }
@@ -316,7 +317,7 @@ public class ScenarioService {
                                         "status",
                                         scenario.getStatus(),
                                         "activeVersionId",
-                                        scenario.getActiveVersionId()),
+                                        scenario.getActiveVersionNo()),
                         "after", Map.of("status", "ACTIVE", "activeVersionId", versionId)));
         matchingCacheInvalidator.onScenarioChanged(scenarioId);
     }
@@ -352,35 +353,38 @@ public class ScenarioService {
 
     private ScenarioGraphDtos.SaveRequest readPersistedGraph(ScenarioVersion version) {
         List<ScenarioNode> nodes =
-                nodeMapper.findByVersionId(version.getId()).stream()
+                nodeMapper.findByVersionId(version.getScenarioVersionNo()).stream()
                         .sorted(
                                 Comparator.comparingInt(ScenarioNode::getSortOrder)
                                         .thenComparing(
-                                                ScenarioNode::getId,
+                                                ScenarioNode::getScenarioNodeNo,
                                                 Comparator.nullsLast(Long::compareTo)))
                         .toList();
         if (nodes.isEmpty()) {
             return new ScenarioGraphDtos.SaveRequest(null, List.of());
         }
         Map<Long, ScenarioNode> byId =
-                nodes.stream().collect(Collectors.toMap(ScenarioNode::getId, Function.identity()));
+                nodes.stream()
+                        .collect(
+                                Collectors.toMap(
+                                        ScenarioNode::getScenarioNodeNo, Function.identity()));
         List<NodeRequest> nodeRequests = new ArrayList<>();
         for (ScenarioNode node : nodes) {
             List<OptionRequest> optionRequests =
-                    optionMapper.findByNodeId(node.getId()).stream()
+                    optionMapper.findByNodeId(node.getScenarioNodeNo()).stream()
                             .sorted(
                                     Comparator.comparingInt(ScenarioNodeOption::getSortOrder)
                                             .thenComparing(
-                                                    ScenarioNodeOption::getId,
+                                                    ScenarioNodeOption::getScenarioNodeOptionNo,
                                                     Comparator.nullsLast(Long::compareTo)))
                             .map(
                                     option ->
                                             new OptionRequest(
                                                     option.getLabel(),
-                                                    nextNodeKey(byId, option.getNextNodeId()),
+                                                    nextNodeKey(byId, option.getNextNodeNo()),
                                                     option.getConditionExpr(),
                                                     option.getSortOrder(),
-                                                    option.isEnabled()))
+                                                    option.getUseYn()))
                             .toList();
             nodeRequests.add(
                     new NodeRequest(
@@ -392,7 +396,7 @@ public class ScenarioService {
                             node.getMetadata(),
                             optionRequests));
         }
-        String startNodeKey = nextNodeKey(byId, version.getStartNodeId());
+        String startNodeKey = nextNodeKey(byId, version.getStartNodeNo());
         return new ScenarioGraphDtos.SaveRequest(startNodeKey, nodeRequests);
     }
 
@@ -410,7 +414,10 @@ public class ScenarioService {
             return null;
         }
         return versions.stream()
-                .filter(version -> excludedVersionId == null || !excludedVersionId.equals(version.getId()))
+                .filter(
+                        version ->
+                                excludedVersionId == null
+                                        || !excludedVersionId.equals(version.getScenarioVersionNo()))
                 .filter(version -> !"DRAFT".equals(version.getStatus()))
                 .findFirst()
                 .orElse(null);
@@ -420,7 +427,7 @@ public class ScenarioService {
         if (source == null) {
             return;
         }
-        List<ScenarioNode> sourceNodes = nodeMapper.findByVersionId(source.getId());
+        List<ScenarioNode> sourceNodes = nodeMapper.findByVersionId(source.getScenarioVersionNo());
         if (sourceNodes.isEmpty()) {
             return;
         }
@@ -428,7 +435,7 @@ public class ScenarioService {
         Map<Long, ScenarioNode> copiedBySourceId = new LinkedHashMap<>();
         for (ScenarioNode sourceNode : sourceNodes) {
             ScenarioNode copied = new ScenarioNode();
-            copied.setVersionId(targetVersionId);
+            copied.setVersionNo(targetVersionId);
             copied.setNodeKey(sourceNode.getNodeKey());
             copied.setNodeType(sourceNode.getNodeType());
             copied.setTitle(sourceNode.getTitle());
@@ -436,27 +443,29 @@ public class ScenarioService {
             copied.setSortOrder(sourceNode.getSortOrder());
             copied.setMetadata(hasText(sourceNode.getMetadata()) ? sourceNode.getMetadata() : "{}");
             nodeMapper.insert(copied);
-            copiedBySourceId.put(sourceNode.getId(), copied);
+            copiedBySourceId.put(sourceNode.getScenarioNodeNo(), copied);
         }
 
         for (ScenarioNode sourceNode : sourceNodes) {
-            ScenarioNode copiedNode = copiedBySourceId.get(sourceNode.getId());
-            for (ScenarioNodeOption sourceOption : optionMapper.findByNodeId(sourceNode.getId())) {
+            ScenarioNode copiedNode = copiedBySourceId.get(sourceNode.getScenarioNodeNo());
+            for (ScenarioNodeOption sourceOption :
+                    optionMapper.findByNodeId(sourceNode.getScenarioNodeNo())) {
                 ScenarioNodeOption copiedOption = new ScenarioNodeOption();
-                copiedOption.setNodeId(copiedNode.getId());
-                ScenarioNode copiedNext = copiedBySourceId.get(sourceOption.getNextNodeId());
-                copiedOption.setNextNodeId(copiedNext == null ? null : copiedNext.getId());
+                copiedOption.setNodeNo(copiedNode.getScenarioNodeNo());
+                ScenarioNode copiedNext = copiedBySourceId.get(sourceOption.getNextNodeNo());
+                copiedOption.setNextNodeNo(
+                        copiedNext == null ? null : copiedNext.getScenarioNodeNo());
                 copiedOption.setLabel(sourceOption.getLabel());
                 copiedOption.setConditionExpr(sourceOption.getConditionExpr());
                 copiedOption.setSortOrder(sourceOption.getSortOrder());
-                copiedOption.setEnabled(sourceOption.isEnabled());
+                copiedOption.setUseYn(sourceOption.getUseYn());
                 optionMapper.insert(copiedOption);
             }
         }
 
-        ScenarioNode copiedStart = copiedBySourceId.get(source.getStartNodeId());
+        ScenarioNode copiedStart = copiedBySourceId.get(source.getStartNodeNo());
         if (copiedStart != null) {
-            versionMapper.setStartNode(targetVersionId, copiedStart.getId());
+            versionMapper.setStartNode(targetVersionId, copiedStart.getScenarioNodeNo());
         }
     }
 

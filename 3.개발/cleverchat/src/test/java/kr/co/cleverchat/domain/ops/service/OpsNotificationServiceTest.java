@@ -40,7 +40,7 @@ class OpsNotificationServiceTest {
         doAnswer(
                         invocation -> {
                             NotificationChannel channel = invocation.getArgument(0);
-                            channel.setId(7L);
+                            channel.setNotificationChannelNo(7L);
                             return null;
                         })
                 .when(opsMapper)
@@ -51,7 +51,7 @@ class OpsNotificationServiceTest {
         var result =
                 service.createChannel(
                         new NotificationChannelRequest(
-                                " Ops ", null, true, "OPS_WEBHOOK_URL", null, null),
+                                " Ops ", null, "Y", "OPS_WEBHOOK_URL", null, null),
                         3L);
 
         assertThat(result).isSameAs(stored);
@@ -69,7 +69,7 @@ class OpsNotificationServiceTest {
         doAnswer(
                         invocation -> {
                             NotificationChannel channel = invocation.getArgument(0);
-                            channel.setId(8L);
+                            channel.setNotificationChannelNo(8L);
                             return null;
                         })
                 .when(opsMapper)
@@ -83,7 +83,7 @@ class OpsNotificationServiceTest {
                 new NotificationChannelRequest(
                         "Slack",
                         "slack_webhook",
-                        true,
+                        "Y",
                         "OPS_SLACK_WEBHOOK_URL",
                         "OPS_SLACK_WEBHOOK_OLD_URL",
                         60),
@@ -104,7 +104,7 @@ class OpsNotificationServiceTest {
                         () ->
                                 service.createChannel(
                                         new NotificationChannelRequest(
-                                                "Ops", "EMAIL", true, "OPS_WEBHOOK_URL", null, 60),
+                                                "Ops", "EMAIL", "Y", "OPS_WEBHOOK_URL", null, 60),
                                         3L))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Unsupported notification channel type");
@@ -115,7 +115,7 @@ class OpsNotificationServiceTest {
         doAnswer(
                         invocation -> {
                             NotificationChannel channel = invocation.getArgument(0);
-                            channel.setId(9L);
+                            channel.setNotificationChannelNo(9L);
                             return null;
                         })
                 .when(opsMapper)
@@ -127,7 +127,7 @@ class OpsNotificationServiceTest {
 
         service.createChannel(
                 new NotificationChannelRequest(
-                        "Email", "email_smtp", true, "OPS_ALERT_EMAIL_TO", "IGNORED_OLD_KEY", 60),
+                        "Email", "email_smtp", "Y", "OPS_ALERT_EMAIL_TO", "IGNORED_OLD_KEY", 60),
                 3L);
 
         ArgumentCaptor<NotificationChannel> captor =
@@ -303,7 +303,7 @@ class OpsNotificationServiceTest {
     void crawlFailureCreatesSingleEventAndSends() {
         NotificationChannel channel = channel(2L, "Ops", true);
         CrawlRunLog runLog = new CrawlRunLog();
-        runLog.setId(11L);
+        runLog.setCrawlRunLogNo(11L);
         when(opsMapper.findOpenNotificationEvent("CRAWL_RUN_FAILED", "CRAWL_RUN_LOG", "11"))
                 .thenReturn(null);
         when(opsMapper.findNotificationChannels(true)).thenReturn(List.of(channel));
@@ -330,7 +330,7 @@ class OpsNotificationServiceTest {
         when(opsMapper.findNotificationEventById(100L)).thenReturn(existing);
         when(opsMapper.findNotificationChannels(true)).thenReturn(List.of());
         CrawlRunLog runLog = new CrawlRunLog();
-        runLog.setId(11L);
+        runLog.setCrawlRunLogNo(11L);
 
         service.notifyCrawlFailure(runLog);
 
@@ -363,8 +363,8 @@ class OpsNotificationServiceTest {
         doAnswer(
                         invocation -> {
                             NotificationEvent event = invocation.getArgument(0);
-                            event.setId(100L);
-                            event.setCreatedAt(OffsetDateTime.parse("2026-05-28T10:00:00+09:00"));
+                            event.setNotificationEventNo(100L);
+                            event.setFrstRegDt(OffsetDateTime.parse("2026-05-28T10:00:00+09:00"));
                             when(opsMapper.findNotificationEventById(100L)).thenReturn(event);
                             return null;
                         })
@@ -392,10 +392,10 @@ class OpsNotificationServiceTest {
 
     private NotificationChannel channel(Long id, String name, boolean enabled) {
         NotificationChannel channel = new NotificationChannel();
-        channel.setId(id);
+        channel.setNotificationChannelNo(id);
         channel.setName(name);
         channel.setType("WEBHOOK");
-        channel.setEnabled(enabled);
+        channel.setUseYn(enabled ? "Y" : "N");
         channel.setEndpointEnvKey("OPS_WEBHOOK_URL");
         channel.setRateLimitPerHour(60);
         return channel;
@@ -403,7 +403,7 @@ class OpsNotificationServiceTest {
 
     private NotificationEvent event(Long id, String status, int attempts) {
         NotificationEvent event = new NotificationEvent();
-        event.setId(id);
+        event.setNotificationEventNo(id);
         event.setEventType("CRAWL_RUN_FAILED");
         event.setSourceType("CRAWL_RUN_LOG");
         event.setSourceId("11");
@@ -411,7 +411,7 @@ class OpsNotificationServiceTest {
         event.setSummary("Crawl run failed: #11");
         event.setStatus(status);
         event.setAttemptCount(attempts);
-        event.setCreatedAt(OffsetDateTime.parse("2026-05-28T10:00:00+09:00"));
+        event.setFrstRegDt(OffsetDateTime.parse("2026-05-28T10:00:00+09:00"));
         return event;
     }
 }

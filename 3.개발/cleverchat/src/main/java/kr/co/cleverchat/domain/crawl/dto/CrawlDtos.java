@@ -18,7 +18,7 @@ public final class CrawlDtos {
     public record TargetRequest(
             @NotBlank @Size(max = 1000) String url,
             @Size(max = 200) String label,
-            Boolean enabled,
+            @Pattern(regexp = "Y|N") String useYn,
             Boolean scheduleEnabled,
             @Min(5) @Max(10080) Integer scheduleIntervalMinutes,
             @Pattern(regexp = "INTERVAL|CRON") String scheduleMode,

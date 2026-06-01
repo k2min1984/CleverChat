@@ -77,7 +77,7 @@
             var payload = Object.assign({
                 url: form.querySelector('[name="url"]').value,
                 label: form.querySelector('[name="label"]').value,
-                enabled: form.querySelector('[name="enabled"]').checked
+                useYn: form.querySelector('[name="useYn"]').checked ? 'Y' : 'N'
             }, schedulePayload(form));
             setStatus('Creating crawl target...');
             fetch('/admin/api/crawl-targets', {

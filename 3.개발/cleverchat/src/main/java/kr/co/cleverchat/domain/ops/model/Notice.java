@@ -4,24 +4,24 @@ import java.time.OffsetDateTime;
 
 public class Notice {
 
-    private Long id;
+    private Long noticeNo;
     private String title;
     private String content;
-    private boolean enabled;
+    private String useYn;
     private OffsetDateTime startsAt;
     private OffsetDateTime endsAt;
     private int priority;
-    private Long createdBy;
-    private Long updatedBy;
-    private OffsetDateTime createdAt;
-    private OffsetDateTime updatedAt;
+    private Long frstRegrEmpno;
+    private Long lstChgrEmpno;
+    private OffsetDateTime frstRegDt;
+    private OffsetDateTime lstChgDt;
 
-    public Long getId() {
-        return id;
+    public Long getNoticeNo() {
+        return noticeNo;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setNoticeNo(Long noticeNo) {
+        this.noticeNo = noticeNo;
     }
 
     public String getTitle() {
@@ -40,12 +40,12 @@ public class Notice {
         this.content = content;
     }
 
-    public boolean isEnabled() {
-        return enabled;
+    public String getUseYn() {
+        return useYn;
     }
 
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
+    public void setUseYn(String useYn) {
+        this.useYn = useYn;
     }
 
     public OffsetDateTime getStartsAt() {
@@ -72,35 +72,35 @@ public class Notice {
         this.priority = priority;
     }
 
-    public Long getCreatedBy() {
-        return createdBy;
+    public Long getFrstRegrEmpno() {
+        return frstRegrEmpno;
     }
 
-    public void setCreatedBy(Long createdBy) {
-        this.createdBy = createdBy;
+    public void setFrstRegrEmpno(Long frstRegrEmpno) {
+        this.frstRegrEmpno = frstRegrEmpno;
     }
 
-    public Long getUpdatedBy() {
-        return updatedBy;
+    public Long getLstChgrEmpno() {
+        return lstChgrEmpno;
     }
 
-    public void setUpdatedBy(Long updatedBy) {
-        this.updatedBy = updatedBy;
+    public void setLstChgrEmpno(Long lstChgrEmpno) {
+        this.lstChgrEmpno = lstChgrEmpno;
     }
 
-    public OffsetDateTime getCreatedAt() {
-        return createdAt;
+    public OffsetDateTime getFrstRegDt() {
+        return frstRegDt;
     }
 
-    public void setCreatedAt(OffsetDateTime createdAt) {
-        this.createdAt = createdAt;
+    public void setFrstRegDt(OffsetDateTime frstRegDt) {
+        this.frstRegDt = frstRegDt;
     }
 
-    public OffsetDateTime getUpdatedAt() {
-        return updatedAt;
+    public OffsetDateTime getLstChgDt() {
+        return lstChgDt;
     }
 
-    public void setUpdatedAt(OffsetDateTime updatedAt) {
-        this.updatedAt = updatedAt;
+    public void setLstChgDt(OffsetDateTime lstChgDt) {
+        this.lstChgDt = lstChgDt;
     }
 }

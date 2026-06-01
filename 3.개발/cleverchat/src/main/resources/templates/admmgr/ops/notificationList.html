@@ -71,40 +71,40 @@
                     </thead>
                     <tbody>
                     <tr th:each="channel : ${channels}">
-                        <td th:text="${channel.id}">1</td>
+                        <td th:text="${channel.notificationChannelNo}">1</td>
                         <td>
-                            <input th:attr="aria-label=${'Name for notification channel ' + channel.id}"
+                            <input th:attr="aria-label=${'Name for notification channel ' + channel.notificationChannelNo}"
                                    name="name" maxlength="100" th:value="${channel.name}">
                         </td>
                         <td>
-                            <select name="type" th:attr="aria-label=${'Type for notification channel ' + channel.id}">
+                            <select name="type" th:attr="aria-label=${'Type for notification channel ' + channel.notificationChannelNo}">
                                 <option value="WEBHOOK" th:selected="${channel.type == 'WEBHOOK'}">Generic webhook</option>
                                 <option value="SLACK_WEBHOOK" th:selected="${channel.type == 'SLACK_WEBHOOK'}">Slack webhook</option>
                                 <option value="EMAIL_SMTP" th:selected="${channel.type == 'EMAIL_SMTP'}">Email SMTP</option>
                             </select>
                         </td>
                         <td>
-                            <input th:attr="aria-label=${'Endpoint env key for notification channel ' + channel.id}"
+                            <input th:attr="aria-label=${'Endpoint env key for notification channel ' + channel.notificationChannelNo}"
                                    name="endpointEnvKey" maxlength="100" pattern="[A-Z0-9_]{3,100}" th:value="${channel.endpointEnvKey}">
                         </td>
                         <td>
-                            <input th:attr="aria-label=${'Previous endpoint env key for notification channel ' + channel.id}"
+                            <input th:attr="aria-label=${'Previous endpoint env key for notification channel ' + channel.notificationChannelNo}"
                                    name="previousEndpointEnvKey" maxlength="100" pattern="[A-Z0-9_]{3,100}" th:value="${channel.previousEndpointEnvKey}">
                         </td>
                         <td>
                             <label>
-                                <input name="enabled" type="checkbox" th:checked="${channel.enabled}">
+                                <input name="enabled" type="checkbox" th:checked="${channel.useYn == 'Y'}">
                                 Enabled
                             </label>
                         </td>
                         <td>
-                            <input th:attr="aria-label=${'Rate limit for notification channel ' + channel.id}"
+                            <input th:attr="aria-label=${'Rate limit for notification channel ' + channel.notificationChannelNo}"
                                    name="rateLimitPerHour" type="number" min="1" max="1000" th:value="${channel.rateLimitPerHour}">
                         </td>
-                        <td th:text="${channel.updatedAt == null ? '-' : #temporals.format(channel.updatedAt, 'yyyy-MM-dd HH:mm')}">2026-05-28 10:00</td>
+                        <td th:text="${channel.lstChgDt == null ? '-' : #temporals.format(channel.lstChgDt, 'yyyy-MM-dd HH:mm')}">2026-05-28 10:00</td>
                         <td>
-                            <button type="button" th:data-save-channel-id="${channel.id}">Save</button>
-                            <button type="button" th:data-test-channel-id="${channel.id}">Test</button>
+                            <button type="button" th:data-save-channel-id="${channel.notificationChannelNo}">Save</button>
+                            <button type="button" th:data-test-channel-id="${channel.notificationChannelNo}">Test</button>
                         </td>
                     </tr>
                     <tr th:if="${#lists.isEmpty(channels)}">
@@ -134,7 +134,7 @@
                     </thead>
                     <tbody>
                     <tr th:each="event : ${events}">
-                        <td th:text="${event.id}">1</td>
+                        <td th:text="${event.notificationEventNo}">1</td>
                         <td th:text="${event.eventType}">CRAWL_RUN_FAILED</td>
                         <td th:text="${event.sourceType + '#' + event.sourceId}">CRAWL_RUN_LOG#1</td>
                         <td th:text="${event.severity}">ERROR</td>
@@ -142,9 +142,9 @@
                         <td th:text="${event.attemptCount}">1</td>
                         <td th:text="${event.summary}">Summary</td>
                         <td th:text="${event.reviewed ? 'Reviewed' : 'Open'}">Open</td>
-                        <td th:text="${event.createdAt == null ? '-' : #temporals.format(event.createdAt, 'yyyy-MM-dd HH:mm')}">2026-05-28 10:00</td>
+                        <td th:text="${event.frstRegDt == null ? '-' : #temporals.format(event.frstRegDt, 'yyyy-MM-dd HH:mm')}">2026-05-28 10:00</td>
                         <td>
-                            <button type="button" th:if="${!event.reviewed}" th:data-review-event-id="${event.id}">Review</button>
+                            <button type="button" th:if="${!event.reviewed}" th:data-review-event-id="${event.notificationEventNo}">Review</button>
                         </td>
                     </tr>
                     <tr th:if="${#lists.isEmpty(events)}">

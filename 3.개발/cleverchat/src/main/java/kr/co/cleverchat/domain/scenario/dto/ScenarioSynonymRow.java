@@ -2,25 +2,25 @@ package kr.co.cleverchat.domain.scenario.dto;
 
 public class ScenarioSynonymRow {
 
-    private Long scenarioId;
-    private Long keywordId;
+    private Long scenarioNo;
+    private Long keywordNo;
     private String synonym;
     private int weight;
 
-    public Long getScenarioId() {
-        return scenarioId;
+    public Long getScenarioNo() {
+        return scenarioNo;
     }
 
-    public void setScenarioId(Long scenarioId) {
-        this.scenarioId = scenarioId;
+    public void setScenarioNo(Long scenarioNo) {
+        this.scenarioNo = scenarioNo;
     }
 
-    public Long getKeywordId() {
-        return keywordId;
+    public Long getKeywordNo() {
+        return keywordNo;
     }
 
-    public void setKeywordId(Long keywordId) {
-        this.keywordId = keywordId;
+    public void setKeywordNo(Long keywordNo) {
+        this.keywordNo = keywordNo;
     }
 
     public String getSynonym() {

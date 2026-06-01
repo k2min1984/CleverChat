@@ -4,7 +4,7 @@
 <mapper namespace="kr.co.cleverchat.common.audit.AuditLogMapper">
 
     <insert id="insert">
-        INSERT INTO audit_log (
+        INSERT INTO tb_audit_log (
             actor,
             action,
             target_type,

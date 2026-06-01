@@ -37,7 +37,7 @@
         return {
             title: scope.querySelector('[name="title"]').value,
             content: scope.querySelector('[name="content"]').value,
-            enabled: scope.querySelector('[name="enabled"]').checked,
+            useYn: scope.querySelector('[name="enabled"]').checked ? 'Y' : 'N',
             startsAt: normalizeDateTime(scope.querySelector('[name="startsAt"]').value),
             endsAt: normalizeDateTime(scope.querySelector('[name="endsAt"]').value),
             priority: Number(scope.querySelector('[name="priority"]').value || 100)

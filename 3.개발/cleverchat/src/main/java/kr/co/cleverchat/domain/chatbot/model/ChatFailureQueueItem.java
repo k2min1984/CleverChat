@@ -4,9 +4,9 @@ import java.time.OffsetDateTime;
 
 public class ChatFailureQueueItem {
 
-    private Long id;
+    private Long chatFailureNo;
     private String sessionKey;
-    private Long messageId;
+    private Long messageNo;
     private String reason;
     private String detail;
     private boolean reviewed;
@@ -16,17 +16,17 @@ public class ChatFailureQueueItem {
     private String reviewCommentCiphertext;
     private String reviewCommentKeyId;
     private Integer reviewCommentEncryptionVersion;
-    private OffsetDateTime createdAt;
-    private Long scenarioId;
+    private OffsetDateTime frstRegDt;
+    private Long scenarioNo;
     private String scenarioTitle;
-    private Long currentNodeId;
+    private Long currentNodeNo;
 
-    public Long getId() {
-        return id;
+    public Long getChatFailureNo() {
+        return chatFailureNo;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setChatFailureNo(Long chatFailureNo) {
+        this.chatFailureNo = chatFailureNo;
     }
 
     public String getSessionKey() {
@@ -37,12 +37,12 @@ public class ChatFailureQueueItem {
         this.sessionKey = sessionKey;
     }
 
-    public Long getMessageId() {
-        return messageId;
+    public Long getMessageNo() {
+        return messageNo;
     }
 
-    public void setMessageId(Long messageId) {
-        this.messageId = messageId;
+    public void setMessageNo(Long messageNo) {
+        this.messageNo = messageNo;
     }
 
     public String getReason() {
@@ -117,20 +117,20 @@ public class ChatFailureQueueItem {
         this.reviewCommentEncryptionVersion = reviewCommentEncryptionVersion;
     }
 
-    public OffsetDateTime getCreatedAt() {
-        return createdAt;
+    public OffsetDateTime getFrstRegDt() {
+        return frstRegDt;
     }
 
-    public void setCreatedAt(OffsetDateTime createdAt) {
-        this.createdAt = createdAt;
+    public void setFrstRegDt(OffsetDateTime frstRegDt) {
+        this.frstRegDt = frstRegDt;
     }
 
-    public Long getScenarioId() {
-        return scenarioId;
+    public Long getScenarioNo() {
+        return scenarioNo;
     }
 
-    public void setScenarioId(Long scenarioId) {
-        this.scenarioId = scenarioId;
+    public void setScenarioNo(Long scenarioNo) {
+        this.scenarioNo = scenarioNo;
     }
 
     public String getScenarioTitle() {
@@ -141,11 +141,11 @@ public class ChatFailureQueueItem {
         this.scenarioTitle = scenarioTitle;
     }
 
-    public Long getCurrentNodeId() {
-        return currentNodeId;
+    public Long getCurrentNodeNo() {
+        return currentNodeNo;
     }
 
-    public void setCurrentNodeId(Long currentNodeId) {
-        this.currentNodeId = currentNodeId;
+    public void setCurrentNodeNo(Long currentNodeNo) {
+        this.currentNodeNo = currentNodeNo;
     }
 }

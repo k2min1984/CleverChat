@@ -38,8 +38,8 @@
                 </thead>
                 <tbody>
                 <tr th:each="document : ${documents}">
-                    <td th:text="${document.id}">1</td>
-                    <td th:text="${document.targetId}">10</td>
+                    <td th:text="${document.crawlDocumentNo}">1</td>
+                    <td th:text="${document.targetNo}">10</td>
                     <td th:text="${document.status}">SUCCESS</td>
                     <td th:text="${document.title ?: '-'}">Help</td>
                     <td><a th:href="${document.url}" th:text="${document.url}" target="_blank" rel="noopener noreferrer">https://example.com</a></td>

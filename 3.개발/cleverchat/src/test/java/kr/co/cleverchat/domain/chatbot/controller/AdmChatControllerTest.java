@@ -58,7 +58,7 @@ class AdmChatControllerTest {
     @Test
     void sessionDetailPageRendersTrace() throws Exception {
         ChatSessionListItem session = new ChatSessionListItem();
-        session.setId("00000000-0000-0000-0000-000000000001");
+        session.setChatSessionNo("00000000-0000-0000-0000-000000000001");
         when(chatAdminService.sessionDetail("00000000-0000-0000-0000-000000000001"))
                 .thenReturn(new SessionDetailResponse(session, List.of(), List.of()));
 

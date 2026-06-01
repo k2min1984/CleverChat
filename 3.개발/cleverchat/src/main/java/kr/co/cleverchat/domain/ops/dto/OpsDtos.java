@@ -19,7 +19,7 @@ public final class OpsDtos {
     public record NoticeRequest(
             @NotBlank @Size(max = 200) String title,
             @NotBlank @Size(max = 4000) String content,
-            Boolean enabled,
+            String useYn,
             OffsetDateTime startsAt,
             OffsetDateTime endsAt,
             @Min(0) @Max(10000) Integer priority) {}
@@ -27,7 +27,7 @@ public final class OpsDtos {
     public record NotificationChannelRequest(
             @NotBlank @Size(max = 100) String name,
             String type,
-            Boolean enabled,
+            String useYn,
             @NotBlank @Pattern(regexp = "[A-Z0-9_]{3,100}") String endpointEnvKey,
             @Pattern(regexp = "[A-Z0-9_]{3,100}") String previousEndpointEnvKey,
             @Min(1) @Max(1000) Integer rateLimitPerHour) {}

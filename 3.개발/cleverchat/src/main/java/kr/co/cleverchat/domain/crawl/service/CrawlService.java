@@ -77,7 +77,8 @@ public class CrawlService {
 
     @Transactional(readOnly = true)
     public List<CrawlTarget> targets(Boolean enabled) {
-        return crawlMapper.findTargets(enabled);
+        String useYn = enabled == null ? null : (enabled ? "Y" : "N");
+        return crawlMapper.findTargets(useYn);
     }
 
     @Transactional(readOnly = true)
@@ -98,8 +99,8 @@ public class CrawlService {
         CrawlTarget target = new CrawlTarget();
         target.setUrl(normalizedUrl);
         target.setLabel(blankToNull(request.label()));
-        target.setEnabled(request.enabled() == null || request.enabled());
-        target.setCreatedBy(adminId);
+        target.setUseYn("N".equals(request.useYn()) ? "N" : "Y");
+        target.setFrstRegrEmpno(adminId);
         applySchedule(
                 target,
                 request.scheduleEnabled(),
@@ -107,7 +108,7 @@ public class CrawlService {
                 request.scheduleMode(),
                 request.scheduleCron());
         crawlMapper.insertTarget(target);
-        return crawlMapper.findTargetById(target.getId());
+        return crawlMapper.findTargetById(target.getCrawlTargetNo());
     }
 
     @Transactional
@@ -117,13 +118,13 @@ public class CrawlService {
         URI uri = urlPolicy.validateAndNormalize(request.url());
         String normalizedUrl = uri.toString();
         CrawlTarget duplicate = crawlMapper.findTargetByUrl(normalizedUrl);
-        if (duplicate != null && !duplicate.getId().equals(id)) {
+        if (duplicate != null && !duplicate.getCrawlTargetNo().equals(id)) {
             throw new BusinessException(
                     ErrorCode.DUPLICATE_RESOURCE, "Crawl target already exists.");
         }
         target.setUrl(normalizedUrl);
         target.setLabel(blankToNull(request.label()));
-        target.setEnabled(request.enabled() == null || request.enabled());
+        target.setUseYn("N".equals(request.useYn()) ? "N" : "Y");
         applySchedule(
                 target,
                 request.scheduleEnabled(),
@@ -230,7 +231,7 @@ public class CrawlService {
     @RequireRole("OPERATOR")
     public RunResponse run(Long targetId) {
         CrawlTarget target = requireTarget(targetId);
-        if (!target.isEnabled()) {
+        if (!"Y".equals(target.getUseYn())) {
             throw new BusinessException(
                     ErrorCode.STATE_CONFLICT, "Disabled crawl targets cannot be run.");
         }
@@ -261,12 +262,12 @@ public class CrawlService {
             if (duplicate != null) {
                 runLog.setStatus("DUPLICATE");
                 runLog.setFailureCode("DUP_HASH");
-                runLog.setDocumentId(duplicate.getId());
+                runLog.setDocumentNo(duplicate.getCrawlDocumentNo());
                 runLog.setHttpStatus(fetched.httpStatus());
                 runLog.setMessage(
                         withRobotsMessage(
                                 "Duplicate content hash. Existing document #"
-                                        + duplicate.getId()
+                                        + duplicate.getCrawlDocumentNo()
                                         + ".",
                                 robotsDecision));
                 finishRun(runLog, startedAt);
@@ -274,7 +275,7 @@ public class CrawlService {
             }
             crawlMapper.insertDocument(document);
             runLog.setStatus("SUCCESS");
-            runLog.setDocumentId(document.getId());
+            runLog.setDocumentNo(document.getCrawlDocumentNo());
             runLog.setHttpStatus(fetched.httpStatus());
             runLog.setMessage(
                     withRobotsMessage(
@@ -368,15 +369,15 @@ public class CrawlService {
     private void scheduleNextRun(CrawlTarget target) {
         try {
             OffsetDateTime next = nextRunAt(target, OffsetDateTime.now());
-            crawlMapper.updateNextRunAt(target.getId(), next);
+            crawlMapper.updateNextRunAt(target.getCrawlTargetNo(), next);
         } catch (RuntimeException e) {
-            CrawlRunLog runLog = baseRunLog(target.getId());
+            CrawlRunLog runLog = baseRunLog(target.getCrawlTargetNo());
             runLog.setStatus("FAILED");
             runLog.setFailureCode("SCHEDULE_INVALID");
             runLog.setMessage("Invalid crawl schedule. Automatic run has been paused.");
             finishRun(runLog, System.nanoTime());
-            crawlMapper.updateNextRunAt(target.getId(), null);
-            log.warn("Failed to compute next crawl schedule: targetId={}", target.getId());
+            crawlMapper.updateNextRunAt(target.getCrawlTargetNo(), null);
+            log.warn("Failed to compute next crawl schedule: targetId={}", target.getCrawlTargetNo());
         }
     }
 
@@ -472,7 +473,7 @@ public class CrawlService {
     private CrawlDocument buildDocument(
             Long targetId, CrawlFetcher.FetchedPage fetched, ParsedPage parsed) {
         CrawlDocument document = new CrawlDocument();
-        document.setTargetId(targetId);
+        document.setTargetNo(targetId);
         document.setUrl(fetched.finalUrl());
         document.setTitle(parsed.title());
         document.setContent(parsed.content());
@@ -486,7 +487,7 @@ public class CrawlService {
 
     private CrawlRunLog baseRunLog(Long targetId) {
         CrawlRunLog runLog = new CrawlRunLog();
-        runLog.setTargetId(targetId);
+        runLog.setTargetNo(targetId);
         return runLog;
     }
 
@@ -495,7 +496,7 @@ public class CrawlService {
         runLog.setMessage(truncate(runLog.getMessage()));
         crawlMapper.insertRunLog(runLog);
         crawlMapper.updateTargetRunStatus(
-                runLog.getTargetId(), runLog.getStatus(), runLog.getMessage());
+                runLog.getTargetNo(), runLog.getStatus(), runLog.getMessage());
     }
 
     private void notifyFailure(CrawlRunLog runLog) {
@@ -503,7 +504,7 @@ public class CrawlService {
             try {
                 notificationService.notifyCrawlFailure(runLog);
             } catch (RuntimeException e) {
-                log.warn("Crawl failure notification failed: runLogId={}", runLog.getId());
+                log.warn("Crawl failure notification failed: runLogId={}", runLog.getCrawlRunLogNo());
             }
         }
     }

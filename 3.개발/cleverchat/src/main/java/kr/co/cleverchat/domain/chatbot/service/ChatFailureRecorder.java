@@ -29,8 +29,8 @@ public class ChatFailureRecorder {
     public void recordFailure(
             String sessionId, Long messageId, String reason, Map<String, ?> detail) {
         ChatFailure failure = new ChatFailure();
-        failure.setSessionId(sessionId);
-        failure.setMessageId(messageId);
+        failure.setSessionNo(sessionId);
+        failure.setMessageNo(messageId);
         failure.setReason(reason);
         failure.setDetail(toJson(detail));
         failureMapper.insert(failure);

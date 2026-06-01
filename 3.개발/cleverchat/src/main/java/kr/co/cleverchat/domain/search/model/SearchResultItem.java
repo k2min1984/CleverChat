@@ -2,20 +2,20 @@ package kr.co.cleverchat.domain.search.model;
 
 public class SearchResultItem {
 
-    private Long scenarioId;
+    private Long scenarioNo;
     private String scenarioTitle;
-    private Long crawlDocumentId;
+    private Long crawlDocumentNo;
     private String crawlUrl;
     private String matchedField;
     private double score;
     private String snippet;
 
-    public Long getScenarioId() {
-        return scenarioId;
+    public Long getScenarioNo() {
+        return scenarioNo;
     }
 
-    public void setScenarioId(Long scenarioId) {
-        this.scenarioId = scenarioId;
+    public void setScenarioNo(Long scenarioNo) {
+        this.scenarioNo = scenarioNo;
     }
 
     public String getScenarioTitle() {
@@ -26,12 +26,12 @@ public class SearchResultItem {
         this.scenarioTitle = scenarioTitle;
     }
 
-    public Long getCrawlDocumentId() {
-        return crawlDocumentId;
+    public Long getCrawlDocumentNo() {
+        return crawlDocumentNo;
     }
 
-    public void setCrawlDocumentId(Long crawlDocumentId) {
-        this.crawlDocumentId = crawlDocumentId;
+    public void setCrawlDocumentNo(Long crawlDocumentNo) {
+        this.crawlDocumentNo = crawlDocumentNo;
     }
 
     public String getCrawlUrl() {

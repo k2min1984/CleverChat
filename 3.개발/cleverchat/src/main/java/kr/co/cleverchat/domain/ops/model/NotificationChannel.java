@@ -3,24 +3,24 @@ package kr.co.cleverchat.domain.ops.model;
 import java.time.OffsetDateTime;
 
 public class NotificationChannel {
-    private Long id;
+    private Long notificationChannelNo;
     private String name;
     private String type;
-    private boolean enabled;
+    private String useYn;
     private String endpointEnvKey;
     private String previousEndpointEnvKey;
     private Integer rateLimitPerHour;
-    private Long createdBy;
-    private Long updatedBy;
-    private OffsetDateTime createdAt;
-    private OffsetDateTime updatedAt;
+    private Long frstRegrEmpno;
+    private Long lstChgrEmpno;
+    private OffsetDateTime frstRegDt;
+    private OffsetDateTime lstChgDt;
 
-    public Long getId() {
-        return id;
+    public Long getNotificationChannelNo() {
+        return notificationChannelNo;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setNotificationChannelNo(Long notificationChannelNo) {
+        this.notificationChannelNo = notificationChannelNo;
     }
 
     public String getName() {
@@ -39,12 +39,12 @@ public class NotificationChannel {
         this.type = type;
     }
 
-    public boolean isEnabled() {
-        return enabled;
+    public String getUseYn() {
+        return useYn;
     }
 
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
+    public void setUseYn(String useYn) {
+        this.useYn = useYn;
     }
 
     public String getEndpointEnvKey() {
@@ -71,35 +71,35 @@ public class NotificationChannel {
         this.rateLimitPerHour = rateLimitPerHour;
     }
 
-    public Long getCreatedBy() {
-        return createdBy;
+    public Long getFrstRegrEmpno() {
+        return frstRegrEmpno;
     }
 
-    public void setCreatedBy(Long createdBy) {
-        this.createdBy = createdBy;
+    public void setFrstRegrEmpno(Long frstRegrEmpno) {
+        this.frstRegrEmpno = frstRegrEmpno;
     }
 
-    public Long getUpdatedBy() {
-        return updatedBy;
+    public Long getLstChgrEmpno() {
+        return lstChgrEmpno;
     }
 
-    public void setUpdatedBy(Long updatedBy) {
-        this.updatedBy = updatedBy;
+    public void setLstChgrEmpno(Long lstChgrEmpno) {
+        this.lstChgrEmpno = lstChgrEmpno;
     }
 
-    public OffsetDateTime getCreatedAt() {
-        return createdAt;
+    public OffsetDateTime getFrstRegDt() {
+        return frstRegDt;
     }
 
-    public void setCreatedAt(OffsetDateTime createdAt) {
-        this.createdAt = createdAt;
+    public void setFrstRegDt(OffsetDateTime frstRegDt) {
+        this.frstRegDt = frstRegDt;
     }
 
-    public OffsetDateTime getUpdatedAt() {
-        return updatedAt;
+    public OffsetDateTime getLstChgDt() {
+        return lstChgDt;
     }
 
-    public void setUpdatedAt(OffsetDateTime updatedAt) {
-        this.updatedAt = updatedAt;
+    public void setLstChgDt(OffsetDateTime lstChgDt) {
+        this.lstChgDt = lstChgDt;
     }
 }

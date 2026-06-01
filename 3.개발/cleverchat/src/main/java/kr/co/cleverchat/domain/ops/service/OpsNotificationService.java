@@ -73,7 +73,7 @@ public class OpsNotificationService {
     public NotificationChannel createChannel(NotificationChannelRequest request, Long actorId) {
         NotificationChannel channel = toChannel(null, request, actorId);
         opsMapper.insertNotificationChannel(channel);
-        return opsMapper.findNotificationChannelById(channel.getId());
+        return opsMapper.findNotificationChannelById(channel.getNotificationChannelNo());
     }
 
     @Transactional
@@ -119,7 +119,7 @@ public class OpsNotificationService {
         opsMapper.insertNotificationEvent(event);
         NotificationEvent delivered = deliverEvent(event, List.of(channel));
         return new NotificationTestResponse(
-                delivered.getId(),
+                delivered.getNotificationEventNo(),
                 "SENT".equals(delivered.getStatus()),
                 delivered.getStatus(),
                 delivered.getLastError() == null ? "SENT" : delivered.getLastError());
@@ -127,16 +127,16 @@ public class OpsNotificationService {
 
     @Transactional
     public void notifyCrawlFailure(CrawlRunLog runLog) {
-        if (runLog == null || runLog.getId() == null) {
+        if (runLog == null || runLog.getCrawlRunLogNo() == null) {
             return;
         }
         NotificationEvent event =
                 findOrCreateOpenEvent(
                         "CRAWL_RUN_FAILED",
                         "CRAWL_RUN_LOG",
-                        String.valueOf(runLog.getId()),
+                        String.valueOf(runLog.getCrawlRunLogNo()),
                         "ERROR",
-                        "Crawl run failed: #" + runLog.getId());
+                        "Crawl run failed: #" + runLog.getCrawlRunLogNo());
         if ("SENT".equals(event.getStatus())) {
             return;
         }
@@ -157,7 +157,7 @@ public class OpsNotificationService {
 
     private NotificationEvent deliverEvent(
             NotificationEvent event, List<NotificationChannel> channels) {
-        NotificationEvent current = opsMapper.findNotificationEventById(event.getId());
+        NotificationEvent current = opsMapper.findNotificationEventById(event.getNotificationEventNo());
         int attempts = current.getAttemptCount() == null ? 0 : current.getAttemptCount();
         if (attempts >= MAX_ATTEMPTS) {
             return current;
@@ -165,18 +165,18 @@ public class OpsNotificationService {
         NotificationChannel channel = firstEnabledChannel(channels);
         if (channel == null) {
             updateDelivery(current, "FAILED", attempts + 1, "NO_ENABLED_CHANNEL");
-            return opsMapper.findNotificationEventById(current.getId());
+            return opsMapper.findNotificationEventById(current.getNotificationEventNo());
         }
-        if (!channel.isEnabled()) {
+        if (!"Y".equals(channel.getUseYn())) {
             updateDelivery(current, "FAILED", attempts + 1, "CHANNEL_DISABLED");
-            return opsMapper.findNotificationEventById(current.getId());
+            return opsMapper.findNotificationEventById(current.getNotificationEventNo());
         }
         DeliveryResult result;
         if (TYPE_EMAIL_SMTP.equals(channel.getType())) {
             RecipientResolution recipients = recipients(channel.getEndpointEnvKey());
             if (recipients.missing()) {
                 updateDelivery(current, "FAILED", attempts + 1, "EMAIL_RECIPIENT_ENV_MISSING");
-                return opsMapper.findNotificationEventById(current.getId());
+                return opsMapper.findNotificationEventById(current.getNotificationEventNo());
             }
             result = sendEmail(current, recipients.values());
         } else {
@@ -185,7 +185,7 @@ public class OpsNotificationService {
                 endpoint = endpoint(channel.getPreviousEndpointEnvKey());
                 if (endpoint.missing()) {
                     updateDelivery(current, "FAILED", attempts + 1, "ENDPOINT_ENV_MISSING");
-                    return opsMapper.findNotificationEventById(current.getId());
+                    return opsMapper.findNotificationEventById(current.getNotificationEventNo());
                 }
             }
             result = sendWebhook(channel, current, endpoint.value());
@@ -202,7 +202,7 @@ public class OpsNotificationService {
             String status = attempts + 1 >= MAX_ATTEMPTS ? "FAILED" : "RETRY";
             updateDelivery(current, status, attempts + 1, result.message());
         }
-        return opsMapper.findNotificationEventById(current.getId());
+        return opsMapper.findNotificationEventById(current.getNotificationEventNo());
     }
 
     private NotificationEvent findOrCreateOpenEvent(
@@ -238,27 +238,27 @@ public class OpsNotificationService {
                         ? OffsetDateTime.now(clock).plusMinutes(Math.min(30, attempts * 5L))
                         : null;
         opsMapper.updateNotificationDelivery(
-                event.getId(), status, attempts, truncate(lastError, 500), nextRetryAt);
+                event.getNotificationEventNo(), status, attempts, truncate(lastError, 500), nextRetryAt);
     }
 
     private NotificationWebhookPayload payload(NotificationEvent event) {
         return new NotificationWebhookPayload(
-                event.getId(),
+                event.getNotificationEventNo(),
                 event.getEventType(),
                 event.getSeverity(),
                 event.getSummary(),
                 "/admin/notifications",
-                event.getCreatedAt() == null ? OffsetDateTime.now(clock) : event.getCreatedAt());
+                event.getFrstRegDt() == null ? OffsetDateTime.now(clock) : event.getFrstRegDt());
     }
 
     private NotificationEmailPayload emailPayload(NotificationEvent event) {
         return new NotificationEmailPayload(
-                event.getId(),
+                event.getNotificationEventNo(),
                 event.getEventType(),
                 event.getSeverity(),
                 event.getSummary(),
                 "/admin/notifications",
-                event.getCreatedAt() == null ? OffsetDateTime.now(clock) : event.getCreatedAt());
+                event.getFrstRegDt() == null ? OffsetDateTime.now(clock) : event.getFrstRegDt());
     }
 
     private SlackWebhookPayload slackPayload(NotificationEvent event) {
@@ -285,7 +285,7 @@ public class OpsNotificationService {
                                                 "mrkdwn",
                                                 "text",
                                                 "Event #"
-                                                        + event.getId()
+                                                        + event.getNotificationEventNo()
                                                         + " | /admin/notifications")))));
     }
 
@@ -305,7 +305,7 @@ public class OpsNotificationService {
 
     private NotificationChannel firstEnabledChannel(List<NotificationChannel> channels) {
         return channels.stream()
-                .filter(NotificationChannel::isEnabled)
+                .filter(channel -> "Y".equals(channel.getUseYn()))
                 .filter(
                         channel ->
                                 TYPE_WEBHOOK.equals(channel.getType())
@@ -335,10 +335,10 @@ public class OpsNotificationService {
             throw new IllegalArgumentException("Unsupported notification channel type.");
         }
         NotificationChannel channel = new NotificationChannel();
-        channel.setId(id);
+        channel.setNotificationChannelNo(id);
         channel.setName(trimRequired(request.name()));
         channel.setType(type);
-        channel.setEnabled(request.enabled() == null || request.enabled());
+        channel.setUseYn("N".equals(request.useYn()) ? "N" : "Y");
         channel.setEndpointEnvKey(trimRequired(request.endpointEnvKey()).toUpperCase());
         channel.setPreviousEndpointEnvKey(
                 TYPE_EMAIL_SMTP.equals(type)
@@ -349,8 +349,8 @@ public class OpsNotificationService {
                 request.rateLimitPerHour() == null
                         ? DEFAULT_RATE_LIMIT_PER_HOUR
                         : request.rateLimitPerHour());
-        channel.setCreatedBy(actorId);
-        channel.setUpdatedBy(actorId);
+        channel.setFrstRegrEmpno(actorId);
+        channel.setLstChgrEmpno(actorId);
         return channel;
     }
 

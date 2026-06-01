@@ -134,13 +134,13 @@
             '<label>다음 노드 키<input type="text" data-field="nextNodeKey" maxlength="80" aria-label="다음 노드 키"></label>' +
             '<label>조건식<input type="text" data-field="conditionExpr" maxlength="500" aria-label="선택지 조건식" placeholder="선택"></label>' +
             '<label>순서<input type="number" data-field="sortOrder" min="1" step="1" aria-label="선택지 정렬 순서"></label>' +
-            '<label class="graph-check"><input type="checkbox" data-field="enabled" aria-label="선택지 사용 여부"> 사용</label>' +
+            '<label class="graph-check"><input type="checkbox" data-field="useYn" aria-label="선택지 사용 여부"> 사용</label>' +
             '<button type="button" class="btn btn-xs btn-secondary red" data-action="removeOption" aria-label="선택지 삭제">삭제</button>';
         row.querySelector('[data-field="label"]').value = op.label || '';
         row.querySelector('[data-field="nextNodeKey"]').value = op.nextNodeKey || '';
         row.querySelector('[data-field="conditionExpr"]').value = op.conditionExpr || '';
         row.querySelector('[data-field="sortOrder"]').value = op.sortOrder || 1;
-        row.querySelector('[data-field="enabled"]').checked = op.enabled !== false;
+        row.querySelector('[data-field="useYn"]').checked = op.useYn !== 'N';
         return row;
     }
 
@@ -184,7 +184,7 @@
                     nextNodeKey: orow.querySelector('[data-field="nextNodeKey"]').value.trim() || null,
                     conditionExpr: orow.querySelector('[data-field="conditionExpr"]').value.trim() || null,
                     sortOrder: parseInt(orow.querySelector('[data-field="sortOrder"]').value, 10) || 1,
-                    enabled: orow.querySelector('[data-field="enabled"]').checked
+                    useYn: orow.querySelector('[data-field="useYn"]').checked ? 'Y' : 'N'
                 });
             });
             nodes.push({
@@ -346,7 +346,7 @@
             dirty = true;
         } else if (act === 'addOption') {
             var ob = e.target.closest('[data-role="node"]').querySelector('[data-role="options"]');
-            ob.appendChild(optionRow({ sortOrder: ob.children.length + 1, enabled: true }));
+            ob.appendChild(optionRow({ sortOrder: ob.children.length + 1, useYn: 'Y' }));
             dirty = true;
         } else if (act === 'removeOption') {
             e.target.closest('[data-role="option"]').remove();
