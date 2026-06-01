@@ -6,23 +6,23 @@ import java.util.List;
 
 public class UserAccount {
 
-    private Long id;
+    private Long userNo;
     private String username;
     private String passwordHash;
     private String displayName;
-    private boolean enabled;
+    private String useYn;
     private int failedAttempts;
     private OffsetDateTime lockedUntil;
     private OffsetDateTime lastLoginAt;
     private boolean mustChangePassword;
     private List<String> roles = new ArrayList<>();
 
-    public Long getId() {
-        return id;
+    public Long getUserNo() {
+        return userNo;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setUserNo(Long userNo) {
+        this.userNo = userNo;
     }
 
     public String getUsername() {
@@ -49,12 +49,12 @@ public class UserAccount {
         this.displayName = displayName;
     }
 
-    public boolean isEnabled() {
-        return enabled;
+    public String getUseYn() {
+        return useYn;
     }
 
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
+    public void setUseYn(String useYn) {
+        this.useYn = useYn;
     }
 
     public int getFailedAttempts() {

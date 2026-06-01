@@ -3,35 +3,35 @@
     "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="kr.co.cleverchat.domain.scenario.mapper.ScenarioSynonymMapper">
     <select id="findByKeywordId" resultType="kr.co.cleverchat.domain.scenario.model.ScenarioSynonym">
-        SELECT id, keyword_id, synonym, weight, enabled, created_at, updated_at
-        FROM scenario_synonym
-        WHERE keyword_id = #{keywordId}
+        SELECT scenario_synonym_no, keyword_no, synonym, weight, use_yn, frst_reg_dt, lst_chg_dt
+        FROM tb_scenario_synonym
+        WHERE keyword_no = #{keywordId}
         ORDER BY weight DESC, synonym
     </select>
     <select id="findEnabledByScenarioId" resultType="kr.co.cleverchat.domain.scenario.dto.ScenarioSynonymRow">
-        SELECT k.scenario_id, sy.keyword_id, sy.synonym, sy.weight
-        FROM scenario_synonym sy
-        JOIN scenario_keyword k ON k.id = sy.keyword_id
-        WHERE k.scenario_id = #{scenarioId}
-          AND k.enabled = TRUE
-          AND sy.enabled = TRUE
-        ORDER BY k.scenario_id, sy.weight DESC, sy.synonym
+        SELECT k.scenario_no, sy.keyword_no, sy.synonym, sy.weight
+        FROM tb_scenario_synonym sy
+        JOIN tb_scenario_keyword k ON k.scenario_keyword_no = sy.keyword_no
+        WHERE k.scenario_no = #{scenarioId}
+          AND k.use_yn = 'Y'
+          AND sy.use_yn = 'Y'
+        ORDER BY k.scenario_no, sy.weight DESC, sy.synonym
     </select>
     <select id="findEnabledForActiveScenarios" resultType="kr.co.cleverchat.domain.scenario.dto.ScenarioSynonymRow">
-        SELECT k.scenario_id, sy.keyword_id, sy.synonym, sy.weight
-        FROM scenario_synonym sy
-        JOIN scenario_keyword k ON k.id = sy.keyword_id
-        JOIN scenario s ON s.id = k.scenario_id
-        JOIN scenario_category c ON c.id = s.category_id
+        SELECT k.scenario_no, sy.keyword_no, sy.synonym, sy.weight
+        FROM tb_scenario_synonym sy
+        JOIN tb_scenario_keyword k ON k.scenario_keyword_no = sy.keyword_no
+        JOIN tb_scenario s ON s.scenario_no = k.scenario_no
+        JOIN tb_scenario_category c ON c.scenario_category_no = s.category_no
         WHERE s.status = 'ACTIVE'
-          AND s.active_version_id IS NOT NULL
-          AND c.enabled = TRUE
-          AND k.enabled = TRUE
-          AND sy.enabled = TRUE
-        ORDER BY k.scenario_id, sy.weight DESC, sy.synonym
+          AND s.active_version_no IS NOT NULL
+          AND c.use_yn = 'Y'
+          AND k.use_yn = 'Y'
+          AND sy.use_yn = 'Y'
+        ORDER BY k.scenario_no, sy.weight DESC, sy.synonym
     </select>
-    <insert id="insert" parameterType="kr.co.cleverchat.domain.scenario.model.ScenarioSynonym" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO scenario_synonym (keyword_id, synonym, weight, enabled)
-        VALUES (#{keywordId}, #{synonym}, #{weight}, #{enabled})
+    <insert id="insert" parameterType="kr.co.cleverchat.domain.scenario.model.ScenarioSynonym" useGeneratedKeys="true" keyProperty="scenarioSynonymNo">
+        INSERT INTO tb_scenario_synonym (keyword_no, synonym, weight, use_yn)
+        VALUES (#{keywordNo}, #{synonym}, #{weight}, #{useYn})
     </insert>
 </mapper>

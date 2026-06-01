@@ -92,9 +92,9 @@ class AiAnswerSuggestionServiceTest {
 
     private SearchResultItem result(String matchedField) {
         SearchResultItem item = new SearchResultItem();
-        item.setScenarioId(100L);
+        item.setScenarioNo(100L);
         item.setScenarioTitle("Scenario title");
-        item.setCrawlDocumentId(200L);
+        item.setCrawlDocumentNo(200L);
         item.setCrawlUrl("https://example.test/doc");
         item.setMatchedField(matchedField);
         item.setSnippet("Short snippet");

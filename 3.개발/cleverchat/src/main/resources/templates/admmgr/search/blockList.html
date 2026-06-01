@@ -45,12 +45,12 @@
                 </thead>
                 <tbody>
                 <tr th:each="block : ${blocks}">
-                    <td th:text="${block.id}">1</td>
+                    <td th:text="${block.searchBlockLogNo}">1</td>
                     <td th:text="${block.queryLength}">12</td>
                     <td th:text="${block.piiTypes}">EMAIL</td>
                     <td th:text="${block.source}">ADMIN_TEST</td>
-                    <td th:text="${block.userId ?: '-'}">10</td>
-                    <td th:text="${#temporals.format(block.createdAt, 'yyyy-MM-dd HH:mm')}">2026-05-27 13:00</td>
+                    <td th:text="${block.userNo ?: '-'}">10</td>
+                    <td th:text="${#temporals.format(block.frstRegDt, 'yyyy-MM-dd HH:mm')}">2026-05-27 13:00</td>
                 </tr>
                 <tr th:if="${#lists.isEmpty(blocks)}">
                     <td colspan="6">No blocked searches found.</td>

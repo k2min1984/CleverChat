@@ -31,9 +31,9 @@
                         <div class="view-meta">
                             <span>카테고리 <strong th:text="${scenario.categoryName}">민원</strong></span>
                             <span class="view-meta-sep">/</span>
-                            <span>ID <strong th:text="${scenario.id}">1</strong></span>
+                            <span>ID <strong th:text="${scenario.scenarioNo}">1</strong></span>
                             <span class="view-meta-sep">/</span>
-                            <span>수정일 <strong th:text="${#temporals.format(scenario.updatedAt, 'yyyy-MM-dd HH:mm')}">2026-05-11</strong></span>
+                            <span>수정일 <strong th:text="${#temporals.format(scenario.lstChgDt, 'yyyy-MM-dd HH:mm')}">2026-05-11</strong></span>
                         </div>
                     </div>
                     <div class="view-body" th:text="${scenario.description != null and !scenario.description.isBlank() ? scenario.description : '등록된 설명이 없습니다.'}">
@@ -41,8 +41,8 @@
                     </div>
                     <div class="view-footer">
                         <a class="btn btn-md btn-secondary" th:href="@{/admin/scenarios}">목록</a>
-                        <a class="btn btn-md btn-solid btn-primary" th:href="@{/admin/scenarios/{id}/edit(id=${scenario.id})}">수정</a>
-                        <form th:if="${scenario.status == 'ACTIVE'}" th:action="@{/admin/scenarios/{id}/deactivate(id=${scenario.id})}" method="post">
+                        <a class="btn btn-md btn-solid btn-primary" th:href="@{/admin/scenarios/{id}/edit(id=${scenario.scenarioNo})}">수정</a>
+                        <form th:if="${scenario.status == 'ACTIVE'}" th:action="@{/admin/scenarios/{id}/deactivate(id=${scenario.scenarioNo})}" method="post">
                             <th:block th:replace="~{admmgr/common/_csrfHidden :: csrfHidden}"></th:block>
                             <button class="btn btn-md btn-secondary" type="submit">비활성화</button>
                         </form>
@@ -52,7 +52,7 @@
                 <div class="result-header">
                     <div class="result-count">버전 총 <strong th:text="${#lists.size(versions)} + '건'">0건</strong></div>
                     <div class="result-actions">
-                        <form th:action="@{/admin/scenarios/{id}/versions(id=${scenario.id})}" method="post">
+                        <form th:action="@{/admin/scenarios/{id}/versions(id=${scenario.scenarioNo})}" method="post">
                             <th:block th:replace="~{admmgr/common/_csrfHidden :: csrfHidden}"></th:block>
                             <button type="submit" class="btn btn-sm btn-solid btn-emerald">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
@@ -89,33 +89,33 @@
                                         <span th:if="${version.status == 'PUBLISHED'}" class="badge badge-success">게시</span>
                                         <span th:if="${version.status == 'ARCHIVED'}" class="badge badge-default">보관</span>
                                     </td>
-                                    <td th:text="${version.startNodeId != null ? version.startNodeId : '-'}">-</td>
+                                    <td th:text="${version.startNodeNo != null ? version.startNodeNo : '-'}">-</td>
                                     <td>
                                         <div class="row-actions">
                                             <a th:if="${version.status == 'DRAFT'}" class="btn btn-xs btn-secondary"
-                                               th:href="@{/admin/scenarios/{scenarioId}/versions/{versionId}/graph(scenarioId=${scenario.id},versionId=${version.id})}">편집</a>
+                                               th:href="@{/admin/scenarios/{scenarioId}/versions/{versionId}/graph(scenarioId=${scenario.scenarioNo},versionId=${version.scenarioVersionNo})}">편집</a>
                                             <a class="btn btn-xs btn-secondary"
                                                href="#"
-                                               th:href="@{/admin/scenarios/versions/{id}/preview(id=${version.id})}"
-                                               th:data-preview-url="@{/admin/scenarios/versions/{id}/preview(id=${version.id})}">미리보기</a>
+                                               th:href="@{/admin/scenarios/versions/{id}/preview(id=${version.scenarioVersionNo})}"
+                                               th:data-preview-url="@{/admin/scenarios/versions/{id}/preview(id=${version.scenarioVersionNo})}">미리보기</a>
                                             <span th:if="${version.status != 'DRAFT'}" class="help-text">게시/보관 버전은 새 초안에서 수정</span>
                                             <form th:if="${version.status == 'DRAFT'}"
-                                                  th:with="publishability=${publishabilityByVersionId[version.id]}"
-                                                  th:action="@{/admin/scenarios/versions/{id}/publish(id=${version.id})}" method="post">
+                                                  th:with="publishability=${publishabilityByVersionId[version.scenarioVersionNo]}"
+                                                  th:action="@{/admin/scenarios/versions/{id}/publish(id=${version.scenarioVersionNo})}" method="post">
                                                 <th:block th:replace="~{admmgr/common/_csrfHidden :: csrfHidden}"></th:block>
-                                                <input type="hidden" name="scenarioId" th:value="${scenario.id}">
+                                                <input type="hidden" name="scenarioId" th:value="${scenario.scenarioNo}">
                                                 <button class="btn btn-xs btn-solid btn-primary" type="submit"
                                                         th:disabled="${publishability == null or !publishability.publishable()}"
                                                         th:title="${publishability == null ? '게시 조건을 확인하세요.' : publishability.reason()}"
-                                                        th:attr="aria-describedby=${publishability == null or !publishability.publishable() ? 'publishHelp-' + version.id : null}">게시</button>
+                                                        th:attr="aria-describedby=${publishability == null or !publishability.publishable() ? 'publishHelp-' + version.scenarioVersionNo : null}">게시</button>
                                                 <span th:if="${publishability == null or !publishability.publishable()}"
-                                                      th:id="${'publishHelp-' + version.id}"
+                                                      th:id="${'publishHelp-' + version.scenarioVersionNo}"
                                                       class="help-text"
                                                       th:text="${publishability == null ? '게시 조건을 확인하세요.' : publishability.reason()}">그래프 저장 후 게시할 수 있습니다.</span>
                                             </form>
-                                            <form th:if="${version.status == 'PUBLISHED' and scenario.status != 'ACTIVE'}" th:action="@{/admin/scenarios/{id}/activate(id=${scenario.id})}" method="post">
+                                            <form th:if="${version.status == 'PUBLISHED' and scenario.status != 'ACTIVE'}" th:action="@{/admin/scenarios/{id}/activate(id=${scenario.scenarioNo})}" method="post">
                                                 <th:block th:replace="~{admmgr/common/_csrfHidden :: csrfHidden}"></th:block>
-                                                <input type="hidden" name="versionId" th:value="${version.id}">
+                                                <input type="hidden" name="versionId" th:value="${version.scenarioVersionNo}">
                                                 <button class="btn btn-xs btn-solid btn-emerald" type="submit">활성화</button>
                                             </form>
                                         </div>

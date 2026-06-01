@@ -3,7 +3,7 @@ package kr.co.cleverchat.domain.ops.model;
 import java.time.OffsetDateTime;
 
 public class NotificationEvent {
-    private Long id;
+    private Long notificationEventNo;
     private String eventType;
     private String sourceType;
     private String sourceId;
@@ -16,15 +16,15 @@ public class NotificationEvent {
     private boolean reviewed;
     private Long reviewedBy;
     private OffsetDateTime reviewedAt;
-    private OffsetDateTime createdAt;
-    private OffsetDateTime updatedAt;
+    private OffsetDateTime frstRegDt;
+    private OffsetDateTime lstChgDt;
 
-    public Long getId() {
-        return id;
+    public Long getNotificationEventNo() {
+        return notificationEventNo;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setNotificationEventNo(Long notificationEventNo) {
+        this.notificationEventNo = notificationEventNo;
     }
 
     public String getEventType() {
@@ -123,19 +123,19 @@ public class NotificationEvent {
         this.reviewedAt = reviewedAt;
     }
 
-    public OffsetDateTime getCreatedAt() {
-        return createdAt;
+    public OffsetDateTime getFrstRegDt() {
+        return frstRegDt;
     }
 
-    public void setCreatedAt(OffsetDateTime createdAt) {
-        this.createdAt = createdAt;
+    public void setFrstRegDt(OffsetDateTime frstRegDt) {
+        this.frstRegDt = frstRegDt;
     }
 
-    public OffsetDateTime getUpdatedAt() {
-        return updatedAt;
+    public OffsetDateTime getLstChgDt() {
+        return lstChgDt;
     }
 
-    public void setUpdatedAt(OffsetDateTime updatedAt) {
-        this.updatedAt = updatedAt;
+    public void setLstChgDt(OffsetDateTime lstChgDt) {
+        this.lstChgDt = lstChgDt;
     }
 }

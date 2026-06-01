@@ -3,42 +3,42 @@ package kr.co.cleverchat.domain.crawl.model;
 import java.time.OffsetDateTime;
 
 public class CrawlRunLog {
-    private Long id;
-    private Long targetId;
-    private Long documentId;
+    private Long crawlRunLogNo;
+    private Long targetNo;
+    private Long documentNo;
     private String status;
     private String failureCode;
     private Integer httpStatus;
     private String message;
     private Integer durationMs;
-    private OffsetDateTime createdAt;
+    private OffsetDateTime frstRegDt;
     private boolean reviewed;
     private Long reviewedBy;
     private OffsetDateTime reviewedAt;
     private String reviewComment;
 
-    public Long getId() {
-        return id;
+    public Long getCrawlRunLogNo() {
+        return crawlRunLogNo;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setCrawlRunLogNo(Long crawlRunLogNo) {
+        this.crawlRunLogNo = crawlRunLogNo;
     }
 
-    public Long getTargetId() {
-        return targetId;
+    public Long getTargetNo() {
+        return targetNo;
     }
 
-    public void setTargetId(Long targetId) {
-        this.targetId = targetId;
+    public void setTargetNo(Long targetNo) {
+        this.targetNo = targetNo;
     }
 
-    public Long getDocumentId() {
-        return documentId;
+    public Long getDocumentNo() {
+        return documentNo;
     }
 
-    public void setDocumentId(Long documentId) {
-        this.documentId = documentId;
+    public void setDocumentNo(Long documentNo) {
+        this.documentNo = documentNo;
     }
 
     public String getStatus() {
@@ -81,12 +81,12 @@ public class CrawlRunLog {
         this.durationMs = durationMs;
     }
 
-    public OffsetDateTime getCreatedAt() {
-        return createdAt;
+    public OffsetDateTime getFrstRegDt() {
+        return frstRegDt;
     }
 
-    public void setCreatedAt(OffsetDateTime createdAt) {
-        this.createdAt = createdAt;
+    public void setFrstRegDt(OffsetDateTime frstRegDt) {
+        this.frstRegDt = frstRegDt;
     }
 
     public boolean isReviewed() {

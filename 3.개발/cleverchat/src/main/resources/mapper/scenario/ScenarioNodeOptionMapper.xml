@@ -3,24 +3,24 @@
     "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="kr.co.cleverchat.domain.scenario.mapper.ScenarioNodeOptionMapper">
     <select id="findByNodeId" resultType="kr.co.cleverchat.domain.scenario.model.ScenarioNodeOption">
-        SELECT id, node_id, next_node_id, label, condition_expr, sort_order, enabled, created_at, updated_at
-        FROM scenario_node_option
-        WHERE node_id = #{nodeId}
-        ORDER BY sort_order, id
+        SELECT scenario_node_option_no, node_no, next_node_no, label, condition_expr, sort_order, use_yn, frst_reg_dt, lst_chg_dt
+        FROM tb_scenario_node_option
+        WHERE node_no = #{nodeId}
+        ORDER BY sort_order, scenario_node_option_no
     </select>
     <select id="findEnabledByNodeId" resultType="kr.co.cleverchat.domain.scenario.model.ScenarioNodeOption">
-        SELECT id, node_id, next_node_id, label, condition_expr, sort_order, enabled, created_at, updated_at
-        FROM scenario_node_option
-        WHERE node_id = #{nodeId}
-          AND enabled = TRUE
-        ORDER BY sort_order, id
+        SELECT scenario_node_option_no, node_no, next_node_no, label, condition_expr, sort_order, use_yn, frst_reg_dt, lst_chg_dt
+        FROM tb_scenario_node_option
+        WHERE node_no = #{nodeId}
+          AND use_yn = 'Y'
+        ORDER BY sort_order, scenario_node_option_no
     </select>
-    <insert id="insert" parameterType="kr.co.cleverchat.domain.scenario.model.ScenarioNodeOption" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO scenario_node_option (node_id, next_node_id, label, condition_expr, sort_order, enabled)
-        VALUES (#{nodeId}, #{nextNodeId}, #{label}, #{conditionExpr}, #{sortOrder}, #{enabled})
+    <insert id="insert" parameterType="kr.co.cleverchat.domain.scenario.model.ScenarioNodeOption" useGeneratedKeys="true" keyProperty="scenarioNodeOptionNo">
+        INSERT INTO tb_scenario_node_option (node_no, next_node_no, label, condition_expr, sort_order, use_yn)
+        VALUES (#{nodeNo}, #{nextNodeNo}, #{label}, #{conditionExpr}, #{sortOrder}, #{useYn})
     </insert>
     <delete id="deleteByVersionId">
-        DELETE FROM scenario_node_option
-        WHERE node_id IN (SELECT id FROM scenario_node WHERE version_id = #{versionId})
+        DELETE FROM tb_scenario_node_option
+        WHERE node_no IN (SELECT scenario_node_no FROM tb_scenario_node WHERE version_no = #{versionId})
     </delete>
 </mapper>

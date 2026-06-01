@@ -57,7 +57,7 @@ public class LoginController {
             loginAuditService.recordFailure(username, "User not found.", request);
             return "redirect:/login?error";
         }
-        if (!account.isEnabled()) {
+        if (!"Y".equals(account.getUseYn())) {
             opsEventLogger.securityEvent(
                     "LOGIN_FAILED", request, username, Map.of("reason", "disabled"));
             loginAuditService.recordFailure(username, "Account is disabled.", request);
@@ -78,7 +78,7 @@ public class LoginController {
         }
 
         opsEventLogger.securityEvent(
-                "LOGIN_SUCCEEDED", request, username, Map.of("userId", account.getId()));
+                "LOGIN_SUCCEEDED", request, username, Map.of("userId", account.getUserNo()));
         loginAuditService.recordSuccess(username, request);
         AuthenticatedUser user = new AuthenticatedUser(account);
         HttpSession session = request.getSession(true);

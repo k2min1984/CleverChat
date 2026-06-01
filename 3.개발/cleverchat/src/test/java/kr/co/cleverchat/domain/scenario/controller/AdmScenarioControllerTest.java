@@ -93,7 +93,7 @@ class AdmScenarioControllerTest {
     @Test
     void scenarioListAddsPreviewVersionMap() throws Exception {
         Scenario active = scenario(1L);
-        active.setActiveVersionId(10L);
+        active.setActiveVersionNo(10L);
         Scenario draft = scenario(2L);
         when(scenarioService.findAll(null)).thenReturn(List.of(active, draft));
         when(scenarioService.versions(2L)).thenReturn(List.of(version(20L, 2L, "DRAFT")));
@@ -212,7 +212,7 @@ class AdmScenarioControllerTest {
 
     private Scenario scenario(Long id) {
         Scenario scenario = new Scenario();
-        scenario.setId(id);
+        scenario.setScenarioNo(id);
         scenario.setTitle("테스트 시나리오");
         scenario.setStatus("DRAFT");
         return scenario;
@@ -220,8 +220,8 @@ class AdmScenarioControllerTest {
 
     private ScenarioVersion version(Long id, Long scenarioId, String status) {
         ScenarioVersion version = new ScenarioVersion();
-        version.setId(id);
-        version.setScenarioId(scenarioId);
+        version.setScenarioVersionNo(id);
+        version.setScenarioNo(scenarioId);
         version.setVersionNo(1);
         version.setStatus(status);
         return version;

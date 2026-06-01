@@ -47,7 +47,7 @@ class ChatAdminServiceTest {
     @Test
     void failuresCapsLimitAtOneHundred() {
         ChatFailureQueueItem item = new ChatFailureQueueItem();
-        item.setId(1L);
+        item.setChatFailureNo(1L);
         when(failureMapper.findQueue(false, 100)).thenReturn(List.of(item));
 
         assertThat(service.failures(false, 1000)).hasSize(1);
@@ -147,7 +147,7 @@ class ChatAdminServiceTest {
 
         verify(recommendationMapper).insert(created);
         assertThat(created.getPriority()).isEqualTo(100);
-        assertThat(created.isEnabled()).isTrue();
+        assertThat(created.getUseYn()).isEqualTo("Y");
     }
 
     @Test

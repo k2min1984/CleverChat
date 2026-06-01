@@ -4,23 +4,23 @@ import java.time.OffsetDateTime;
 
 public class SearchLog {
 
-    private Long id;
+    private Long searchLogNo;
     private String queryText;
     private String normalizedQuery;
     private int resultCount;
-    private Long topScenarioId;
+    private Long topScenarioNo;
     private String source;
     private Integer latencyMs;
     private String anonymousIdHash;
-    private Long userId;
-    private OffsetDateTime createdAt;
+    private Long userNo;
+    private OffsetDateTime frstRegDt;
 
-    public Long getId() {
-        return id;
+    public Long getSearchLogNo() {
+        return searchLogNo;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setSearchLogNo(Long searchLogNo) {
+        this.searchLogNo = searchLogNo;
     }
 
     public String getQueryText() {
@@ -47,12 +47,12 @@ public class SearchLog {
         this.resultCount = resultCount;
     }
 
-    public Long getTopScenarioId() {
-        return topScenarioId;
+    public Long getTopScenarioNo() {
+        return topScenarioNo;
     }
 
-    public void setTopScenarioId(Long topScenarioId) {
-        this.topScenarioId = topScenarioId;
+    public void setTopScenarioNo(Long topScenarioNo) {
+        this.topScenarioNo = topScenarioNo;
     }
 
     public String getSource() {
@@ -79,19 +79,19 @@ public class SearchLog {
         this.anonymousIdHash = anonymousIdHash;
     }
 
-    public Long getUserId() {
-        return userId;
+    public Long getUserNo() {
+        return userNo;
     }
 
-    public void setUserId(Long userId) {
-        this.userId = userId;
+    public void setUserNo(Long userNo) {
+        this.userNo = userNo;
     }
 
-    public OffsetDateTime getCreatedAt() {
-        return createdAt;
+    public OffsetDateTime getFrstRegDt() {
+        return frstRegDt;
     }
 
-    public void setCreatedAt(OffsetDateTime createdAt) {
-        this.createdAt = createdAt;
+    public void setFrstRegDt(OffsetDateTime frstRegDt) {
+        this.frstRegDt = frstRegDt;
     }
 }

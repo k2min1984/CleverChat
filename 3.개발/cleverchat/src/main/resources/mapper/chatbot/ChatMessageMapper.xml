@@ -3,83 +3,83 @@
     "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="kr.co.cleverchat.domain.chatbot.mapper.ChatMessageMapper">
     <select id="findBySessionId" resultType="kr.co.cleverchat.domain.chatbot.model.ChatMessage">
-        SELECT id, session_id, seq, direction, node_id, option_id, content,
+        SELECT chat_message_no, session_no, seq, direction, node_no, option_no, content,
                content_ciphertext, content_key_id, content_encryption_version,
                payload::text AS payload,
-               latency_ms, created_at
-        FROM chat_message
-        WHERE session_id = #{sessionId}::uuid
-        ORDER BY seq, id
+               latency_ms, frst_reg_dt
+        FROM tb_chat_message
+        WHERE session_no = #{sessionId}::uuid
+        ORDER BY seq, chat_message_no
     </select>
     <select id="findTraceBySessionId" resultType="kr.co.cleverchat.domain.chatbot.model.ChatMessageTraceItem">
-        SELECT m.id, m.session_id, m.seq, m.direction, m.node_id, m.option_id, m.content,
+        SELECT m.chat_message_no, m.session_no, m.seq, m.direction, m.node_no, m.option_no, m.content,
                m.content_ciphertext, m.content_key_id, m.content_encryption_version,
-               m.payload::text AS payload, m.latency_ms, m.created_at,
+               m.payload::text AS payload, m.latency_ms, m.frst_reg_dt,
                fb.rating AS feedback_rating, fb.comment AS feedback_comment,
                fb.comment_ciphertext AS feedback_comment_ciphertext,
                fb.comment_key_id AS feedback_comment_key_id,
                fb.comment_encryption_version AS feedback_comment_encryption_version
-        FROM chat_message m
-        LEFT JOIN chat_feedback fb ON fb.message_id = m.id
-        WHERE m.session_id = #{sessionId}::uuid
-        ORDER BY m.seq, m.id
+        FROM tb_chat_message m
+        LEFT JOIN tb_chat_feedback fb ON fb.message_no = m.chat_message_no
+        WHERE m.session_no = #{sessionId}::uuid
+        ORDER BY m.seq, m.chat_message_no
     </select>
     <select id="findById" resultType="kr.co.cleverchat.domain.chatbot.model.ChatMessage">
-        SELECT id, session_id, seq, direction, node_id, option_id, content,
+        SELECT chat_message_no, session_no, seq, direction, node_no, option_no, content,
                content_ciphertext, content_key_id, content_encryption_version,
                payload::text AS payload,
-               latency_ms, created_at
-        FROM chat_message
-        WHERE id = #{id}
+               latency_ms, frst_reg_dt
+        FROM tb_chat_message
+        WHERE chat_message_no = #{id}
     </select>
     <select id="selectNextSeq" resultType="int">
         SELECT COALESCE(MAX(seq), 0) + 1
-        FROM chat_message
-        WHERE session_id = #{sessionId}::uuid
+        FROM tb_chat_message
+        WHERE session_no = #{sessionId}::uuid
     </select>
-    <insert id="insert" parameterType="kr.co.cleverchat.domain.chatbot.model.ChatMessage" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO chat_message (
-            session_id, seq, direction, node_id, option_id, content,
+    <insert id="insert" parameterType="kr.co.cleverchat.domain.chatbot.model.ChatMessage" useGeneratedKeys="true" keyProperty="chatMessageNo">
+        INSERT INTO tb_chat_message (
+            session_no, seq, direction, node_no, option_no, content,
             content_ciphertext, content_key_id, content_encryption_version,
             payload, latency_ms
         )
         VALUES (
-            #{sessionId}::uuid, #{seq}, #{direction}, #{nodeId}, #{optionId}, #{content},
+            #{sessionNo}::uuid, #{seq}, #{direction}, #{nodeNo}, #{optionNo}, #{content},
             #{contentCiphertext}, #{contentKeyId}, #{contentEncryptionVersion},
             CAST(#{payload} AS jsonb), #{latencyMs}
         )
     </insert>
     <select id="findContentBackfillCandidates" resultType="kr.co.cleverchat.domain.chatbot.model.ChatEncryptedFieldRow">
-        SELECT id,
+        SELECT chat_message_no AS id,
                content AS plaintext,
                content_ciphertext AS ciphertext,
                content_key_id AS key_id
-        FROM chat_message
+        FROM tb_chat_message
         WHERE content_ciphertext IS NULL
           AND content IS NOT NULL
           AND content != ''
           AND content != '[encrypted]'
-        ORDER BY id
+        ORDER BY chat_message_no
         LIMIT #{limit}
     </select>
     <select id="findContentRotationCandidates" resultType="kr.co.cleverchat.domain.chatbot.model.ChatEncryptedFieldRow">
-        SELECT id,
+        SELECT chat_message_no AS id,
                content AS plaintext,
                content_ciphertext AS ciphertext,
                content_key_id AS key_id
-        FROM chat_message
+        FROM tb_chat_message
         WHERE content_ciphertext IS NOT NULL
           AND content_key_id IS NOT NULL
           AND content_key_id != #{activeKeyId}
-        ORDER BY id
+        ORDER BY chat_message_no
         LIMIT #{limit}
     </select>
     <update id="updateEncryptedContent">
-        UPDATE chat_message
+        UPDATE tb_chat_message
         SET content = #{content},
             content_ciphertext = #{contentCiphertext},
             content_key_id = #{contentKeyId},
             content_encryption_version = #{contentEncryptionVersion}
-        WHERE id = #{id}
+        WHERE chat_message_no = #{id}
     </update>
 </mapper>

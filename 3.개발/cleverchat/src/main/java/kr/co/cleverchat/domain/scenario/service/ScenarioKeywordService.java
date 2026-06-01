@@ -67,10 +67,10 @@ public class ScenarioKeywordService {
                 throw new BusinessException(ErrorCode.VALIDATION_ERROR, "중복된 키워드가 있습니다.");
             }
             ScenarioKeyword keyword = new ScenarioKeyword();
-            keyword.setScenarioId(scenarioId);
+            keyword.setScenarioNo(scenarioId);
             keyword.setKeyword(normalized);
             keyword.setWeight(item.weight());
-            keyword.setEnabled(item.enabled());
+            keyword.setUseYn(item.useYn());
             keywordMapper.insert(keyword);
             Set<String> synonyms = new LinkedHashSet<>();
             for (SynonymRequest synonymRequest :
@@ -81,10 +81,10 @@ public class ScenarioKeywordService {
                     throw new BusinessException(ErrorCode.VALIDATION_ERROR, "중복된 유사어가 있습니다.");
                 }
                 ScenarioSynonym synonym = new ScenarioSynonym();
-                synonym.setKeywordId(keyword.getId());
+                synonym.setKeywordNo(keyword.getScenarioKeywordNo());
                 synonym.setSynonym(synonymValue);
                 synonym.setWeight(synonymRequest.weight());
-                synonym.setEnabled(synonymRequest.enabled());
+                synonym.setUseYn(synonymRequest.useYn());
                 synonymMapper.insert(synonym);
                 synonymCount++;
             }

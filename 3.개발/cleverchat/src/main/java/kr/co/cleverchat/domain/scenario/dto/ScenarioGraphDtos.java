@@ -32,5 +32,5 @@ public final class ScenarioGraphDtos {
             @Size(max = 80) @Pattern(regexp = "|[A-Za-z0-9_-]{1,80}") String nextNodeKey,
             @Size(max = 500) String conditionExpr,
             @Min(0) @Max(100000) int sortOrder,
-            boolean enabled) {}
+            @Pattern(regexp = "Y|N") String useYn) {}
 }

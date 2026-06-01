@@ -15,7 +15,7 @@
         <div class="btn-group">
             <a class="btn btn-sm btn-secondary"
                data-preview-detail
-               th:href="@{/admin/scenarios/{id}(id=${version.scenarioId})}">상세</a>
+               th:href="@{/admin/scenarios/{id}(id=${version.scenarioNo})}">상세</a>
             <button type="button" class="btn btn-sm btn-secondary preview-close-btn" data-preview-close>닫기</button>
         </div>
     </header>
@@ -28,15 +28,15 @@
             <div class="preview-options" th:if="${!#lists.isEmpty(options)}">
                 <a class="btn btn-sm btn-secondary"
                    th:each="option : ${options}"
-                   th:href="@{/admin/scenarios/versions/{versionId}/preview(versionId=${version.id},nodeId=${option.nextNodeId})}"
+                   th:href="@{/admin/scenarios/versions/{versionId}/preview(versionId=${version.scenarioVersionNo},nodeId=${option.nextNodeNo})}"
                    th:text="${option.label}">옵션</a>
             </div>
             <p class="help-text" th:if="${#lists.isEmpty(options)}">다음 옵션이 없는 종료 노드입니다.</p>
         </section>
 
         <section class="preview-empty" th:if="${current == null}" role="status">
-            <p th:if="${version.startNodeId == null}">저장된 시작 노드가 없습니다. DRAFT 그래프를 저장한 뒤 미리보기를 확인해 주세요.</p>
-            <p th:if="${version.startNodeId != null}">미리보기 가능한 노드를 찾지 못했습니다. 그래프 연결을 확인해 주세요.</p>
+            <p th:if="${version.startNodeNo == null}">저장된 시작 노드가 없습니다. DRAFT 그래프를 저장한 뒤 미리보기를 확인해 주세요.</p>
+            <p th:if="${version.startNodeNo != null}">미리보기 가능한 노드를 찾지 못했습니다. 그래프 연결을 확인해 주세요.</p>
         </section>
     </div>
 </section>

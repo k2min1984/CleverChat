@@ -4,9 +4,9 @@
 <mapper namespace="kr.co.cleverchat.domain.chatbot.mapper.ChatFailureMapper">
     <select id="findQueue" resultType="kr.co.cleverchat.domain.chatbot.model.ChatFailureQueueItem">
         SELECT
-            f.id,
-            left(f.session_id::text, 8) AS session_key,
-            f.message_id,
+            f.chat_failure_no,
+            left(f.session_no::text, 8) AS session_key,
+            f.message_no,
             f.reason,
             f.detail::text AS detail,
             f.reviewed,
@@ -16,26 +16,26 @@
             f.review_comment_ciphertext,
             f.review_comment_key_id,
             f.review_comment_encryption_version,
-            f.created_at,
-            s.scenario_id,
+            f.frst_reg_dt,
+            s.scenario_no,
             sc.title AS scenario_title,
-            s.current_node_id
-        FROM chat_failure f
-        JOIN chat_session s ON s.id = f.session_id
-        JOIN scenario sc ON sc.id = s.scenario_id
+            s.current_node_no
+        FROM tb_chat_failure f
+        JOIN tb_chat_session s ON s.chat_session_no = f.session_no
+        JOIN tb_scenario sc ON sc.scenario_no = s.scenario_no
         <where>
             <if test="reviewed != null">
                 f.reviewed = #{reviewed}
             </if>
         </where>
-        ORDER BY f.reviewed ASC, f.created_at DESC, f.id DESC
+        ORDER BY f.reviewed ASC, f.frst_reg_dt DESC, f.chat_failure_no DESC
         LIMIT #{limit}
     </select>
     <select id="findBySessionId" resultType="kr.co.cleverchat.domain.chatbot.model.ChatFailureQueueItem">
         SELECT
-            f.id,
-            left(f.session_id::text, 8) AS session_key,
-            f.message_id,
+            f.chat_failure_no,
+            left(f.session_no::text, 8) AS session_key,
+            f.message_no,
             f.reason,
             f.detail::text AS detail,
             f.reviewed,
@@ -45,30 +45,30 @@
             f.review_comment_ciphertext,
             f.review_comment_key_id,
             f.review_comment_encryption_version,
-            f.created_at,
-            s.scenario_id,
+            f.frst_reg_dt,
+            s.scenario_no,
             sc.title AS scenario_title,
-            s.current_node_id
-        FROM chat_failure f
-        JOIN chat_session s ON s.id = f.session_id
-        JOIN scenario sc ON sc.id = s.scenario_id
-        WHERE f.session_id = #{sessionId}::uuid
-        ORDER BY f.created_at DESC, f.id DESC
+            s.current_node_no
+        FROM tb_chat_failure f
+        JOIN tb_chat_session s ON s.chat_session_no = f.session_no
+        JOIN tb_scenario sc ON sc.scenario_no = s.scenario_no
+        WHERE f.session_no = #{sessionId}::uuid
+        ORDER BY f.frst_reg_dt DESC, f.chat_failure_no DESC
     </select>
-    <insert id="insert" parameterType="kr.co.cleverchat.domain.chatbot.model.ChatFailure" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO chat_failure (
-            session_id, message_id, reason, detail, reviewed, reviewed_by, reviewed_at,
+    <insert id="insert" parameterType="kr.co.cleverchat.domain.chatbot.model.ChatFailure" useGeneratedKeys="true" keyProperty="chatFailureNo">
+        INSERT INTO tb_chat_failure (
+            session_no, message_no, reason, detail, reviewed, reviewed_by, reviewed_at,
             review_comment, review_comment_ciphertext, review_comment_key_id,
             review_comment_encryption_version
         )
         VALUES (
-            #{sessionId}::uuid, #{messageId}, #{reason}, CAST(#{detail} AS jsonb),
+            #{sessionNo}::uuid, #{messageNo}, #{reason}, CAST(#{detail} AS jsonb),
             #{reviewed}, #{reviewedBy}, #{reviewedAt}, #{reviewComment},
             #{reviewCommentCiphertext}, #{reviewCommentKeyId}, #{reviewCommentEncryptionVersion}
         )
     </insert>
     <update id="markReviewed">
-        UPDATE chat_failure
+        UPDATE tb_chat_failure
         SET reviewed = true,
             reviewed_by = #{reviewedBy},
             reviewed_at = now(),
@@ -76,39 +76,39 @@
             review_comment_ciphertext = #{reviewCommentCiphertext},
             review_comment_key_id = #{reviewCommentKeyId},
             review_comment_encryption_version = #{reviewCommentEncryptionVersion}
-        WHERE id = #{id}
+        WHERE chat_failure_no = #{id}
     </update>
     <select id="findReviewCommentBackfillCandidates" resultType="kr.co.cleverchat.domain.chatbot.model.ChatEncryptedFieldRow">
-        SELECT id,
+        SELECT chat_failure_no AS id,
                review_comment AS plaintext,
                review_comment_ciphertext AS ciphertext,
                review_comment_key_id AS key_id
-        FROM chat_failure
+        FROM tb_chat_failure
         WHERE review_comment_ciphertext IS NULL
           AND review_comment IS NOT NULL
           AND review_comment != ''
           AND review_comment != '[encrypted]'
-        ORDER BY id
+        ORDER BY chat_failure_no
         LIMIT #{limit}
     </select>
     <select id="findReviewCommentRotationCandidates" resultType="kr.co.cleverchat.domain.chatbot.model.ChatEncryptedFieldRow">
-        SELECT id,
+        SELECT chat_failure_no AS id,
                review_comment AS plaintext,
                review_comment_ciphertext AS ciphertext,
                review_comment_key_id AS key_id
-        FROM chat_failure
+        FROM tb_chat_failure
         WHERE review_comment_ciphertext IS NOT NULL
           AND review_comment_key_id IS NOT NULL
           AND review_comment_key_id != #{activeKeyId}
-        ORDER BY id
+        ORDER BY chat_failure_no
         LIMIT #{limit}
     </select>
     <update id="updateEncryptedReviewComment">
-        UPDATE chat_failure
+        UPDATE tb_chat_failure
         SET review_comment = #{reviewComment},
             review_comment_ciphertext = #{reviewCommentCiphertext},
             review_comment_key_id = #{reviewCommentKeyId},
             review_comment_encryption_version = #{reviewCommentEncryptionVersion}
-        WHERE id = #{id}
+        WHERE chat_failure_no = #{id}
     </update>
 </mapper>

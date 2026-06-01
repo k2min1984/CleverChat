@@ -52,7 +52,7 @@ class AdmChatApiControllerTest {
     @Test
     void failuresApiReturnsQueue() throws Exception {
         ChatFailureQueueItem item = new ChatFailureQueueItem();
-        item.setId(1L);
+        item.setChatFailureNo(1L);
         item.setSessionKey("abcdef12");
         item.setReason("NO_MATCH");
         when(chatAdminService.failures(false, 20)).thenReturn(List.of(item));
@@ -63,14 +63,14 @@ class AdmChatApiControllerTest {
                                 .param("limit", "20"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data[0].id").value(1))
+                .andExpect(jsonPath("$.data[0].chatFailureNo").value(1))
                 .andExpect(jsonPath("$.data[0].sessionKey").value("abcdef12"));
     }
 
     @Test
     void sessionsApiReturnsList() throws Exception {
         ChatSessionListItem item = new ChatSessionListItem();
-        item.setId("00000000-0000-0000-0000-000000000001");
+        item.setChatSessionNo("00000000-0000-0000-0000-000000000001");
         item.setSessionKey("00000000");
         when(chatAdminService.sessions(10)).thenReturn(List.of(item));
 
@@ -83,7 +83,7 @@ class AdmChatApiControllerTest {
     @Test
     void sessionDetailApiReturnsTrace() throws Exception {
         ChatSessionListItem item = new ChatSessionListItem();
-        item.setId("00000000-0000-0000-0000-000000000001");
+        item.setChatSessionNo("00000000-0000-0000-0000-000000000001");
         when(chatAdminService.sessionDetail("00000000-0000-0000-0000-000000000001"))
                 .thenReturn(new SessionDetailResponse(item, List.of(), List.of()));
 
@@ -91,7 +91,7 @@ class AdmChatApiControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(
-                        jsonPath("$.data.session.id")
+                        jsonPath("$.data.session.chatSessionNo")
                                 .value("00000000-0000-0000-0000-000000000001"));
     }
 
@@ -130,11 +130,11 @@ class AdmChatApiControllerTest {
     @Test
     void createRecommendationApiReturnsCreatedRecommendation() throws Exception {
         ChatRecommendation recommendation = new ChatRecommendation();
-        recommendation.setId(1L);
-        recommendation.setScenarioId(2L);
+        recommendation.setChatRecommendationNo(1L);
+        recommendation.setScenarioNo(2L);
         recommendation.setLabel("Question");
         recommendation.setPriority(10);
-        recommendation.setEnabled(true);
+        recommendation.setUseYn("Y");
         when(chatAdminService.createRecommendation(org.mockito.Mockito.any()))
                 .thenReturn(recommendation);
 
@@ -144,7 +144,7 @@ class AdmChatApiControllerTest {
                                 .content(
                                         "{\"scenarioId\":2,\"label\":\"Question\",\"priority\":10,\"enabled\":true}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.id").value(1));
+                .andExpect(jsonPath("$.data.chatRecommendationNo").value(1));
     }
 
     @Test
@@ -162,8 +162,8 @@ class AdmChatApiControllerTest {
     @Test
     void updateRecommendationApiReturnsUpdatedRecommendation() throws Exception {
         ChatRecommendation recommendation = new ChatRecommendation();
-        recommendation.setId(1L);
-        recommendation.setScenarioId(2L);
+        recommendation.setChatRecommendationNo(1L);
+        recommendation.setScenarioNo(2L);
         recommendation.setLabel("Question");
         when(chatAdminService.updateRecommendation(
                         org.mockito.Mockito.eq(1L), org.mockito.Mockito.any()))
@@ -174,7 +174,7 @@ class AdmChatApiControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{\"scenarioId\":2,\"label\":\"Question\"}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.id").value(1));
+                .andExpect(jsonPath("$.data.chatRecommendationNo").value(1));
     }
 
     private static class TestCurrentUserResolver implements HandlerMethodArgumentResolver {

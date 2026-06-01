@@ -4,12 +4,12 @@ import java.time.OffsetDateTime;
 
 public class ChatSessionListItem {
 
-    private String id;
+    private String chatSessionNo;
     private String sessionKey;
-    private Long scenarioId;
+    private Long scenarioNo;
     private String scenarioTitle;
     private String state;
-    private Long currentNodeId;
+    private Long currentNodeNo;
     private OffsetDateTime startedAt;
     private OffsetDateTime lastActivityAt;
     private OffsetDateTime expiresAt;
@@ -19,12 +19,12 @@ public class ChatSessionListItem {
     private String lastMessageKeyId;
     private Integer lastMessageEncryptionVersion;
 
-    public String getId() {
-        return id;
+    public String getChatSessionNo() {
+        return chatSessionNo;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public void setChatSessionNo(String chatSessionNo) {
+        this.chatSessionNo = chatSessionNo;
     }
 
     public String getSessionKey() {
@@ -35,12 +35,12 @@ public class ChatSessionListItem {
         this.sessionKey = sessionKey;
     }
 
-    public Long getScenarioId() {
-        return scenarioId;
+    public Long getScenarioNo() {
+        return scenarioNo;
     }
 
-    public void setScenarioId(Long scenarioId) {
-        this.scenarioId = scenarioId;
+    public void setScenarioNo(Long scenarioNo) {
+        this.scenarioNo = scenarioNo;
     }
 
     public String getScenarioTitle() {
@@ -59,12 +59,12 @@ public class ChatSessionListItem {
         this.state = state;
     }
 
-    public Long getCurrentNodeId() {
-        return currentNodeId;
+    public Long getCurrentNodeNo() {
+        return currentNodeNo;
     }
 
-    public void setCurrentNodeId(Long currentNodeId) {
-        this.currentNodeId = currentNodeId;
+    public void setCurrentNodeNo(Long currentNodeNo) {
+        this.currentNodeNo = currentNodeNo;
     }
 
     public OffsetDateTime getStartedAt() {

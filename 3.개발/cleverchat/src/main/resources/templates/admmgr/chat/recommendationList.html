@@ -30,12 +30,12 @@
                 </thead>
                 <tbody>
                 <tr th:each="item : ${recommendations}">
-                    <td th:text="${item.id}">1</td>
+                    <td th:text="${item.chatRecommendationNo}">1</td>
                     <td th:text="${item.scenarioTitle}">Scenario</td>
                     <td th:text="${item.label}">Question</td>
                     <td th:text="${item.priority}">100</td>
-                    <td th:text="${item.enabled}">true</td>
-                    <td th:text="${#temporals.format(item.updatedAt, 'yyyy-MM-dd HH:mm')}">2026-05-27 13:00</td>
+                    <td th:text="${item.useYn}">Y</td>
+                    <td th:text="${#temporals.format(item.lstChgDt, 'yyyy-MM-dd HH:mm')}">2026-05-27 13:00</td>
                 </tr>
                 <tr th:if="${#lists.isEmpty(recommendations)}">
                     <td colspan="6">No recommendations found.</td>

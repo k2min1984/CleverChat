@@ -16,10 +16,10 @@
         ),
         scenario_matches AS (
             SELECT
-                'S:' || s.id::text AS result_key,
-                s.id AS scenario_id,
+                'S:' || s.scenario_no::text AS result_key,
+                s.scenario_no AS scenario_no,
                 s.title AS scenario_title,
-                NULL::bigint AS crawl_document_id,
+                NULL::bigint AS crawl_document_no,
                 NULL::text AS crawl_url,
                 'SCENARIO' AS matched_field,
                 2 AS field_priority,
@@ -39,12 +39,12 @@
                     + greatest(similarity(s.title, q.raw), similarity(coalesce(s.description, ''), q.raw))
                 ) AS score,
                 regexp_replace(coalesce(s.description, s.title), '\s+', ' ', 'g') AS snippet
-            FROM scenario s
-            JOIN scenario_category c ON c.id = s.category_id
+            FROM tb_scenario s
+            JOIN tb_scenario_category c ON c.scenario_category_no = s.category_no
             CROSS JOIN q
             WHERE s.status = 'ACTIVE'
-              AND s.active_version_id IS NOT NULL
-              AND c.enabled = TRUE
+              AND s.active_version_no IS NOT NULL
+              AND c.use_yn = 'Y'
               AND (
                   to_tsvector('simple', coalesce(s.title, '') || ' ' || coalesce(s.description, '')) @@ q.tsq
                   OR s.title % q.raw
@@ -61,10 +61,10 @@
         ),
         keyword_matches AS (
             SELECT
-                'S:' || s.id::text AS result_key,
-                s.id AS scenario_id,
+                'S:' || s.scenario_no::text AS result_key,
+                s.scenario_no AS scenario_no,
                 s.title AS scenario_title,
-                NULL::bigint AS crawl_document_id,
+                NULL::bigint AS crawl_document_no,
                 NULL::text AS crawl_url,
                 'KEYWORD' AS matched_field,
                 1 AS field_priority,
@@ -86,14 +86,14 @@
                     + ((k.weight + coalesce(sy.weight, 0))::numeric / 100)
                 ) AS score,
                 regexp_replace(coalesce(sy.synonym, k.keyword), '\s+', ' ', 'g') AS snippet
-            FROM scenario s
-            JOIN scenario_category c ON c.id = s.category_id
-            JOIN scenario_keyword k ON k.scenario_id = s.id AND k.enabled = TRUE
-            LEFT JOIN scenario_synonym sy ON sy.keyword_id = k.id AND sy.enabled = TRUE
+            FROM tb_scenario s
+            JOIN tb_scenario_category c ON c.scenario_category_no = s.category_no
+            JOIN tb_scenario_keyword k ON k.scenario_no = s.scenario_no AND k.use_yn = 'Y'
+            LEFT JOIN tb_scenario_synonym sy ON sy.keyword_no = k.scenario_keyword_no AND sy.use_yn = 'Y'
             CROSS JOIN q
             WHERE s.status = 'ACTIVE'
-              AND s.active_version_id IS NOT NULL
-              AND c.enabled = TRUE
+              AND s.active_version_no IS NOT NULL
+              AND c.use_yn = 'Y'
               AND (
                   k.keyword % q.raw
                   OR coalesce(sy.synonym, '') % q.raw
@@ -111,10 +111,10 @@
         ),
         node_matches AS (
             SELECT
-                'S:' || s.id::text AS result_key,
-                s.id AS scenario_id,
+                'S:' || s.scenario_no::text AS result_key,
+                s.scenario_no AS scenario_no,
                 s.title AS scenario_title,
-                NULL::bigint AS crawl_document_id,
+                NULL::bigint AS crawl_document_no,
                 NULL::text AS crawl_url,
                 'NODE' AS matched_field,
                 3 AS field_priority,
@@ -134,13 +134,13 @@
                     + greatest(similarity(n.title, q.raw), similarity(coalesce(n.content, ''), q.raw))
                 ) AS score,
                 regexp_replace(coalesce(n.content, n.title), '\s+', ' ', 'g') AS snippet
-            FROM scenario s
-            JOIN scenario_category c ON c.id = s.category_id
-            JOIN scenario_version v ON v.id = s.active_version_id
-            JOIN scenario_node n ON n.version_id = v.id
+            FROM tb_scenario s
+            JOIN tb_scenario_category c ON c.scenario_category_no = s.category_no
+            JOIN tb_scenario_version v ON v.scenario_version_no = s.active_version_no
+            JOIN tb_scenario_node n ON n.version_no = v.scenario_version_no
             CROSS JOIN q
             WHERE s.status = 'ACTIVE'
-              AND c.enabled = TRUE
+              AND c.use_yn = 'Y'
               AND (
                   to_tsvector('simple', coalesce(n.title, '') || ' ' || coalesce(n.content, '')) @@ q.tsq
                   OR n.title % q.raw
@@ -157,10 +157,10 @@
         ),
         crawl_document_matches AS (
             SELECT
-                'C:' || d.id::text AS result_key,
-                NULL::bigint AS scenario_id,
+                'C:' || d.crawl_document_no::text AS result_key,
+                NULL::bigint AS scenario_no,
                 coalesce(d.title, d.url) AS scenario_title,
-                d.id AS crawl_document_id,
+                d.crawl_document_no AS crawl_document_no,
                 d.url AS crawl_url,
                 'CRAWL_DOCUMENT' AS matched_field,
                 4 AS field_priority,
@@ -180,7 +180,7 @@
                     + greatest(similarity(coalesce(d.title, ''), q.raw), similarity(coalesce(d.content, ''), q.raw))
                 ) AS score,
                 regexp_replace(coalesce(d.content, d.title, d.url), '\s+', ' ', 'g') AS snippet
-            FROM crawl_document d
+            FROM tb_crawl_document d
             CROSS JOIN q
             WHERE d.status = 'SUCCESS'
               AND (
@@ -200,9 +200,9 @@
         best_matches AS (
             SELECT DISTINCT ON (result_key)
                 result_key,
-                scenario_id,
+                scenario_no,
                 scenario_title,
-                crawl_document_id,
+                crawl_document_no,
                 crawl_url,
                 matched_field,
                 field_priority,
@@ -220,9 +220,9 @@
             ORDER BY result_key, score DESC, field_priority
         )
         SELECT
-            scenario_id,
+            scenario_no,
             scenario_title,
-            crawl_document_id,
+            crawl_document_no,
             crawl_url,
             matched_field,
             score,
@@ -232,19 +232,19 @@
         LIMIT #{limit}
     </select>
 
-    <insert id="insertLog" parameterType="kr.co.cleverchat.domain.search.model.SearchLog" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO search_log (query_text, normalized_query, result_count, top_scenario_id, source, latency_ms, anonymous_id_hash, user_id)
-        VALUES (#{queryText}, #{normalizedQuery}, #{resultCount}, #{topScenarioId}, #{source}, #{latencyMs}, #{anonymousIdHash}, #{userId})
+    <insert id="insertLog" parameterType="kr.co.cleverchat.domain.search.model.SearchLog" useGeneratedKeys="true" keyProperty="searchLogNo">
+        INSERT INTO tb_search_log (query_text, normalized_query, result_count, top_scenario_no, source, latency_ms, anonymous_id_hash, user_no)
+        VALUES (#{queryText}, #{normalizedQuery}, #{resultCount}, #{topScenarioNo}, #{source}, #{latencyMs}, #{anonymousIdHash}, #{userNo})
     </insert>
 
-    <insert id="insertBlockLog" parameterType="kr.co.cleverchat.domain.search.model.SearchBlockLog" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO search_block_log (query_length, pii_types, source, anonymous_id_hash, user_id)
-        VALUES (#{queryLength}, #{piiTypes}, #{source}, #{anonymousIdHash}, #{userId})
+    <insert id="insertBlockLog" parameterType="kr.co.cleverchat.domain.search.model.SearchBlockLog" useGeneratedKeys="true" keyProperty="searchBlockLogNo">
+        INSERT INTO tb_search_block_log (query_length, pii_types, source, anonymous_id_hash, user_no)
+        VALUES (#{queryLength}, #{piiTypes}, #{source}, #{anonymousIdHash}, #{userNo})
     </insert>
 
     <select id="findLogs" resultType="kr.co.cleverchat.domain.search.model.SearchLog">
-        SELECT id, query_text, normalized_query, result_count, top_scenario_id, source, latency_ms, anonymous_id_hash, user_id, created_at
-        FROM search_log
+        SELECT search_log_no, query_text, normalized_query, result_count, top_scenario_no, source, latency_ms, anonymous_id_hash, user_no, frst_reg_dt
+        FROM tb_search_log
         <where>
             <if test="query != null and query != ''">
                 normalized_query LIKE concat('%', #{query}, '%')
@@ -253,13 +253,13 @@
                 AND source = #{source}
             </if>
         </where>
-        ORDER BY created_at DESC, id DESC
+        ORDER BY frst_reg_dt DESC, search_log_no DESC
         LIMIT #{limit}
     </select>
 
     <select id="findBlockLogs" resultType="kr.co.cleverchat.domain.search.model.SearchBlockLog">
-        SELECT id, query_length, pii_types, source, anonymous_id_hash, user_id, created_at
-        FROM search_block_log
+        SELECT search_block_log_no, query_length, pii_types, source, anonymous_id_hash, user_no, frst_reg_dt
+        FROM tb_search_block_log
         <where>
             <if test="piiType != null and piiType != ''">
                 pii_types LIKE concat('%', #{piiType}, '%')
@@ -268,47 +268,47 @@
                 AND source = #{source}
             </if>
         </where>
-        ORDER BY created_at DESC, id DESC
+        ORDER BY frst_reg_dt DESC, search_block_log_no DESC
         LIMIT #{limit}
     </select>
 
     <select id="findPopular" resultType="kr.co.cleverchat.domain.search.model.PopularQueryDaily">
-        SELECT stat_date, normalized_query, query_text_sample, search_count, no_result_count, top_result_scenario_id, created_at, updated_at
-        FROM popular_query_daily
+        SELECT stat_date, normalized_query, query_text_sample, search_count, no_result_count, top_result_scenario_no, frst_reg_dt, lst_chg_dt
+        FROM tb_popular_query_daily
         WHERE stat_date BETWEEN #{from} AND #{to}
         ORDER BY stat_date DESC, search_count DESC, normalized_query
         LIMIT #{limit}
     </select>
 
     <delete id="deletePopularByDate">
-        DELETE FROM popular_query_daily
+        DELETE FROM tb_popular_query_daily
         WHERE stat_date = #{statDate}
     </delete>
 
     <insert id="rebuildPopularByDate">
-        INSERT INTO popular_query_daily (stat_date, normalized_query, query_text_sample, search_count, no_result_count, top_result_scenario_id)
+        INSERT INTO tb_popular_query_daily (stat_date, normalized_query, query_text_sample, search_count, no_result_count, top_result_scenario_no)
         SELECT
-            CAST(created_at AT TIME ZONE 'Asia/Seoul' AS date) AS stat_date,
+            CAST(frst_reg_dt AT TIME ZONE 'Asia/Seoul' AS date) AS stat_date,
             normalized_query,
             min(query_text) AS query_text_sample,
             count(*)::int AS search_count,
             count(*) FILTER (WHERE result_count = 0)::int AS no_result_count,
-            max(top_scenario_id) FILTER (WHERE top_scenario_id IS NOT NULL) AS top_result_scenario_id
-        FROM search_log
-        WHERE CAST(created_at AT TIME ZONE 'Asia/Seoul' AS date) = #{statDate}
-        GROUP BY CAST(created_at AT TIME ZONE 'Asia/Seoul' AS date), normalized_query
+            max(top_scenario_no) FILTER (WHERE top_scenario_no IS NOT NULL) AS top_result_scenario_no
+        FROM tb_search_log
+        WHERE CAST(frst_reg_dt AT TIME ZONE 'Asia/Seoul' AS date) = #{statDate}
+        GROUP BY CAST(frst_reg_dt AT TIME ZONE 'Asia/Seoul' AS date), normalized_query
     </insert>
 
     <select id="countSearchLogsBefore" resultType="long">
-        SELECT count(*) FROM search_log WHERE created_at &lt; #{cutoff}
+        SELECT count(*) FROM tb_search_log WHERE frst_reg_dt &lt; #{cutoff}
     </select>
     <select id="countBlockLogsBefore" resultType="long">
-        SELECT count(*) FROM search_block_log WHERE created_at &lt; #{cutoff}
+        SELECT count(*) FROM tb_search_block_log WHERE frst_reg_dt &lt; #{cutoff}
     </select>
     <delete id="deleteSearchLogsBefore">
-        DELETE FROM search_log WHERE created_at &lt; #{cutoff}
+        DELETE FROM tb_search_log WHERE frst_reg_dt &lt; #{cutoff}
     </delete>
     <delete id="deleteBlockLogsBefore">
-        DELETE FROM search_block_log WHERE created_at &lt; #{cutoff}
+        DELETE FROM tb_search_block_log WHERE frst_reg_dt &lt; #{cutoff}
     </delete>
 </mapper>

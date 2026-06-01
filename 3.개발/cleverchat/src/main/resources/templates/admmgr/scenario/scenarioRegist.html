@@ -18,11 +18,11 @@
                                 <caption class="sr-only">Scenario form</caption>
                                 <tbody>
                                 <tr>
-                                    <th scope="row"><label for="categoryId">카테고리 <em class="required">*</em></label></th>
+                                    <th scope="row"><label for="categoryNo">카테고리 <em class="required">*</em></label></th>
                                     <td>
-                                        <select id="categoryId" th:field="*{categoryId}" aria-describedby="categoryHelp" required>
+                                        <select id="categoryNo" th:field="*{categoryNo}" aria-describedby="categoryHelp" required>
                                             <option value="">선택</option>
-                                            <option th:each="category : ${categories}" th:value="${category.id}" th:text="${category.name}">민원</option>
+                                            <option th:each="category : ${categories}" th:value="${category.scenarioCategoryNo}" th:text="${category.name}">민원</option>
                                         </select>
                                         <p id="categoryHelp" class="help-text">시나리오가 노출될 상담 분류를 선택합니다.</p>
                                     </td>

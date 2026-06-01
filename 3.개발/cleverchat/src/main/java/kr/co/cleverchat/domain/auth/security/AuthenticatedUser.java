@@ -13,7 +13,7 @@ public class AuthenticatedUser {
     private final boolean mustChangePassword;
 
     public AuthenticatedUser(UserAccount account) {
-        this.id = account.getId();
+        this.id = account.getUserNo();
         this.username = account.getUsername();
         this.displayName = account.getDisplayName();
         this.roles =

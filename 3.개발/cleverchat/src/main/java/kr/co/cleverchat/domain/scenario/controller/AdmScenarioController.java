@@ -57,7 +57,7 @@ public class AdmScenarioController {
                         .filter(
                                 scenario ->
                                         categoryId == null
-                                                || categoryId.equals(scenario.getCategoryId()))
+                                                || categoryId.equals(scenario.getCategoryNo()))
                         .filter(
                                 scenario ->
                                         title == null
@@ -120,10 +120,10 @@ public class AdmScenarioController {
                 scenarioService
                         .create(
                                 new ScenarioDtos.SaveRequest(
-                                        form.getCategoryId(),
+                                        form.getCategoryNo(),
                                         form.getTitle(),
                                         form.getDescription()))
-                        .getId();
+                        .getScenarioNo();
         return "redirect:/admin/scenarios/" + id;
     }
 
@@ -141,12 +141,12 @@ public class AdmScenarioController {
     public String scenarioModify(@PathVariable Long id, Model model) {
         var scenario = scenarioService.get(id);
         ScenarioForm form = new ScenarioForm();
-        form.setCategoryId(scenario.getCategoryId());
+        form.setCategoryNo(scenario.getCategoryNo());
         form.setTitle(scenario.getTitle());
         form.setDescription(scenario.getDescription());
         model.addAttribute("scenario", scenario);
         model.addAttribute("scenarioForm", form);
-        model.addAttribute("formAction", "/admin/scenarios/" + scenario.getId());
+        model.addAttribute("formAction", "/admin/scenarios/" + scenario.getScenarioNo());
         model.addAttribute("categories", categoryService.findAll());
         return "admmgr/scenario/scenarioRegist";
     }
@@ -166,7 +166,7 @@ public class AdmScenarioController {
         scenarioService.update(
                 id,
                 new ScenarioDtos.SaveRequest(
-                        form.getCategoryId(), form.getTitle(), form.getDescription()));
+                        form.getCategoryNo(), form.getTitle(), form.getDescription()));
         return "redirect:/admin/scenarios/" + id;
     }
 
@@ -186,7 +186,11 @@ public class AdmScenarioController {
                         "이미 편집 중인 초안 v" + existingDraft.getVersionNo() + "이 있습니다. 기존 초안을 편집해 주세요.");
                 redirectAttributes.addFlashAttribute(
                         "draftEditUrl",
-                        "/admin/scenarios/" + id + "/versions/" + existingDraft.getId() + "/graph");
+                        "/admin/scenarios/"
+                                + id
+                                + "/versions/"
+                                + existingDraft.getScenarioVersionNo()
+                                + "/graph");
             } else {
                 redirectAttributes.addFlashAttribute(
                         "successMessage", "새 초안 v" + version.getVersionNo() + "을 만들었습니다.");
@@ -245,7 +249,7 @@ public class AdmScenarioController {
             @PathVariable Long scenarioId, @PathVariable Long versionId, Model model) {
         var scenario = scenarioService.get(scenarioId);
         ScenarioVersion version = scenarioService.version(versionId);
-        if (!scenarioId.equals(version.getScenarioId())) {
+        if (!scenarioId.equals(version.getScenarioNo())) {
             throw new BusinessException(ErrorCode.NOT_FOUND);
         }
         if (!"DRAFT".equals(version.getStatus())) {
@@ -270,13 +274,13 @@ public class AdmScenarioController {
         ScenarioVersion version = scenarioService.version(versionId);
         var nodes = scenarioService.nodes(versionId);
         ScenarioNode current =
-                nodeId == null && version.getStartNodeId() != null
+                nodeId == null && version.getStartNodeNo() != null
                         ? nodes.stream()
-                                .filter(node -> node.getId().equals(version.getStartNodeId()))
+                                .filter(node -> node.getScenarioNodeNo().equals(version.getStartNodeNo()))
                                 .findFirst()
                                 .orElse(null)
                         : nodes.stream()
-                                .filter(node -> node.getId().equals(nodeId))
+                                .filter(node -> node.getScenarioNodeNo().equals(nodeId))
                                 .findFirst()
                                 .orElse(null);
         model.addAttribute("version", version);
@@ -285,7 +289,7 @@ public class AdmScenarioController {
                 "options",
                 current == null
                         ? java.util.List.<ScenarioNodeOption>of()
-                        : scenarioService.options(current.getId()));
+                        : scenarioService.options(current.getScenarioNodeNo()));
         model.addAttribute(
                 "previewTitle", "DRAFT".equals(version.getStatus()) ? "초안 미리보기" : "게시본 미리보기");
         return "admmgr/scenario/scenarioPreviewLayer";
@@ -326,7 +330,10 @@ public class AdmScenarioController {
             List<ScenarioVersion> versions) {
         return versions.stream()
                 .filter(version -> "DRAFT".equals(version.getStatus()))
-                .collect(Collectors.toMap(ScenarioVersion::getId, scenarioService::publishability));
+                .collect(
+                        Collectors.toMap(
+                                ScenarioVersion::getScenarioVersionNo,
+                                scenarioService::publishability));
     }
 
     private Map<Long, Long> previewVersionByScenarioId(
@@ -334,22 +341,24 @@ public class AdmScenarioController {
         return scenarios.stream()
                 .map(
                         scenario -> {
-                            Long versionId = scenario.getActiveVersionId();
+                            Long versionId = scenario.getActiveVersionNo();
                             if (versionId == null) {
                                 versionId =
-                                        scenarioService.versions(scenario.getId()).stream()
+                                        scenarioService.versions(scenario.getScenarioNo()).stream()
                                                 .findFirst()
-                                                .map(ScenarioVersion::getId)
+                                                .map(ScenarioVersion::getScenarioVersionNo)
                                                 .orElse(null);
                             }
-                            return versionId == null ? null : Map.entry(scenario.getId(), versionId);
+                            return versionId == null
+                                    ? null
+                                    : Map.entry(scenario.getScenarioNo(), versionId);
                         })
                 .filter(java.util.Objects::nonNull)
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
     public static class ScenarioForm {
-        @NotNull private Long categoryId;
+        @NotNull private Long categoryNo;
 
         @NotBlank
         @Size(max = 150)
@@ -358,12 +367,12 @@ public class AdmScenarioController {
         @Size(max = 2000)
         private String description;
 
-        public Long getCategoryId() {
-            return categoryId;
+        public Long getCategoryNo() {
+            return categoryNo;
         }
 
-        public void setCategoryId(Long categoryId) {
-            this.categoryId = categoryId;
+        public void setCategoryNo(Long categoryNo) {
+            this.categoryNo = categoryNo;
         }
 
         public String getTitle() {

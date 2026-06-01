@@ -32,16 +32,16 @@
                 </tr>
                 </thead>
                 <tbody id="failureRows">
-                <tr th:each="failure : ${failures}" th:attr="data-failure-id=${failure.id}">
-                    <td th:text="${failure.id}">1</td>
+                <tr th:each="failure : ${failures}" th:attr="data-failure-id=${failure.chatFailureNo}">
+                    <td th:text="${failure.chatFailureNo}">1</td>
                     <td th:text="${failure.reason}">NO_MATCH</td>
                     <td th:text="${failure.scenarioTitle}">Scenario</td>
                     <td th:text="${failure.sessionKey}">abcdef12</td>
                     <td><code th:text="${failure.detail}">{}</code></td>
-                    <td th:text="${#temporals.format(failure.createdAt, 'yyyy-MM-dd HH:mm')}">2026-05-27 13:00</td>
+                    <td th:text="${#temporals.format(failure.frstRegDt, 'yyyy-MM-dd HH:mm')}">2026-05-27 13:00</td>
                     <td th:text="${failure.reviewed ? 'Reviewed' : 'Open'}">Open</td>
                     <td>
-                        <form th:if="${!failure.reviewed}" class="failure-review-form" th:attr="data-failure-id=${failure.id}">
+                        <form th:if="${!failure.reviewed}" class="failure-review-form" th:attr="data-failure-id=${failure.chatFailureNo}">
                             <label>
                                 <span class="sr-only">Review comment</span>
                                 <input type="text" name="comment" maxlength="1000" placeholder="Comment">

@@ -3,13 +3,13 @@ package kr.co.cleverchat.domain.crawl.model;
 import java.time.OffsetDateTime;
 
 public class CrawlTarget {
-    private Long id;
+    private Long crawlTargetNo;
     private String url;
     private String label;
-    private boolean enabled;
-    private Long createdBy;
-    private OffsetDateTime createdAt;
-    private OffsetDateTime updatedAt;
+    private String useYn;
+    private Long frstRegrEmpno;
+    private OffsetDateTime frstRegDt;
+    private OffsetDateTime lstChgDt;
     private OffsetDateTime lastRunAt;
     private String lastStatus;
     private String lastMessage;
@@ -21,12 +21,12 @@ public class CrawlTarget {
     private Boolean robotsAllowed;
     private OffsetDateTime robotsCheckedAt;
 
-    public Long getId() {
-        return id;
+    public Long getCrawlTargetNo() {
+        return crawlTargetNo;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setCrawlTargetNo(Long crawlTargetNo) {
+        this.crawlTargetNo = crawlTargetNo;
     }
 
     public String getUrl() {
@@ -45,36 +45,36 @@ public class CrawlTarget {
         this.label = label;
     }
 
-    public boolean isEnabled() {
-        return enabled;
+    public String getUseYn() {
+        return useYn;
     }
 
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
+    public void setUseYn(String useYn) {
+        this.useYn = useYn;
     }
 
-    public Long getCreatedBy() {
-        return createdBy;
+    public Long getFrstRegrEmpno() {
+        return frstRegrEmpno;
     }
 
-    public void setCreatedBy(Long createdBy) {
-        this.createdBy = createdBy;
+    public void setFrstRegrEmpno(Long frstRegrEmpno) {
+        this.frstRegrEmpno = frstRegrEmpno;
     }
 
-    public OffsetDateTime getCreatedAt() {
-        return createdAt;
+    public OffsetDateTime getFrstRegDt() {
+        return frstRegDt;
     }
 
-    public void setCreatedAt(OffsetDateTime createdAt) {
-        this.createdAt = createdAt;
+    public void setFrstRegDt(OffsetDateTime frstRegDt) {
+        this.frstRegDt = frstRegDt;
     }
 
-    public OffsetDateTime getUpdatedAt() {
-        return updatedAt;
+    public OffsetDateTime getLstChgDt() {
+        return lstChgDt;
     }
 
-    public void setUpdatedAt(OffsetDateTime updatedAt) {
-        this.updatedAt = updatedAt;
+    public void setLstChgDt(OffsetDateTime lstChgDt) {
+        this.lstChgDt = lstChgDt;
     }
 
     public OffsetDateTime getLastRunAt() {

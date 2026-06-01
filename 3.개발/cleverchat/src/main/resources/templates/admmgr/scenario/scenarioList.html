@@ -20,8 +20,8 @@
                             <select id="categoryId" name="categoryId" class="search-select">
                                 <option value="" th:selected="${categoryId == null}">전체</option>
                                 <option th:each="category : ${categories}"
-                                        th:value="${category.id}"
-                                        th:selected="${categoryId != null and categoryId == category.id}"
+                                        th:value="${category.scenarioCategoryNo}"
+                                        th:selected="${categoryId != null and categoryId == category.scenarioCategoryNo}"
                                         th:text="${category.name}">민원</option>
                             </select>
                         </div>
@@ -84,28 +84,28 @@
                                 </thead>
                                 <tbody>
                                 <tr th:each="scenario : ${scenarios}">
-                                    <td th:text="${scenario.id}">1</td>
+                                    <td th:text="${scenario.scenarioNo}">1</td>
                                     <td th:text="${scenario.categoryName}">민원</td>
                                     <td class="td-left">
-                                        <a class="link-detail" th:href="@{/admin/scenarios/{id}(id=${scenario.id})}" th:text="${scenario.title}">제목</a>
+                                        <a class="link-detail" th:href="@{/admin/scenarios/{id}(id=${scenario.scenarioNo})}" th:text="${scenario.title}">제목</a>
                                     </td>
                                     <td>
                                         <span th:if="${scenario.status == 'ACTIVE'}" class="badge badge-success">활성</span>
                                         <span th:if="${scenario.status == 'DRAFT'}" class="badge badge-info">초안</span>
                                         <span th:if="${scenario.status == 'INACTIVE'}" class="badge badge-default">비활성</span>
                                     </td>
-                                    <td th:text="${#temporals.format(scenario.updatedAt, 'yyyy-MM-dd HH:mm')}">2026-05-11</td>
+                                    <td th:text="${#temporals.format(scenario.lstChgDt, 'yyyy-MM-dd HH:mm')}">2026-05-11</td>
                                     <td>
                                         <div class="row-actions">
-                                            <a class="btn btn-xs btn-secondary" th:href="@{/admin/scenarios/{id}(id=${scenario.id})}">상세</a>
-                                            <a th:if="${previewVersionByScenarioId[scenario.id] != null}"
+                                            <a class="btn btn-xs btn-secondary" th:href="@{/admin/scenarios/{id}(id=${scenario.scenarioNo})}">상세</a>
+                                            <a th:if="${previewVersionByScenarioId[scenario.scenarioNo] != null}"
                                                class="btn btn-xs btn-solid btn-emerald"
                                                href="#"
-                                               th:href="@{/admin/scenarios/versions/{versionId}/preview(versionId=${previewVersionByScenarioId[scenario.id]})}"
-                                               th:data-preview-url="@{/admin/scenarios/versions/{versionId}/preview(versionId=${previewVersionByScenarioId[scenario.id]})}">
+                                               th:href="@{/admin/scenarios/versions/{versionId}/preview(versionId=${previewVersionByScenarioId[scenario.scenarioNo]})}"
+                                               th:data-preview-url="@{/admin/scenarios/versions/{versionId}/preview(versionId=${previewVersionByScenarioId[scenario.scenarioNo]})}">
                                                 Preview
                                             </a>
-                                            <span th:if="${previewVersionByScenarioId[scenario.id] == null}" class="help-text">버전 없음</span>
+                                            <span th:if="${previewVersionByScenarioId[scenario.scenarioNo] == null}" class="help-text">버전 없음</span>
                                         </div>
                                     </td>
                                 </tr>

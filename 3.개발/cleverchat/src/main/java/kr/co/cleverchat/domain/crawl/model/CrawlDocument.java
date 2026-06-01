@@ -3,8 +3,8 @@ package kr.co.cleverchat.domain.crawl.model;
 import java.time.OffsetDateTime;
 
 public class CrawlDocument {
-    private Long id;
-    private Long targetId;
+    private Long crawlDocumentNo;
+    private Long targetNo;
     private String url;
     private String title;
     private String content;
@@ -14,22 +14,22 @@ public class CrawlDocument {
     private Integer httpStatus;
     private String errorMessage;
     private OffsetDateTime fetchedAt;
-    private OffsetDateTime createdAt;
+    private OffsetDateTime frstRegDt;
 
-    public Long getId() {
-        return id;
+    public Long getCrawlDocumentNo() {
+        return crawlDocumentNo;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setCrawlDocumentNo(Long crawlDocumentNo) {
+        this.crawlDocumentNo = crawlDocumentNo;
     }
 
-    public Long getTargetId() {
-        return targetId;
+    public Long getTargetNo() {
+        return targetNo;
     }
 
-    public void setTargetId(Long targetId) {
-        this.targetId = targetId;
+    public void setTargetNo(Long targetNo) {
+        this.targetNo = targetNo;
     }
 
     public String getUrl() {
@@ -104,11 +104,11 @@ public class CrawlDocument {
         this.fetchedAt = fetchedAt;
     }
 
-    public OffsetDateTime getCreatedAt() {
-        return createdAt;
+    public OffsetDateTime getFrstRegDt() {
+        return frstRegDt;
     }
 
-    public void setCreatedAt(OffsetDateTime createdAt) {
-        this.createdAt = createdAt;
+    public void setFrstRegDt(OffsetDateTime frstRegDt) {
+        this.frstRegDt = frstRegDt;
     }
 }

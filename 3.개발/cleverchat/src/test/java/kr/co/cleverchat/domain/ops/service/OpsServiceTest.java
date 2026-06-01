@@ -56,7 +56,7 @@ class OpsServiceTest {
     @Test
     void auditLogsTrimsFiltersAndCapsLimit() {
         AuditLog auditLog = new AuditLog();
-        auditLog.setId(1L);
+        auditLog.setAuditLogNo(1L);
         OffsetDateTime from = OffsetDateTime.parse("2026-05-01T00:00:00+09:00");
         OffsetDateTime to = OffsetDateTime.parse("2026-05-27T23:59:00+09:00");
         when(opsMapper.findAuditLogs("admin", "CREATE", "SCENARIO", from, to, 200))
@@ -93,7 +93,7 @@ class OpsServiceTest {
         doAnswer(
                         invocation -> {
                             Notice notice = invocation.getArgument(0);
-                            notice.setId(7L);
+                            notice.setNoticeNo(7L);
                             return null;
                         })
                 .when(opsMapper)
@@ -117,9 +117,9 @@ class OpsServiceTest {
         verify(opsMapper).insertNotice(captor.capture());
         assertThat(captor.getValue().getTitle()).isEqualTo("Title");
         assertThat(captor.getValue().getContent()).isEqualTo("Content");
-        assertThat(captor.getValue().isEnabled()).isTrue();
+        assertThat(captor.getValue().getUseYn()).isEqualTo("Y");
         assertThat(captor.getValue().getPriority()).isEqualTo(100);
-        assertThat(captor.getValue().getCreatedBy()).isEqualTo(3L);
+        assertThat(captor.getValue().getFrstRegrEmpno()).isEqualTo(3L);
     }
 
     @Test
@@ -128,7 +128,7 @@ class OpsServiceTest {
                 new NoticeRequest(
                         "Title",
                         "Content",
-                        true,
+                        "Y",
                         OffsetDateTime.parse("2026-05-29T09:00:00+09:00"),
                         OffsetDateTime.parse("2026-05-28T09:00:00+09:00"),
                         100);
@@ -150,10 +150,10 @@ class OpsServiceTest {
 
     private Notice notice(Long id, String title) {
         Notice notice = new Notice();
-        notice.setId(id);
+        notice.setNoticeNo(id);
         notice.setTitle(title);
         notice.setContent("Content");
-        notice.setEnabled(true);
+        notice.setUseYn("Y");
         notice.setPriority(100);
         return notice;
     }

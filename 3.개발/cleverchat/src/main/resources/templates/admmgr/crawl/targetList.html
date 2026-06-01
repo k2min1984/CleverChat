@@ -38,7 +38,7 @@
                         <input type="text" name="label" maxlength="200">
                     </label>
                     <label>
-                        <input type="checkbox" name="enabled" checked>
+                        <input type="checkbox" name="useYn" checked>
                         Enabled
                     </label>
                     <label>
@@ -83,26 +83,26 @@
                 </thead>
                 <tbody>
                 <tr th:each="target : ${targets}">
-                    <td th:text="${target.id}">1</td>
+                    <td th:text="${target.crawlTargetNo}">1</td>
                     <td th:text="${target.label ?: '-'}">Help</td>
                     <td><a th:href="${target.url}" th:text="${target.url}" target="_blank" rel="noopener noreferrer">https://example.com</a></td>
-                    <td th:text="${target.enabled ? 'Y' : 'N'}">Y</td>
+                    <td th:text="${target.useYn == 'Y' ? 'Y' : 'N'}">Y</td>
                     <td>
-                        <form class="crawl-schedule-form" th:attr="data-schedule-target-id=${target.id}">
+                        <form class="crawl-schedule-form" th:attr="data-schedule-target-id=${target.crawlTargetNo}">
                             <label>
                                 <input type="checkbox" name="scheduleEnabled" th:checked="${target.scheduleEnabled}">
                                 Auto
                             </label>
                             <label>
                                 <span class="sr-only">Schedule mode</span>
-                                <select name="scheduleMode" th:attr="aria-label=${'Schedule mode for crawl target ' + target.id}">
+                                <select name="scheduleMode" th:attr="aria-label=${'Schedule mode for crawl target ' + target.crawlTargetNo}">
                                     <option value="INTERVAL" th:selected="${target.scheduleMode == null || target.scheduleMode == 'INTERVAL'}">Interval</option>
                                     <option value="CRON" th:selected="${target.scheduleMode == 'CRON'}">Cron</option>
                                 </select>
                             </label>
                             <input type="number" name="scheduleIntervalMinutes" min="5" max="10080" th:value="${target.scheduleIntervalMinutes ?: 1440}" aria-label="Schedule interval minutes">
                             <input type="text" name="scheduleCron" maxlength="120" th:value="${target.scheduleCron}" aria-label="Schedule cron expression" placeholder="0 */30 * * * *">
-                            <button type="button" data-preview-schedule th:attr="aria-label=${'Preview schedule for crawl target ' + target.id}">Preview</button>
+                            <button type="button" data-preview-schedule th:attr="aria-label=${'Preview schedule for crawl target ' + target.crawlTargetNo}">Preview</button>
                             <button type="submit">Save</button>
                             <small th:text="${target.nextRunAt == null ? '-' : #temporals.format(target.nextRunAt, 'yyyy-MM-dd HH:mm')}">-</small>
                             <small data-schedule-preview role="status" aria-live="polite"></small>
@@ -112,9 +112,9 @@
                     <td th:text="${target.lastStatus ?: '-'}">SUCCESS</td>
                     <td th:text="${target.lastRunAt == null ? '-' : #temporals.format(target.lastRunAt, 'yyyy-MM-dd HH:mm')}">2026-05-27 13:00</td>
                     <td>
-                        <button type="button" class="button" th:attr="data-run-target-id=${target.id},aria-label=${'Run crawl target ' + target.id}">Run</button>
-                        <a class="button" th:href="@{/admin/crawl-documents(targetId=${target.id})}">Documents</a>
-                        <a class="button" th:href="@{/admin/crawl-runs(targetId=${target.id})}">Runs</a>
+                        <button type="button" class="button" th:attr="data-run-target-id=${target.crawlTargetNo},aria-label=${'Run crawl target ' + target.crawlTargetNo}">Run</button>
+                        <a class="button" th:href="@{/admin/crawl-documents(targetId=${target.crawlTargetNo})}">Documents</a>
+                        <a class="button" th:href="@{/admin/crawl-runs(targetId=${target.crawlTargetNo})}">Runs</a>
                     </td>
                 </tr>
                 <tr th:if="${#lists.isEmpty(targets)}">

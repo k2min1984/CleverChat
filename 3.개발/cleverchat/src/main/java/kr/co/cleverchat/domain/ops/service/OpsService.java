@@ -93,7 +93,7 @@ public class OpsService {
     public Notice createNotice(NoticeRequest request, Long actorId) {
         Notice notice = toNotice(null, request, actorId);
         opsMapper.insertNotice(notice);
-        return opsMapper.findNoticeById(notice.getId());
+        return opsMapper.findNoticeById(notice.getNoticeNo());
     }
 
     @Audited(action = "NOTICE_UPDATE", targetType = "NOTICE")
@@ -120,16 +120,16 @@ public class OpsService {
     private Notice toNotice(Long id, NoticeRequest request, Long actorId) {
         validateNoticePeriod(request);
         Notice notice = new Notice();
-        notice.setId(id);
+        notice.setNoticeNo(id);
         notice.setTitle(trimRequired(request.title()));
         notice.setContent(trimRequired(request.content()));
-        notice.setEnabled(request.enabled() == null || request.enabled());
+        notice.setUseYn("N".equals(request.useYn()) ? "N" : "Y");
         notice.setStartsAt(request.startsAt());
         notice.setEndsAt(request.endsAt());
         notice.setPriority(
                 request.priority() == null ? DEFAULT_NOTICE_PRIORITY : request.priority());
-        notice.setCreatedBy(actorId);
-        notice.setUpdatedBy(actorId);
+        notice.setFrstRegrEmpno(actorId);
+        notice.setLstChgrEmpno(actorId);
         return notice;
     }
 

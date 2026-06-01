@@ -111,7 +111,7 @@ class ChatRuntimeServiceTest {
                 .doAnswer(
                         invocation -> {
                             ChatMessage message = invocation.getArgument(0);
-                            message.setId(messageIds.getAndIncrement());
+                            message.setChatMessageNo(messageIds.getAndIncrement());
                             return null;
                         })
                 .when(messageMapper)
@@ -146,7 +146,7 @@ class ChatRuntimeServiceTest {
         doAnswer(
                         invocation -> {
                             ChatSession inserted = invocation.getArgument(0);
-                            when(sessionMapper.findById(inserted.getId()))
+                            when(sessionMapper.findById(inserted.getChatSessionNo()))
                                     .thenReturn(Optional.of(inserted));
                             return null;
                         })
@@ -270,7 +270,7 @@ class ChatRuntimeServiceTest {
     void freeTextNoMatchUsesSearchFallbackWhenAvailable() {
         ChatSession session = activeSession();
         SearchResultItem result = new SearchResultItem();
-        result.setScenarioId(200L);
+        result.setScenarioNo(200L);
         result.setScenarioTitle("Search result");
         when(sessionMapper.findById(SESSION_ID_STR)).thenReturn(Optional.of(session));
         when(matchingService.match(100L, 300L, "unknown")).thenReturn(Optional.empty());
@@ -292,7 +292,7 @@ class ChatRuntimeServiceTest {
     void freeTextNoMatchUsesAiSuggestionWhenAvailable() {
         ChatSession session = activeSession();
         SearchResultItem result = new SearchResultItem();
-        result.setScenarioId(200L);
+        result.setScenarioNo(200L);
         result.setScenarioTitle("Search result");
         result.setMatchedField("SCENARIO");
         when(sessionMapper.findById(SESSION_ID_STR)).thenReturn(Optional.of(session));
@@ -402,8 +402,8 @@ class ChatRuntimeServiceTest {
     @Test
     void historyListReturnsRecentSessionsForAnonymousId() {
         ChatSessionListItem item = new ChatSessionListItem();
-        item.setId(SESSION_ID_STR);
-        item.setScenarioId(100L);
+        item.setChatSessionNo(SESSION_ID_STR);
+        item.setScenarioNo(100L);
         item.setScenarioTitle("상담");
         item.setState("COMPLETED");
         item.setMessageCount(2);
@@ -527,7 +527,7 @@ class ChatRuntimeServiceTest {
 
         verify(feedbackMapper).upsert(feedbackCaptor.capture());
         assertThat(result.comment()).isEqualTo(masked);
-        assertThat(feedbackCaptor.getValue().getMessageId()).isEqualTo(10L);
+        assertThat(feedbackCaptor.getValue().getMessageNo()).isEqualTo(10L);
         assertThat(feedbackCaptor.getValue().getRating()).isEqualTo("UP");
         assertThat(feedbackCaptor.getValue().getComment()).isEqualTo("[encrypted]");
         assertThat(feedbackCaptor.getValue().getCommentCiphertext()).isNotBlank();
@@ -573,11 +573,11 @@ class ChatRuntimeServiceTest {
 
     private ChatSession activeSession() {
         ChatSession session = new ChatSession();
-        session.setId(SESSION_ID_STR);
+        session.setChatSessionNo(SESSION_ID_STR);
         session.setAnonymousId(ANONYMOUS_ID_STR);
-        session.setScenarioId(100L);
-        session.setVersionId(200L);
-        session.setCurrentNodeId(300L);
+        session.setScenarioNo(100L);
+        session.setVersionNo(200L);
+        session.setCurrentNodeNo(300L);
         session.setState("ACTIVE");
         session.setExpiresAt(OffsetDateTime.now().plusMinutes(30));
         return session;
@@ -585,7 +585,7 @@ class ChatRuntimeServiceTest {
 
     private Scenario scenario(Long id, String status, String title) {
         Scenario scenario = new Scenario();
-        scenario.setId(id);
+        scenario.setScenarioNo(id);
         scenario.setStatus(status);
         scenario.setTitle(title);
         return scenario;
@@ -593,16 +593,16 @@ class ChatRuntimeServiceTest {
 
     private ScenarioVersion version(Long id, Long scenarioId, Long startNodeId) {
         ScenarioVersion version = new ScenarioVersion();
-        version.setId(id);
-        version.setScenarioId(scenarioId);
-        version.setStartNodeId(startNodeId);
+        version.setScenarioVersionNo(id);
+        version.setScenarioNo(scenarioId);
+        version.setStartNodeNo(startNodeId);
         return version;
     }
 
     private ScenarioNode node(Long id, Long versionId, String type, String title, String content) {
         ScenarioNode node = new ScenarioNode();
-        node.setId(id);
-        node.setVersionId(versionId);
+        node.setScenarioNodeNo(id);
+        node.setVersionNo(versionId);
         node.setNodeType(type);
         node.setTitle(title);
         node.setContent(content);
@@ -611,21 +611,21 @@ class ChatRuntimeServiceTest {
 
     private ScenarioNodeOption option(Long id, Long nextNodeId, String label) {
         ScenarioNodeOption option = new ScenarioNodeOption();
-        option.setId(id);
-        option.setNextNodeId(nextNodeId);
+        option.setScenarioNodeOptionNo(id);
+        option.setNextNodeNo(nextNodeId);
         option.setLabel(label);
-        option.setEnabled(true);
+        option.setUseYn("Y");
         return option;
     }
 
     private ChatMessage botMessage(Long id, String sessionId) {
         ChatMessage message = new ChatMessage();
-        message.setId(id);
-        message.setSessionId(sessionId);
+        message.setChatMessageNo(id);
+        message.setSessionNo(sessionId);
         message.setSeq(1);
         message.setDirection("BOT");
         message.setContent("답변");
-        message.setCreatedAt(OffsetDateTime.now());
+        message.setFrstRegDt(OffsetDateTime.now());
         return message;
     }
 

@@ -222,26 +222,26 @@ class ScenarioMatchingServiceTest {
 
     private ScenarioNodeOption option(Long id, Long nextNodeId, String label, int sortOrder) {
         ScenarioNodeOption option = new ScenarioNodeOption();
-        option.setId(id);
-        option.setNextNodeId(nextNodeId);
+        option.setScenarioNodeOptionNo(id);
+        option.setNextNodeNo(nextNodeId);
         option.setLabel(label);
         option.setSortOrder(sortOrder);
-        option.setEnabled(true);
+        option.setUseYn("Y");
         return option;
     }
 
     private ScenarioKeyword keyword(Long scenarioId, String value, int weight) {
         ScenarioKeyword keyword = new ScenarioKeyword();
-        keyword.setScenarioId(scenarioId);
+        keyword.setScenarioNo(scenarioId);
         keyword.setKeyword(value);
         keyword.setWeight(weight);
-        keyword.setEnabled(true);
+        keyword.setUseYn("Y");
         return keyword;
     }
 
     private ScenarioSynonymRow synonym(Long scenarioId, String value, int weight) {
         ScenarioSynonymRow row = new ScenarioSynonymRow();
-        row.setScenarioId(scenarioId);
+        row.setScenarioNo(scenarioId);
         row.setSynonym(value);
         row.setWeight(weight);
         return row;

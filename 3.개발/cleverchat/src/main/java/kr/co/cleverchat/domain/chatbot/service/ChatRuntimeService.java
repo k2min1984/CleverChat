@@ -114,25 +114,25 @@ public class ChatRuntimeService {
                                         new BusinessException(
                                                 ErrorCode.NOT_FOUND, "활성 시나리오를 찾을 수 없습니다."));
         ScenarioVersion version =
-                Optional.ofNullable(versionMapper.findPublishedByScenarioId(scenario.getId()))
-                        .filter(value -> value.getStartNodeId() != null)
+                Optional.ofNullable(versionMapper.findPublishedByScenarioId(scenario.getScenarioNo()))
+                        .filter(value -> value.getStartNodeNo() != null)
                         .orElseThrow(
                                 () ->
                                         new BusinessException(
                                                 ErrorCode.STATE_CONFLICT, "게시된 시작 노드가 없습니다."));
         ScenarioNode startNode =
-                Optional.ofNullable(nodeMapper.findById(version.getStartNodeId()))
+                Optional.ofNullable(nodeMapper.findById(version.getStartNodeNo()))
                         .orElseThrow(
                                 () ->
                                         new BusinessException(
                                                 ErrorCode.STATE_CONFLICT, "시작 노드를 찾을 수 없습니다."));
 
         ChatSession session = new ChatSession();
-        session.setId(UUID.randomUUID().toString());
+        session.setChatSessionNo(UUID.randomUUID().toString());
         session.setAnonymousId(context.anonymousId().toString());
-        session.setScenarioId(scenario.getId());
-        session.setVersionId(version.getId());
-        session.setCurrentNodeId(startNode.getId());
+        session.setScenarioNo(scenario.getScenarioNo());
+        session.setVersionNo(version.getScenarioVersionNo());
+        session.setCurrentNodeNo(startNode.getScenarioNodeNo());
         session.setState(stateFor(startNode));
         session.setExpiresAt(expiresAt());
         session.setIpHash(hash(context.ipAddress()));
@@ -140,11 +140,11 @@ public class ChatRuntimeService {
         sessionMapper.insert(session);
 
         insertBotMessage(
-                session.getId(),
+                session.getChatSessionNo(),
                 1,
                 startNode,
                 startNode.getContent() == null ? startNode.getTitle() : startNode.getContent());
-        return response(session.getId());
+        return response(session.getChatSessionNo());
     }
 
     @Transactional
@@ -183,8 +183,8 @@ public class ChatRuntimeService {
         enforceRateLimit(session, context);
 
         ScenarioNodeOption option =
-                optionMapper.findEnabledByNodeId(session.getCurrentNodeId()).stream()
-                        .filter(value -> value.getId().equals(optionId))
+                optionMapper.findEnabledByNodeId(session.getCurrentNodeNo()).stream()
+                        .filter(value -> value.getScenarioNodeOptionNo().equals(optionId))
                         .findFirst()
                         .orElseThrow(
                                 () -> {
@@ -200,12 +200,12 @@ public class ChatRuntimeService {
         insertUserMessage(
                 sid,
                 seq,
-                session.getCurrentNodeId(),
-                option.getId(),
+                session.getCurrentNodeNo(),
+                option.getScenarioNodeOptionNo(),
                 option.getLabel(),
                 "{}",
                 null);
-        advance(session, option.getNextNodeId(), seq + 1);
+        advance(session, option.getNextNodeNo(), seq + 1);
         return response(sid);
     }
 
@@ -221,7 +221,7 @@ public class ChatRuntimeService {
             Map<String, Object> detail = new LinkedHashMap<>();
             detail.put("piiTypes", piiTypes);
             detail.put("inputLength", text == null ? 0 : text.length());
-            detail.put("currentNodeId", session.getCurrentNodeId());
+            detail.put("currentNodeId", session.getCurrentNodeNo());
             failureRecorder.recordFailure(sid, null, "PII_BLOCKED", detail);
             throw new BusinessException(
                     ErrorCode.VALIDATION_ERROR, "Personal information cannot be submitted.");
@@ -231,11 +231,11 @@ public class ChatRuntimeService {
         long startedAt = System.nanoTime();
         Optional<ScenarioMatchingService.MatchResult> match =
                 matchingService.match(
-                        session.getScenarioId(), session.getCurrentNodeId(), safeText);
+                        session.getScenarioNo(), session.getCurrentNodeNo(), safeText);
         int latencyMs = latencyMsSince(startedAt);
         int seq = messageMapper.selectNextSeq(sid);
         insertUserMessage(
-                sid, seq, session.getCurrentNodeId(), null, safeText, matchingPayload(match), null);
+                sid, seq, session.getCurrentNodeNo(), null, safeText, matchingPayload(match), null);
         if (match.isEmpty()) {
             var fallback =
                     searchService.search(
@@ -255,8 +255,8 @@ public class ChatRuntimeService {
                                         safeText,
                                         fallback.results(),
                                         new AiAnswerContext(
-                                                session.getScenarioId(),
-                                                session.getCurrentNodeId(),
+                                                session.getScenarioNo(),
+                                                session.getCurrentNodeNo(),
                                                 "CHAT_FALLBACK"))
                                 .map(response -> response.answer())
                                 .orElse(fallbackMessage);
@@ -265,7 +265,7 @@ public class ChatRuntimeService {
             }
             Map<String, Object> detail = new LinkedHashMap<>();
             detail.put("inputLength", text == null ? 0 : text.length());
-            detail.put("currentNodeId", session.getCurrentNodeId());
+            detail.put("currentNodeId", session.getCurrentNodeNo());
             detail.put("fallbackSource", "M4_SEARCH");
             detail.put("matchedScenarioIds", List.of());
             failureRecorder.recordFailure(sid, null, "NO_MATCH", detail);
@@ -292,7 +292,7 @@ public class ChatRuntimeService {
                 .map(
                         scenario ->
                                 new ScenarioSummaryResponse(
-                                        scenario.getId(),
+                                        scenario.getScenarioNo(),
                                         scenario.getTitle(),
                                         scenario.getDescription()))
                 .toList();
@@ -315,14 +315,14 @@ public class ChatRuntimeService {
                                 () ->
                                         new BusinessException(
                                                 ErrorCode.NOT_FOUND, "메시지를 찾을 수 없습니다."));
-        ChatSession session = findSession(message.getSessionId());
+        ChatSession session = findSession(message.getSessionNo());
         validateOwner(session, context);
         if (!"BOT".equals(message.getDirection())) {
             throw new BusinessException(ErrorCode.VALIDATION_ERROR, "BOT 메시지에만 만족도를 등록할 수 있습니다.");
         }
         String safeComment = safeFeedbackComment(comment);
         ChatFeedback feedback = new ChatFeedback();
-        feedback.setMessageId(messageId);
+        feedback.setMessageNo(messageId);
         feedback.setRating(rating);
         applyEncryptedComment(feedback, safeComment);
         feedback.setIpHash(hash(context.ipAddress()));
@@ -337,21 +337,21 @@ public class ChatRuntimeService {
     private void advance(ChatSession session, Long nextNodeId, int botSeq, Integer latencyMs) {
         if (nextNodeId == null) {
             sessionMapper.updateCurrentNode(
-                    session.getId(), session.getCurrentNodeId(), "COMPLETED", expiresAt());
-            insertBotMessage(session.getId(), botSeq, null, "대화가 완료되었습니다.", latencyMs);
+                    session.getChatSessionNo(), session.getCurrentNodeNo(), "COMPLETED", expiresAt());
+            insertBotMessage(session.getChatSessionNo(), botSeq, null, "대화가 완료되었습니다.", latencyMs);
             return;
         }
         ScenarioNode nextNode =
                 Optional.ofNullable(nodeMapper.findById(nextNodeId))
-                        .filter(node -> session.getVersionId().equals(node.getVersionId()))
+                        .filter(node -> session.getVersionNo().equals(node.getVersionNo()))
                         .orElseThrow(
                                 () ->
                                         new BusinessException(
                                                 ErrorCode.STATE_CONFLICT, "같은 버전의 다음 노드가 아닙니다."));
         sessionMapper.updateCurrentNode(
-                session.getId(), nextNode.getId(), stateFor(nextNode), expiresAt());
+                session.getChatSessionNo(), nextNode.getScenarioNodeNo(), stateFor(nextNode), expiresAt());
         insertBotMessage(
-                session.getId(),
+                session.getChatSessionNo(),
                 botSeq,
                 nextNode,
                 nextNode.getContent() == null ? nextNode.getTitle() : nextNode.getContent(),
@@ -367,11 +367,11 @@ public class ChatRuntimeService {
             String payload,
             Integer latencyMs) {
         ChatMessage message = new ChatMessage();
-        message.setSessionId(sessionId);
+        message.setSessionNo(sessionId);
         message.setSeq(seq);
         message.setDirection("USER");
-        message.setNodeId(nodeId);
-        message.setOptionId(optionId);
+        message.setNodeNo(nodeId);
+        message.setOptionNo(optionId);
         applyEncryptedContent(message, content);
         message.setPayload(payload);
         message.setLatencyMs(latencyMs);
@@ -387,10 +387,10 @@ public class ChatRuntimeService {
     private ChatMessage insertBotMessage(
             String sessionId, int seq, ScenarioNode node, String content, Integer latencyMs) {
         ChatMessage message = new ChatMessage();
-        message.setSessionId(sessionId);
+        message.setSessionNo(sessionId);
         message.setSeq(seq);
         message.setDirection("BOT");
-        message.setNodeId(node == null ? null : node.getId());
+        message.setNodeNo(node == null ? null : node.getScenarioNodeNo());
         applyEncryptedContent(
                 message, content == null || content.isBlank() ? "응답 내용이 없습니다." : content);
         message.setPayload("{}");
@@ -407,15 +407,15 @@ public class ChatRuntimeService {
                         .toList();
         List<OptionResponse> options =
                 "ACTIVE".equals(session.getState())
-                        ? optionMapper.findEnabledByNodeId(session.getCurrentNodeId()).stream()
+                        ? optionMapper.findEnabledByNodeId(session.getCurrentNodeNo()).stream()
                                 .map(this::toOptionResponse)
                                 .toList()
                         : List.of();
         return new SessionResponse(
-                UUID.fromString(session.getId()),
-                session.getScenarioId(),
-                session.getVersionId(),
-                session.getCurrentNodeId(),
+                UUID.fromString(session.getChatSessionNo()),
+                session.getScenarioNo(),
+                session.getVersionNo(),
+                session.getCurrentNodeNo(),
                 session.getState(),
                 session.getExpiresAt(),
                 messages,
@@ -446,19 +446,19 @@ public class ChatRuntimeService {
         if (session.getExpiresAt().isBefore(OffsetDateTime.now())
                 || "EXPIRED".equals(session.getState())) {
             if (!"EXPIRED".equals(session.getState())) {
-                sessionMapper.markExpired(session.getId());
-                failureRecorder.recordFailure(session.getId(), null, "EXPIRED");
+                sessionMapper.markExpired(session.getChatSessionNo());
+                failureRecorder.recordFailure(session.getChatSessionNo(), null, "EXPIRED");
             }
             throw new BusinessException(ErrorCode.SESSION_EXPIRED, "Session expired.");
         }
     }
 
     private void enforceRateLimit(ChatSession session, ChatRequestContext context) {
-        String key = context.anonymousId() + ":" + session.getId();
+        String key = context.anonymousId() + ":" + session.getChatSessionNo();
         if (!rateLimiter.isAllowed(key)) {
             Map<String, Object> detail = new LinkedHashMap<>();
-            detail.put("currentNodeId", session.getCurrentNodeId());
-            failureRecorder.recordFailure(session.getId(), null, "RATE_LIMITED", detail);
+            detail.put("currentNodeId", session.getCurrentNodeNo());
+            failureRecorder.recordFailure(session.getChatSessionNo(), null, "RATE_LIMITED", detail);
             throw new BusinessException(ErrorCode.RATE_LIMITED, "Too many requests.");
         }
     }
@@ -503,27 +503,30 @@ public class ChatRuntimeService {
 
     private MessageResponse toMessageResponse(ChatMessage message) {
         return new MessageResponse(
-                message.getId(),
+                message.getChatMessageNo(),
                 message.getSeq(),
                 message.getDirection(),
-                message.getNodeId(),
+                message.getNodeNo(),
                 decryptContent(message),
-                message.getCreatedAt());
+                message.getFrstRegDt());
     }
 
     private OptionResponse toOptionResponse(ScenarioNodeOption option) {
-        return new OptionResponse(option.getId(), option.getLabel(), option.getSortOrder());
+        return new OptionResponse(
+                option.getScenarioNodeOptionNo(), option.getLabel(), option.getSortOrder());
     }
 
     private RecommendationResponse toRecommendationResponse(ChatRecommendation recommendation) {
         return new RecommendationResponse(
-                recommendation.getId(), recommendation.getScenarioId(), recommendation.getLabel());
+                recommendation.getChatRecommendationNo(),
+                recommendation.getScenarioNo(),
+                recommendation.getLabel());
     }
 
     private HistorySessionResponse toHistorySessionResponse(ChatSessionListItem session) {
         return new HistorySessionResponse(
-                UUID.fromString(session.getId()),
-                session.getScenarioId(),
+                UUID.fromString(session.getChatSessionNo()),
+                session.getScenarioNo(),
                 session.getScenarioTitle(),
                 session.getState(),
                 session.getStartedAt(),

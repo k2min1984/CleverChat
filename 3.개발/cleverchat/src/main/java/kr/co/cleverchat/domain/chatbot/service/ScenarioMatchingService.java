@@ -79,8 +79,8 @@ public class ScenarioMatchingService implements ScenarioMatchingCacheInvalidator
             return Optional.of(
                     new MatchResult(
                             scenarioId,
-                            option.getId(),
-                            option.getNextNodeId(),
+                            option.getScenarioNodeOptionNo(),
+                            option.getNextNodeNo(),
                             100.0,
                             100,
                             option.getSortOrder(),
@@ -90,8 +90,8 @@ public class ScenarioMatchingService implements ScenarioMatchingCacheInvalidator
             return Optional.of(
                     new MatchResult(
                             scenarioId,
-                            option.getId(),
-                            option.getNextNodeId(),
+                            option.getScenarioNodeOptionNo(),
+                            option.getNextNodeNo(),
                             85.0,
                             85,
                             option.getSortOrder(),
@@ -125,7 +125,7 @@ public class ScenarioMatchingService implements ScenarioMatchingCacheInvalidator
                                         keywordResult(
                                                 keyword,
                                                 60.0,
-                                                currentScenarioId.equals(keyword.getScenarioId())))
+                                                currentScenarioId.equals(keyword.getScenarioNo())))
                         .max(matchComparator());
         Optional<MatchResult> globalSynonym =
                 globalSynonymCache
@@ -137,7 +137,7 @@ public class ScenarioMatchingService implements ScenarioMatchingCacheInvalidator
                                         synonymResult(
                                                 row,
                                                 50.0,
-                                                currentScenarioId.equals(row.getScenarioId())))
+                                                currentScenarioId.equals(row.getScenarioNo())))
                         .max(matchComparator());
 
         return List.of(currentKeyword, currentSynonym, globalKeyword, globalSynonym).stream()
@@ -149,7 +149,7 @@ public class ScenarioMatchingService implements ScenarioMatchingCacheInvalidator
             ScenarioKeyword keyword, double baseScore, boolean currentScenario) {
         double score = baseScore * keyword.getWeight() / 100.0;
         return new MatchResult(
-                keyword.getScenarioId(),
+                keyword.getScenarioNo(),
                 null,
                 null,
                 score,
@@ -162,7 +162,7 @@ public class ScenarioMatchingService implements ScenarioMatchingCacheInvalidator
             ScenarioSynonymRow row, double baseScore, boolean currentScenario) {
         double score = baseScore * row.getWeight() / 100.0;
         return new MatchResult(
-                row.getScenarioId(),
+                row.getScenarioNo(),
                 null,
                 null,
                 score,

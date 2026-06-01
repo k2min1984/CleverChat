@@ -23,15 +23,15 @@ public class CrawlScheduler {
     public void runDueTargets() {
         for (CrawlTarget target : crawlService.dueTargets(BATCH_SIZE)) {
             try {
-                crawlService.runScheduled(target.getId());
+                crawlService.runScheduled(target.getCrawlTargetNo());
             } catch (BusinessException e) {
                 log.info(
                         "Scheduled crawl failed: targetId={}, code={}, message={}",
-                        target.getId(),
+                        target.getCrawlTargetNo(),
                         e.getErrorCode(),
                         e.getMessage());
             } catch (RuntimeException e) {
-                log.warn("Scheduled crawl failed unexpectedly: targetId={}", target.getId(), e);
+                log.warn("Scheduled crawl failed unexpectedly: targetId={}", target.getCrawlTargetNo(), e);
             }
         }
     }

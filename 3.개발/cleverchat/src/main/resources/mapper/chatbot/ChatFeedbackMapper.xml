@@ -3,21 +3,21 @@
     "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="kr.co.cleverchat.domain.chatbot.mapper.ChatFeedbackMapper">
     <select id="findByMessageId" resultType="kr.co.cleverchat.domain.chatbot.model.ChatFeedback">
-        SELECT id, message_id, rating, comment, comment_ciphertext, comment_key_id,
-               comment_encryption_version, created_at, ip_hash
-        FROM chat_feedback
-        WHERE message_id = #{messageId}
+        SELECT chat_feedback_no, message_no, rating, comment, comment_ciphertext, comment_key_id,
+               comment_encryption_version, frst_reg_dt, ip_hash
+        FROM tb_chat_feedback
+        WHERE message_no = #{messageId}
     </select>
     <insert id="upsert" parameterType="kr.co.cleverchat.domain.chatbot.model.ChatFeedback">
-        INSERT INTO chat_feedback (
-            message_id, rating, comment, comment_ciphertext, comment_key_id,
+        INSERT INTO tb_chat_feedback (
+            message_no, rating, comment, comment_ciphertext, comment_key_id,
             comment_encryption_version, ip_hash
         )
         VALUES (
-            #{messageId}, #{rating}, #{comment}, #{commentCiphertext}, #{commentKeyId},
+            #{messageNo}, #{rating}, #{comment}, #{commentCiphertext}, #{commentKeyId},
             #{commentEncryptionVersion}, #{ipHash}
         )
-        ON CONFLICT (message_id) DO UPDATE
+        ON CONFLICT (message_no) DO UPDATE
         SET rating = EXCLUDED.rating,
             comment = EXCLUDED.comment,
             comment_ciphertext = EXCLUDED.comment_ciphertext,
@@ -27,60 +27,60 @@
     </insert>
     <select id="findQueue" resultType="kr.co.cleverchat.domain.chatbot.model.ChatFeedbackQueueItem">
         SELECT
-            fb.id,
-            fb.message_id,
-            left(m.session_id::text, 8) AS session_key,
-            s.scenario_id,
+            fb.chat_feedback_no,
+            fb.message_no,
+            left(m.session_no::text, 8) AS session_key,
+            s.scenario_no,
             sc.title AS scenario_title,
             fb.rating,
             fb.comment,
             fb.comment_ciphertext,
             fb.comment_key_id,
             fb.comment_encryption_version,
-            fb.created_at
-        FROM chat_feedback fb
-        JOIN chat_message m ON m.id = fb.message_id
-        JOIN chat_session s ON s.id = m.session_id
-        JOIN scenario sc ON sc.id = s.scenario_id
+            fb.frst_reg_dt
+        FROM tb_chat_feedback fb
+        JOIN tb_chat_message m ON m.chat_message_no = fb.message_no
+        JOIN tb_chat_session s ON s.chat_session_no = m.session_no
+        JOIN tb_scenario sc ON sc.scenario_no = s.scenario_no
         <where>
             <if test="rating != null and rating != ''">
                 fb.rating = #{rating}
             </if>
         </where>
-        ORDER BY fb.created_at DESC, fb.id DESC
+        ORDER BY fb.frst_reg_dt DESC, fb.chat_feedback_no DESC
         LIMIT #{limit}
     </select>
     <select id="findCommentBackfillCandidates" resultType="kr.co.cleverchat.domain.chatbot.model.ChatEncryptedFieldRow">
-        SELECT id,
+        SELECT chat_feedback_no AS id,
                comment AS plaintext,
                comment_ciphertext AS ciphertext,
                comment_key_id AS key_id
-        FROM chat_feedback
+        FROM tb_chat_feedback
         WHERE comment_ciphertext IS NULL
           AND comment IS NOT NULL
           AND comment != ''
           AND comment != '[encrypted]'
-        ORDER BY id
+        ORDER BY chat_feedback_no
         LIMIT #{limit}
     </select>
     <select id="findCommentRotationCandidates" resultType="kr.co.cleverchat.domain.chatbot.model.ChatEncryptedFieldRow">
-        SELECT id,
+        SELECT chat_feedback_no AS id,
                comment AS plaintext,
                comment_ciphertext AS ciphertext,
                comment_key_id AS key_id
-        FROM chat_feedback
+        FROM tb_chat_feedback
         WHERE comment_ciphertext IS NOT NULL
           AND comment_key_id IS NOT NULL
           AND comment_key_id != #{activeKeyId}
-        ORDER BY id
+        ORDER BY chat_feedback_no
         LIMIT #{limit}
     </select>
     <update id="updateEncryptedComment">
-        UPDATE chat_feedback
+        UPDATE tb_chat_feedback
         SET comment = #{comment},
             comment_ciphertext = #{commentCiphertext},
             comment_key_id = #{commentKeyId},
             comment_encryption_version = #{commentEncryptionVersion}
-        WHERE id = #{id}
+        WHERE chat_feedback_no = #{id}
     </update>
 </mapper>

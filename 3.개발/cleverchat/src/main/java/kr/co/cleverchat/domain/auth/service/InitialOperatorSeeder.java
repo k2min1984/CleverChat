@@ -45,9 +45,9 @@ public class InitialOperatorSeeder implements ApplicationRunner {
         operator.setUsername(username);
         operator.setPasswordHash(passwordEncoder.encode(password));
         operator.setDisplayName(displayName);
-        operator.setEnabled(enabled);
+        operator.setUseYn(enabled ? "Y" : "N");
         operator.setMustChangePassword(true);
         userMapper.insertUser(operator);
-        userMapper.insertUserRole(operator.getId(), "OPERATOR");
+        userMapper.insertUserRole(operator.getUserNo(), "OPERATOR");
     }
 }

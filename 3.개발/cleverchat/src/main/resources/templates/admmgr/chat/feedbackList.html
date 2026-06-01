@@ -31,13 +31,13 @@
                 </thead>
                 <tbody>
                 <tr th:each="item : ${feedbackItems}">
-                    <td th:text="${item.id}">1</td>
+                    <td th:text="${item.chatFeedbackNo}">1</td>
                     <td th:text="${item.rating}">UP</td>
                     <td th:text="${item.scenarioTitle}">Scenario</td>
                     <td th:text="${item.sessionKey}">abcdef12</td>
-                    <td th:text="${item.messageId}">10</td>
+                    <td th:text="${item.messageNo}">10</td>
                     <td th:text="${item.comment ?: '-'}">-</td>
-                    <td th:text="${#temporals.format(item.createdAt, 'yyyy-MM-dd HH:mm')}">2026-05-27 13:00</td>
+                    <td th:text="${#temporals.format(item.frstRegDt, 'yyyy-MM-dd HH:mm')}">2026-05-27 13:00</td>
                 </tr>
                 <tr th:if="${#lists.isEmpty(feedbackItems)}">
                     <td colspan="7">No feedback found.</td>

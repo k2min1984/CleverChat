@@ -77,7 +77,7 @@ class ScenarioServiceTest {
         org.mockito.Mockito.doAnswer(
                         invocation -> {
                             ScenarioVersion version = invocation.getArgument(0);
-                            version.setId(30L);
+                            version.setScenarioVersionNo(30L);
                             return null;
                         })
                 .when(versionMapper)
@@ -85,7 +85,7 @@ class ScenarioServiceTest {
 
         ScenarioVersion result = scenarioService.createVersion(1L);
 
-        assertThat(result.getId()).isEqualTo(30L);
+        assertThat(result.getScenarioVersionNo()).isEqualTo(30L);
         assertThat(result.getVersionNo()).isEqualTo(3);
         verify(versionMapper).insert(any(ScenarioVersion.class));
     }
@@ -93,7 +93,7 @@ class ScenarioServiceTest {
     @Test
     void createVersionCopiesLatestPublishedGraphToDraft() {
         ScenarioVersion published = version(20L, 1L, 1, "PUBLISHED");
-        published.setStartNodeId(100L);
+        published.setStartNodeNo(100L);
         ScenarioNode sourceNode = node(100L);
         sourceNode.setMetadata("{\"memo\":\"old\"}");
         when(scenarioMapper.findById(1L)).thenReturn(scenario(1L, "ACTIVE"));
@@ -107,7 +107,7 @@ class ScenarioServiceTest {
         org.mockito.Mockito.doAnswer(
                         invocation -> {
                             ScenarioVersion version = invocation.getArgument(0);
-                            version.setId(30L);
+                            version.setScenarioVersionNo(30L);
                             return null;
                         })
                 .when(versionMapper)
@@ -115,7 +115,7 @@ class ScenarioServiceTest {
         org.mockito.Mockito.doAnswer(
                         invocation -> {
                             ScenarioNode node = invocation.getArgument(0);
-                            node.setId(300L);
+                            node.setScenarioNodeNo(300L);
                             return null;
                         })
                 .when(nodeMapper)
@@ -123,7 +123,7 @@ class ScenarioServiceTest {
 
         ScenarioVersion result = scenarioService.createVersion(1L);
 
-        assertThat(result.getId()).isEqualTo(30L);
+        assertThat(result.getScenarioVersionNo()).isEqualTo(30L);
         verify(nodeMapper).insert(any(ScenarioNode.class));
         verify(optionMapper).insert(any(ScenarioNodeOption.class));
         verify(versionMapper).setStartNode(30L, 300L);
@@ -134,8 +134,8 @@ class ScenarioServiceTest {
         ScenarioVersion noGraph = version(10L, 1L, 1, "DRAFT");
         ScenarioVersion noStart = version(11L, 1L, 2, "DRAFT");
         ScenarioVersion ready = version(12L, 1L, 3, "DRAFT");
-        noStart.setStartNodeId(999L);
-        ready.setStartNodeId(100L);
+        noStart.setStartNodeNo(999L);
+        ready.setStartNodeNo(100L);
         when(nodeMapper.findByVersionId(10L)).thenReturn(List.of());
         when(nodeMapper.findByVersionId(11L)).thenReturn(List.of(node(100L)));
         when(nodeMapper.findByVersionId(12L)).thenReturn(List.of(node(100L)));
@@ -163,7 +163,7 @@ class ScenarioServiceTest {
     void emptyDraftGraphUsesLatestPublishedGraphAsEditableBaseline() {
         ScenarioVersion draft = version(30L, 1L, 2, "DRAFT");
         ScenarioVersion published = version(20L, 1L, 1, "PUBLISHED");
-        published.setStartNodeId(100L);
+        published.setStartNodeNo(100L);
         when(versionMapper.findById(30L)).thenReturn(draft);
         when(nodeMapper.findByVersionId(30L)).thenReturn(List.of());
         when(versionMapper.findByScenarioId(1L)).thenReturn(List.of(draft, published));
@@ -179,7 +179,7 @@ class ScenarioServiceTest {
 
     private Scenario scenario(Long id, String status) {
         Scenario scenario = new Scenario();
-        scenario.setId(id);
+        scenario.setScenarioNo(id);
         scenario.setStatus(status);
         scenario.setTitle("테스트 시나리오");
         return scenario;
@@ -187,8 +187,8 @@ class ScenarioServiceTest {
 
     private ScenarioVersion version(Long id, Long scenarioId, int versionNo, String status) {
         ScenarioVersion version = new ScenarioVersion();
-        version.setId(id);
-        version.setScenarioId(scenarioId);
+        version.setScenarioVersionNo(id);
+        version.setScenarioNo(scenarioId);
         version.setVersionNo(versionNo);
         version.setStatus(status);
         return version;
@@ -196,8 +196,8 @@ class ScenarioServiceTest {
 
     private ScenarioNode node(Long id) {
         ScenarioNode node = new ScenarioNode();
-        node.setId(id);
-        node.setVersionId(1L);
+        node.setScenarioNodeNo(id);
+        node.setVersionNo(1L);
         node.setNodeKey("start");
         node.setNodeType("MESSAGE");
         node.setTitle("Start");
@@ -206,12 +206,12 @@ class ScenarioServiceTest {
 
     private ScenarioNodeOption option(Long id, Long nodeId, Long nextNodeId) {
         ScenarioNodeOption option = new ScenarioNodeOption();
-        option.setId(id);
-        option.setNodeId(nodeId);
-        option.setNextNodeId(nextNodeId);
+        option.setScenarioNodeOptionNo(id);
+        option.setNodeNo(nodeId);
+        option.setNextNodeNo(nextNodeId);
         option.setLabel("다음");
         option.setSortOrder(1);
-        option.setEnabled(true);
+        option.setUseYn("Y");
         return option;
     }
 }

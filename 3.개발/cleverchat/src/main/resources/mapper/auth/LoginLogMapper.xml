@@ -4,7 +4,7 @@
 <mapper namespace="kr.co.cleverchat.domain.auth.mapper.LoginLogMapper">
 
     <insert id="insert">
-        INSERT INTO login_log (
+        INSERT INTO tb_login_log (
             username,
             success,
             failure_msg,

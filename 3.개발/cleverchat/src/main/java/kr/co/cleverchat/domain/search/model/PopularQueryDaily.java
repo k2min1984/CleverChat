@@ -10,9 +10,9 @@ public class PopularQueryDaily {
     private String queryTextSample;
     private int searchCount;
     private int noResultCount;
-    private Long topResultScenarioId;
-    private OffsetDateTime createdAt;
-    private OffsetDateTime updatedAt;
+    private Long topResultScenarioNo;
+    private OffsetDateTime frstRegDt;
+    private OffsetDateTime lstChgDt;
 
     public LocalDate getStatDate() {
         return statDate;
@@ -54,27 +54,27 @@ public class PopularQueryDaily {
         this.noResultCount = noResultCount;
     }
 
-    public Long getTopResultScenarioId() {
-        return topResultScenarioId;
+    public Long getTopResultScenarioNo() {
+        return topResultScenarioNo;
     }
 
-    public void setTopResultScenarioId(Long topResultScenarioId) {
-        this.topResultScenarioId = topResultScenarioId;
+    public void setTopResultScenarioNo(Long topResultScenarioNo) {
+        this.topResultScenarioNo = topResultScenarioNo;
     }
 
-    public OffsetDateTime getCreatedAt() {
-        return createdAt;
+    public OffsetDateTime getFrstRegDt() {
+        return frstRegDt;
     }
 
-    public void setCreatedAt(OffsetDateTime createdAt) {
-        this.createdAt = createdAt;
+    public void setFrstRegDt(OffsetDateTime frstRegDt) {
+        this.frstRegDt = frstRegDt;
     }
 
-    public OffsetDateTime getUpdatedAt() {
-        return updatedAt;
+    public OffsetDateTime getLstChgDt() {
+        return lstChgDt;
     }
 
-    public void setUpdatedAt(OffsetDateTime updatedAt) {
-        this.updatedAt = updatedAt;
+    public void setLstChgDt(OffsetDateTime lstChgDt) {
+        this.lstChgDt = lstChgDt;
     }
 }

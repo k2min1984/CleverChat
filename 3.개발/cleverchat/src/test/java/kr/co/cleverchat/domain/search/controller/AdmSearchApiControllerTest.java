@@ -55,7 +55,7 @@ class AdmSearchApiControllerTest {
     @Test
     void searchTestReturnsResults() throws Exception {
         SearchResultItem item = new SearchResultItem();
-        item.setScenarioId(10L);
+        item.setScenarioNo(10L);
         item.setScenarioTitle("FAQ");
         when(searchService.search(
                         org.mockito.Mockito.eq("shipping"),
@@ -72,7 +72,7 @@ class AdmSearchApiControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.resultCount").value(1))
-                .andExpect(jsonPath("$.data.results[0].scenarioId").value(10));
+                .andExpect(jsonPath("$.data.results[0].scenarioNo").value(10));
     }
 
     @Test
@@ -119,7 +119,7 @@ class AdmSearchApiControllerTest {
     @Test
     void blocksReturnsEnvelope() throws Exception {
         SearchBlockLog block = new SearchBlockLog();
-        block.setId(7L);
+        block.setSearchBlockLogNo(7L);
         block.setPiiTypes("EMAIL");
         when(searchService.blockLogs("EMAIL", "CHAT_FALLBACK", 10)).thenReturn(List.of(block));
 
@@ -130,7 +130,7 @@ class AdmSearchApiControllerTest {
                                 .param("size", "10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data[0].id").value(7));
+                .andExpect(jsonPath("$.data[0].searchBlockLogNo").value(7));
     }
 
     @Test

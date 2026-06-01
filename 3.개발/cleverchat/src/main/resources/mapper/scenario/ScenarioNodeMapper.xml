@@ -3,22 +3,22 @@
     "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="kr.co.cleverchat.domain.scenario.mapper.ScenarioNodeMapper">
     <select id="findByVersionId" resultType="kr.co.cleverchat.domain.scenario.model.ScenarioNode">
-        SELECT id, version_id, node_key, node_type, title, content, sort_order, metadata::text AS metadata, created_at, updated_at
-        FROM scenario_node
-        WHERE version_id = #{versionId}
-        ORDER BY sort_order, id
+        SELECT scenario_node_no, version_no, node_key, node_type, title, content, sort_order, metadata::text AS metadata, frst_reg_dt, lst_chg_dt
+        FROM tb_scenario_node
+        WHERE version_no = #{versionId}
+        ORDER BY sort_order, scenario_node_no
     </select>
     <select id="findById" resultType="kr.co.cleverchat.domain.scenario.model.ScenarioNode">
-        SELECT id, version_id, node_key, node_type, title, content, sort_order, metadata::text AS metadata, created_at, updated_at
-        FROM scenario_node
-        WHERE id = #{id}
+        SELECT scenario_node_no, version_no, node_key, node_type, title, content, sort_order, metadata::text AS metadata, frst_reg_dt, lst_chg_dt
+        FROM tb_scenario_node
+        WHERE scenario_node_no = #{id}
     </select>
-    <insert id="insert" parameterType="kr.co.cleverchat.domain.scenario.model.ScenarioNode" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO scenario_node (version_id, node_key, node_type, title, content, sort_order, metadata)
-        VALUES (#{versionId}, #{nodeKey}, #{nodeType}, #{title}, #{content}, #{sortOrder}, CAST(#{metadata} AS jsonb))
+    <insert id="insert" parameterType="kr.co.cleverchat.domain.scenario.model.ScenarioNode" useGeneratedKeys="true" keyProperty="scenarioNodeNo">
+        INSERT INTO tb_scenario_node (version_no, node_key, node_type, title, content, sort_order, metadata)
+        VALUES (#{versionNo}, #{nodeKey}, #{nodeType}, #{title}, #{content}, #{sortOrder}, CAST(#{metadata} AS jsonb))
     </insert>
     <delete id="deleteByVersionId">
-        DELETE FROM scenario_node
-        WHERE version_id = #{versionId}
+        DELETE FROM tb_scenario_node
+        WHERE version_no = #{versionId}
     </delete>
 </mapper>

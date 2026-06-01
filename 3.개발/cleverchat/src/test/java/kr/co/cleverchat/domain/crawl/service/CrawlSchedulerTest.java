@@ -15,7 +15,7 @@ class CrawlSchedulerTest {
     @Test
     void runsDueTargets() {
         CrawlTarget target = new CrawlTarget();
-        target.setId(10L);
+        target.setCrawlTargetNo(10L);
         when(crawlService.dueTargets(10)).thenReturn(List.of(target));
 
         scheduler.runDueTargets();

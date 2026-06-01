@@ -4,38 +4,38 @@ import java.time.OffsetDateTime;
 
 public class ScenarioNodeOption {
 
-    private Long id;
-    private Long nodeId;
-    private Long nextNodeId;
+    private Long scenarioNodeOptionNo;
+    private Long nodeNo;
+    private Long nextNodeNo;
     private String label;
     private String conditionExpr;
     private int sortOrder;
-    private boolean enabled;
-    private OffsetDateTime createdAt;
-    private OffsetDateTime updatedAt;
+    private String useYn;
+    private OffsetDateTime frstRegDt;
+    private OffsetDateTime lstChgDt;
 
-    public Long getId() {
-        return id;
+    public Long getScenarioNodeOptionNo() {
+        return scenarioNodeOptionNo;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setScenarioNodeOptionNo(Long scenarioNodeOptionNo) {
+        this.scenarioNodeOptionNo = scenarioNodeOptionNo;
     }
 
-    public Long getNodeId() {
-        return nodeId;
+    public Long getNodeNo() {
+        return nodeNo;
     }
 
-    public void setNodeId(Long nodeId) {
-        this.nodeId = nodeId;
+    public void setNodeNo(Long nodeNo) {
+        this.nodeNo = nodeNo;
     }
 
-    public Long getNextNodeId() {
-        return nextNodeId;
+    public Long getNextNodeNo() {
+        return nextNodeNo;
     }
 
-    public void setNextNodeId(Long nextNodeId) {
-        this.nextNodeId = nextNodeId;
+    public void setNextNodeNo(Long nextNodeNo) {
+        this.nextNodeNo = nextNodeNo;
     }
 
     public String getLabel() {
@@ -62,27 +62,27 @@ public class ScenarioNodeOption {
         this.sortOrder = sortOrder;
     }
 
-    public boolean isEnabled() {
-        return enabled;
+    public String getUseYn() {
+        return useYn;
     }
 
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
+    public void setUseYn(String useYn) {
+        this.useYn = useYn;
     }
 
-    public OffsetDateTime getCreatedAt() {
-        return createdAt;
+    public OffsetDateTime getFrstRegDt() {
+        return frstRegDt;
     }
 
-    public void setCreatedAt(OffsetDateTime createdAt) {
-        this.createdAt = createdAt;
+    public void setFrstRegDt(OffsetDateTime frstRegDt) {
+        this.frstRegDt = frstRegDt;
     }
 
-    public OffsetDateTime getUpdatedAt() {
-        return updatedAt;
+    public OffsetDateTime getLstChgDt() {
+        return lstChgDt;
     }
 
-    public void setUpdatedAt(OffsetDateTime updatedAt) {
-        this.updatedAt = updatedAt;
+    public void setLstChgDt(OffsetDateTime lstChgDt) {
+        this.lstChgDt = lstChgDt;
     }
 }

@@ -66,8 +66,8 @@
                     <td th:text="${item.normalizedQuery}">shipping</td>
                     <td th:text="${item.searchCount}">10</td>
                     <td th:text="${item.noResultCount}">1</td>
-                    <td th:text="${item.topResultScenarioId ?: '-'}">10</td>
-                    <td th:text="${#temporals.format(item.updatedAt, 'yyyy-MM-dd HH:mm')}">2026-05-27 13:00</td>
+                    <td th:text="${item.topResultScenarioNo ?: '-'}">10</td>
+                    <td th:text="${#temporals.format(item.lstChgDt, 'yyyy-MM-dd HH:mm')}">2026-05-27 13:00</td>
                 </tr>
                 <tr th:if="${#lists.isEmpty(popularQueries)}">
                     <td colspan="6">No popular searches found.</td>
