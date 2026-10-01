@@ -1,158 +1,204 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{admmgr/common/head :: adminHead('Notifications | CleverChat')}"></head>
+<head th:replace="~{admmgr/common/head :: adminHead('알림 관리 | CleverChat')}"></head>
 <body>
 <div class="admin-wrap">
     <div th:replace="~{admmgr/common/sidebar :: adminSidebar}"></div>
     <div class="main-area">
         <div th:replace="~{admmgr/common/header :: adminHeader}"></div>
         <div th:replace="~{admmgr/common/navigation :: adminNavigation}"></div>
-        <main class="content-area" data-notifications-root>
-            <header>
-                <h1>Notifications</h1>
-                <nav class="actions" aria-label="Operations navigation">
-                    <a class="button" th:href="@{/admin/statistics}">Statistics</a>
-                    <a class="button" th:href="@{/admin/audit-logs}">Audit logs</a>
-                    <a class="button" th:href="@{/admin/notices}">Notices</a>
-                </nav>
-            </header>
+        <main class="content-area board-page" data-notifications-root>
+            <div class="page-wrap">
+                <div th:replace="~{admmgr/common/board :: heading('알림 관리', '알림 채널 설정과 최근 알림 발송 이력을 확인합니다.')}"></div>
+                <section id="notificationStatus" class="status-line" role="status" aria-live="polite"></section>
 
-            <section id="notificationStatus" class="status-line" role="status" aria-live="polite"></section>
-
-            <section aria-labelledby="notificationCreateTitle">
-                <h2 id="notificationCreateTitle">Create notification channel</h2>
-                <form id="notificationCreateForm" aria-label="Create notification channel">
-                    <label for="notificationName">Name</label>
-                    <input id="notificationName" name="name" type="text" maxlength="100" required>
-
-                    <label for="notificationType">Type</label>
-                    <select id="notificationType" name="type" required>
-                        <option value="WEBHOOK">Generic webhook</option>
-                        <option value="SLACK_WEBHOOK">Slack webhook</option>
-                        <option value="EMAIL_SMTP">Email SMTP</option>
-                    </select>
-
-                    <label for="notificationEndpointEnvKey">Endpoint env key</label>
-                    <input id="notificationEndpointEnvKey" name="endpointEnvKey" type="text" maxlength="100" pattern="[A-Z0-9_]{3,100}" aria-describedby="notificationEndpointHelp" required>
-                    <p id="notificationEndpointHelp" class="help-text">Webhook URL env key or email recipient env key.</p>
-
-                    <label for="notificationPreviousEndpointEnvKey">Previous endpoint env key</label>
-                    <input id="notificationPreviousEndpointEnvKey" name="previousEndpointEnvKey" type="text" maxlength="100" pattern="[A-Z0-9_]{3,100}" aria-describedby="notificationPreviousEndpointHelp">
-                    <p id="notificationPreviousEndpointHelp" class="help-text">Optional fallback key for webhook secret rotation.</p>
-
-                    <label for="notificationRateLimit">Rate limit per hour</label>
-                    <input id="notificationRateLimit" name="rateLimitPerHour" type="number" min="1" max="1000" value="60">
-
-                    <label>
-                        <input name="enabled" type="checkbox" checked>
-                        Enabled
-                    </label>
-
-                    <button type="submit">Create</button>
-                </form>
-            </section>
-
-            <section aria-labelledby="notificationChannelsTitle">
-                <h2 id="notificationChannelsTitle">Channels</h2>
-                <table aria-label="Notification channels">
-                    <caption>Notification channel list</caption>
-                    <thead>
-                    <tr>
-                        <th scope="col">ID</th>
-                        <th scope="col">Name</th>
-                        <th scope="col">Type</th>
-                        <th scope="col">Endpoint env key</th>
-                        <th scope="col">Previous env key</th>
-                        <th scope="col">Enabled</th>
-                        <th scope="col">Rate limit</th>
-                        <th scope="col">Updated</th>
-                        <th scope="col">Actions</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr th:each="channel : ${channels}">
-                        <td th:text="${channel.notificationChannelNo}">1</td>
-                        <td>
-                            <input th:attr="aria-label=${'Name for notification channel ' + channel.notificationChannelNo}"
-                                   name="name" maxlength="100" th:value="${channel.name}">
-                        </td>
-                        <td>
-                            <select name="type" th:attr="aria-label=${'Type for notification channel ' + channel.notificationChannelNo}">
-                                <option value="WEBHOOK" th:selected="${channel.type == 'WEBHOOK'}">Generic webhook</option>
-                                <option value="SLACK_WEBHOOK" th:selected="${channel.type == 'SLACK_WEBHOOK'}">Slack webhook</option>
-                                <option value="EMAIL_SMTP" th:selected="${channel.type == 'EMAIL_SMTP'}">Email SMTP</option>
+                <details class="board-disclosure" id="board-create"><summary>알림 채널 등록<small>펼쳐서 입력</small></summary>
+<section class="search-card" aria-labelledby="notificationCreateTitle">
+                    <div class="box-title" id="notificationCreateTitle">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                        알림 채널 등록
+                    </div>
+                    <form id="notificationCreateForm" class="form-grid" aria-label="Create notification channel">
+                        <div class="search-field">
+                            <label for="notificationName" class="search-label">이름</label>
+                            <input id="notificationName" class="search-input" name="name" type="text" maxlength="100" required>
+                        </div>
+                        <div class="search-field">
+                            <label for="notificationType" class="search-label">유형</label>
+                            <select id="notificationType" class="search-select" name="type" required>
+                                <option th:each="code : ${adminCommonCodes['NOTIFICATION_CHANNEL_TYPE']}"
+                                        th:value="${code.value}" th:text="${code.name}">알림 채널</option>
                             </select>
-                        </td>
-                        <td>
-                            <input th:attr="aria-label=${'Endpoint env key for notification channel ' + channel.notificationChannelNo}"
-                                   name="endpointEnvKey" maxlength="100" pattern="[A-Z0-9_]{3,100}" th:value="${channel.endpointEnvKey}">
-                        </td>
-                        <td>
-                            <input th:attr="aria-label=${'Previous endpoint env key for notification channel ' + channel.notificationChannelNo}"
-                                   name="previousEndpointEnvKey" maxlength="100" pattern="[A-Z0-9_]{3,100}" th:value="${channel.previousEndpointEnvKey}">
-                        </td>
-                        <td>
-                            <label>
-                                <input name="enabled" type="checkbox" th:checked="${channel.useYn == 'Y'}">
-                                Enabled
+                        </div>
+                        <div class="search-field">
+                            <label for="notificationEndpointEnvKey" class="search-label">엔드포인트 환경키</label>
+                            <input id="notificationEndpointEnvKey" class="search-input" name="endpointEnvKey" type="text" maxlength="100" pattern="[A-Z0-9_]{3,100}" aria-describedby="notificationEndpointHelp" required>
+                            <p id="notificationEndpointHelp" class="help-text">Webhook URL 환경키 또는 이메일 수신자 환경키.</p>
+                        </div>
+                        <div class="search-field">
+                            <label for="notificationPreviousEndpointEnvKey" class="search-label">이전 엔드포인트 환경키</label>
+                            <input id="notificationPreviousEndpointEnvKey" class="search-input" name="previousEndpointEnvKey" type="text" maxlength="100" pattern="[A-Z0-9_]{3,100}" aria-describedby="notificationPreviousEndpointHelp">
+                            <p id="notificationPreviousEndpointHelp" class="help-text">Webhook 시크릿 교체용 선택 대체 키.</p>
+                        </div>
+                        <div class="search-field">
+                            <label for="notificationRateLimit" class="search-label">시간당 호출 제한</label>
+                            <input id="notificationRateLimit" class="search-input" name="rateLimitPerHour" type="number" min="1" max="1000" value="60">
+                        </div>
+                        <div class="search-field">
+                            <label class="search-label">사용</label>
+                            <label class="inline-check">
+                                <input name="enabled" type="checkbox" checked>
+                                사용
                             </label>
-                        </td>
-                        <td>
-                            <input th:attr="aria-label=${'Rate limit for notification channel ' + channel.notificationChannelNo}"
-                                   name="rateLimitPerHour" type="number" min="1" max="1000" th:value="${channel.rateLimitPerHour}">
-                        </td>
-                        <td th:text="${channel.lstChgDt == null ? '-' : #temporals.format(channel.lstChgDt, 'yyyy-MM-dd HH:mm')}">2026-05-28 10:00</td>
-                        <td>
-                            <button type="button" th:data-save-channel-id="${channel.notificationChannelNo}">Save</button>
-                            <button type="button" th:data-test-channel-id="${channel.notificationChannelNo}">Test</button>
-                        </td>
-                    </tr>
-                    <tr th:if="${#lists.isEmpty(channels)}">
-                        <td colspan="9">No notification channels found.</td>
-                    </tr>
-                    </tbody>
-                </table>
-            </section>
+                        </div>
+                        <div class="search-actions">
+                            <button type="submit" class="btn btn-sm btn-solid btn-emerald">등록</button>
+                        </div>
+                    </form>
+                </section>
+                </details>
 
-            <section aria-labelledby="notificationEventsTitle">
-                <h2 id="notificationEventsTitle">Events</h2>
-                <table aria-label="Notification events">
-                    <caption>Notification event list</caption>
-                    <thead>
-                    <tr>
-                        <th scope="col">ID</th>
-                        <th scope="col">Type</th>
-                        <th scope="col">Source</th>
-                        <th scope="col">Severity</th>
-                        <th scope="col">Status</th>
-                        <th scope="col">Attempts</th>
-                        <th scope="col">Summary</th>
-                        <th scope="col">Reviewed</th>
-                        <th scope="col">Created</th>
-                        <th scope="col">Actions</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr th:each="event : ${events}">
-                        <td th:text="${event.notificationEventNo}">1</td>
-                        <td th:text="${event.eventType}">CRAWL_RUN_FAILED</td>
-                        <td th:text="${event.sourceType + '#' + event.sourceId}">CRAWL_RUN_LOG#1</td>
-                        <td th:text="${event.severity}">ERROR</td>
-                        <td th:text="${event.status}">FAILED</td>
-                        <td th:text="${event.attemptCount}">1</td>
-                        <td th:text="${event.summary}">Summary</td>
-                        <td th:text="${event.reviewed ? 'Reviewed' : 'Open'}">Open</td>
-                        <td th:text="${event.frstRegDt == null ? '-' : #temporals.format(event.frstRegDt, 'yyyy-MM-dd HH:mm')}">2026-05-28 10:00</td>
-                        <td>
-                            <button type="button" th:if="${!event.reviewed}" th:data-review-event-id="${event.notificationEventNo}">Review</button>
-                        </td>
-                    </tr>
-                    <tr th:if="${#lists.isEmpty(events)}">
-                        <td colspan="10">No notification events found.</td>
-                    </tr>
-                    </tbody>
-                </table>
-            </section>
+                <div class="result-header">
+                    <div class="result-count">알림 채널 조회 <strong th:text="${#lists.size(channels)} + '건'">0건</strong></div>
+                    <div class="result-actions">
+                        <button type="button" class="btn btn-sm btn-solid btn-emerald" data-board-open="board-create" aria-controls="board-create" aria-expanded="false" hidden>+ 채널 등록</button>
+                        <a class="btn btn-sm btn-secondary" th:href="@{/admin/statistics}">통계</a>
+                        <a class="btn btn-sm btn-secondary" th:href="@{/admin/audit-logs}">감사 로그</a>
+                        <a class="btn btn-sm btn-secondary" th:href="@{/admin/notices}">공지</a>
+                    </div>
+                </div>
+
+                <div class="table-card">
+                    <div class="table-wrap">
+                        <div class="admin-table-wrap">
+                            <table class="admin-table board-editable-table board-channel-table" data-board-pagination aria-label="Notification channels">
+                                <caption>Notification channel list</caption>
+                                <colgroup>
+                                    <col style="width:50px"><col style="width:130px"><col style="width:90px"><col>
+                                    <col style="width:70px"><col style="width:100px"><col style="width:130px"><col style="width:135px">
+                                </colgroup>
+                                <thead>
+                                <tr>
+                                    <th scope="col">번호</th>
+                                    <th scope="col">이름</th>
+                                    <th scope="col">유형</th>
+                                    <th scope="col">연결 환경키</th>
+                                    <th scope="col">사용</th>
+                                    <th scope="col">호출 제한</th>
+                                    <th scope="col">수정일</th>
+                                    <th scope="col">관리</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="channel, stat : ${channels}">
+                                    <td class="board-number" th:text="${stat.count}">1</td>
+                                    <td class="td-left">
+                                        <input th:attr="aria-label=${'Name for notification channel ' + channel.notificationChannelNo}"
+                                               name="name" maxlength="100" th:value="${channel.name}">
+                                    </td>
+                                    <td class="td-left">
+                                        <select name="type" th:attr="aria-label=${'Type for notification channel ' + channel.notificationChannelNo}">
+                                            <option th:each="code : ${adminCommonCodes['NOTIFICATION_CHANNEL_TYPE']}"
+                                                    th:value="${code.value}" th:selected="${channel.type == code.value}"
+                                                    th:text="${code.name}">알림 채널</option>
+                                        </select>
+                                    </td>
+                                    <td class="td-left">
+                                        <input th:attr="aria-label=${'Endpoint env key for notification channel ' + channel.notificationChannelNo}"
+                                               name="endpointEnvKey" maxlength="100" pattern="[A-Z0-9_]{3,100}" th:value="${channel.endpointEnvKey}"><span class="board-description">이전 환경키</span>
+                                        <input th:attr="aria-label=${'Previous endpoint env key for notification channel ' + channel.notificationChannelNo}"
+                                               name="previousEndpointEnvKey" maxlength="100" pattern="[A-Z0-9_]{3,100}" th:value="${channel.previousEndpointEnvKey}">
+                                    </td>
+                                    <td>
+                                        <label class="inline-check">
+                                            <input name="enabled" type="checkbox" th:checked="${channel.useYn == 'Y'}">
+                                            사용
+                                        </label>
+                                    </td>
+                                    <td>
+                                        <input th:attr="aria-label=${'Rate limit for notification channel ' + channel.notificationChannelNo}"
+                                               name="rateLimitPerHour" type="number" min="1" max="1000" th:value="${channel.rateLimitPerHour}">
+                                    </td>
+                                    <td class="board-date" th:text="${channel.lstChgDt == null ? '-' : #temporals.format(channel.lstChgDt, 'yyyy-MM-dd HH:mm')}">2026-05-28 10:00</td>
+                                    <td>
+                                        <div class="row-actions">
+                                            <button type="button" class="btn btn-xs btn-solid btn-emerald" th:data-save-channel-id="${channel.notificationChannelNo}">저장</button>
+                                            <button type="button" class="btn btn-xs btn-secondary" th:data-test-channel-id="${channel.notificationChannelNo}">테스트</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(channels)}" class="td-empty">
+                                    <td colspan="8"><span class="board-empty-message">등록된 알림 채널이 없습니다.</span></td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="result-header">
+                    <div class="result-count">알림 이벤트 조회 <strong th:text="${#lists.size(events)} + '건'">0건</strong></div>
+                </div>
+
+                <div class="table-card">
+                    <div class="table-wrap">
+                        <div class="admin-table-wrap">
+                            <table class="admin-table" data-board-pagination aria-label="Notification events">
+                                <caption>Notification event list</caption>
+                                <colgroup>
+                                    <col style="width:60px">
+                                    <col style="width:170px">
+                                    <col style="width:150px">
+                                    <col style="width:90px">
+                                    <col style="width:90px">
+                                    <col style="width:70px">
+                                    <col style="width:230px">
+                                    <col style="width:100px">
+                                    <col style="width:150px">
+                                    <col style="width:100px">
+                                </colgroup>
+                                <thead>
+                                <tr>
+                                    <th scope="col">번호</th>
+                                    <th scope="col">유형</th>
+                                    <th scope="col">소스</th>
+                                    <th scope="col">심각도</th>
+                                    <th scope="col">상태</th>
+                                    <th scope="col">시도</th>
+                                    <th scope="col">요약</th>
+                                    <th scope="col">검토</th>
+                                    <th scope="col">등록일</th>
+                                    <th scope="col">관리</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="event, stat : ${events}">
+                                    <td class="board-number" th:text="${stat.count}">1</td>
+                                    <td class="td-left" th:text="${event.eventType}">CRAWL_RUN_FAILED</td>
+                                    <td class="td-left" th:text="${event.sourceType + '#' + event.sourceId}">CRAWL_RUN_LOG#1</td>
+                                    <td th:text="${event.severity}">ERROR</td>
+                                    <td th:text="${event.status}">FAILED</td>
+                                    <td th:text="${event.attemptCount}">1</td>
+                                    <td class="td-left" th:text="${event.summary}">Summary</td>
+                                    <td>
+                                        <span class="badge" th:classappend="${event.reviewed} ? ' badge-success' : ' badge-default'" th:text="${event.reviewed ? '검토완료' : '미검토'}">미검토</span>
+                                    </td>
+                                    <td class="board-date" th:text="${event.frstRegDt == null ? '-' : #temporals.format(event.frstRegDt, 'yyyy-MM-dd HH:mm')}">2026-05-28 10:00</td>
+                                    <td>
+                                        <div class="row-actions">
+                                            <button type="button" class="btn btn-xs btn-solid btn-emerald" th:if="${!event.reviewed}" th:data-review-event-id="${event.notificationEventNo}">검토</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(events)}" class="td-empty">
+                                    <td colspan="10"><span class="board-empty-message">등록된 알림 이벤트가 없습니다.</span></td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </main>
         <div th:replace="~{admmgr/common/footer :: adminFooter}"></div>
     </div>

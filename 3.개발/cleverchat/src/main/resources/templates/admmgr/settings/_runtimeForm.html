@@ -1,0 +1,23 @@
+<!DOCTYPE html><html lang="ko" xmlns:th="http://www.thymeleaf.org"><body>
+<section class="workspace-card" th:fragment="runtimeForm(section,title,description)">
+    <div class="workspace-section-title"><div><h2 th:text="${title}"></h2><p th:text="${description}"></p></div></div>
+    <form method="post" th:action="@{/admin/system-settings/runtime/{section}(section=${section})}" data-settings-form>
+        <th:block th:replace="~{admmgr/common/_csrfHidden :: csrfHidden}"></th:block>
+        <input type="hidden" name="version" th:value="${settings.version}">
+        <div class="settings-fields">
+            <div class="workspace-field" th:each="field : ${runtimeFields.get(section)}">
+                <label th:for="${field.key}" th:text="${field.label}"></label>
+                <select th:if="${field.type == 'boolean'}" th:id="${field.key}" th:name="${field.key}">
+                    <option value="true" th:selected="${runtimeValues.get(field.key).toString() == 'true'}">사용</option>
+                    <option value="false" th:selected="${runtimeValues.get(field.key).toString() == 'false'}">사용 안 함</option>
+                </select>
+                <input th:unless="${field.type == 'boolean'}" th:id="${field.key}" th:name="${field.key}"
+                       th:type="${field.type == 'decimal' ? 'number' : field.type}" th:value="${runtimeValues.get(field.key)}"
+                       th:attr="min=${field.type == 'number' or field.type == 'decimal' ? field.min : null},max=${field.type == 'number' or field.type == 'decimal' ? field.max : null},step=${field.type == 'decimal' ? 'any' : (field.type == 'number' ? '1' : null)},maxlength=${field.type == 'text' or field.type == 'url' ? field.maxLength : null}"
+                       th:required="${field.key != 'AI_BASE_URL' and field.key != 'AI_MODEL'}">
+                <p th:text="${field.help}"></p>
+            </div>
+        </div>
+        <div class="settings-card-footer"><span>이 항목만 저장합니다.</span><button type="submit" class="btn btn-md btn-solid btn-primary" th:text="${title + ' 저장'}"></button></div>
+    </form>
+</section></body></html>

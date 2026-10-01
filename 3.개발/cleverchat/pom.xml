@@ -23,6 +23,8 @@
         <mybatis-spring-boot.version>3.0.3</mybatis-spring-boot.version>
         <jsoup.version>1.18.1</jsoup.version>
         <caffeine.version>3.1.8</caffeine.version>
+        <lucene.version>9.11.1</lucene.version>
+        <playwright.version>1.49.0</playwright.version>
         <testcontainers.version>1.21.4</testcontainers.version>
         <spotless-maven-plugin.version>3.4.0</spotless-maven-plugin.version>
         <google-java-format.version>1.24.0</google-java-format.version>
@@ -121,6 +123,18 @@
             <artifactId>jsoup</artifactId>
             <version>${jsoup.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.microsoft.playwright</groupId>
+            <artifactId>playwright</artifactId>
+            <version>${playwright.version}</version>
+        </dependency>
+
+        <!-- Search / Korean morphological analysis (Lucene Nori, mecab-ko-dic bundled, offline) -->
+        <dependency>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-analysis-nori</artifactId>
+            <version>${lucene.version}</version>
+        </dependency>
 
         <!-- Dev -->
         <dependency>
@@ -157,6 +171,7 @@
             <artifactId>junit-jupiter</artifactId>
             <scope>test</scope>
         </dependency>
+
     </dependencies>
 
     <build>

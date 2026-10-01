@@ -4,7 +4,8 @@
 <mapper namespace="kr.co.cleverchat.domain.crawl.mapper.CrawlMapper">
     <sql id="targetColumns">
         crawl_target_no, url, label, use_yn, frst_regr_empno, frst_reg_dt, lst_chg_dt, last_run_at, last_status, last_message,
-        schedule_enabled, schedule_interval_minutes, schedule_mode, schedule_cron, next_run_at, robots_allowed, robots_checked_at
+        schedule_enabled, schedule_interval_minutes, schedule_mode, schedule_cron, next_run_at, robots_allowed, robots_checked_at,
+        json_export_enabled, json_export_directory
     </sql>
 
     <select id="findTargets" resultType="kr.co.cleverchat.domain.crawl.model.CrawlTarget">
@@ -42,8 +43,8 @@
     </select>
 
     <insert id="insertTarget" parameterType="kr.co.cleverchat.domain.crawl.model.CrawlTarget" useGeneratedKeys="true" keyProperty="crawlTargetNo">
-        INSERT INTO tb_crawl_target (url, label, use_yn, frst_regr_empno, schedule_enabled, schedule_interval_minutes, schedule_mode, schedule_cron, next_run_at)
-        VALUES (#{url}, #{label}, #{useYn}, #{frstRegrEmpno}, #{scheduleEnabled}, #{scheduleIntervalMinutes}, #{scheduleMode}, #{scheduleCron}, #{nextRunAt})
+        INSERT INTO tb_crawl_target (url, label, use_yn, frst_regr_empno, schedule_enabled, schedule_interval_minutes, schedule_mode, schedule_cron, next_run_at, json_export_enabled, json_export_directory)
+        VALUES (#{url}, #{label}, #{useYn}, #{frstRegrEmpno}, #{scheduleEnabled}, #{scheduleIntervalMinutes}, #{scheduleMode}, #{scheduleCron}, #{nextRunAt}, #{jsonExportEnabled}, #{jsonExportDirectory})
     </insert>
 
     <update id="updateTarget" parameterType="kr.co.cleverchat.domain.crawl.model.CrawlTarget">
@@ -51,6 +52,8 @@
         SET url = #{url},
             label = #{label},
             use_yn = #{useYn},
+            json_export_enabled = #{jsonExportEnabled},
+            json_export_directory = #{jsonExportDirectory},
             schedule_enabled = #{scheduleEnabled},
             schedule_interval_minutes = #{scheduleIntervalMinutes},
             schedule_mode = #{scheduleMode},
@@ -112,6 +115,27 @@
         LIMIT 1
     </select>
 
+    <select id="lockTargetForRun" resultType="long">
+        SELECT crawl_target_no FROM tb_crawl_target WHERE crawl_target_no = #{id} FOR UPDATE
+    </select>
+
+    <select id="findDocumentByTargetAndUrlHash" resultType="kr.co.cleverchat.domain.crawl.model.CrawlDocument">
+        SELECT crawl_document_no, target_no, url, title, content, url_hash, content_hash, status, http_status, error_message, fetched_at, frst_reg_dt
+        FROM tb_crawl_document
+        WHERE target_no = #{targetId}
+          AND url_hash = #{urlHash}
+          AND status = 'SUCCESS'
+        ORDER BY fetched_at DESC, crawl_document_no DESC
+        LIMIT 1
+    </select>
+
+    <select id="findDocumentById" resultType="kr.co.cleverchat.domain.crawl.model.CrawlDocument">
+        SELECT crawl_document_no, target_no, url, title, content, url_hash, content_hash, status, http_status, error_message, fetched_at, frst_reg_dt
+        FROM tb_crawl_document
+        WHERE crawl_document_no = #{id}
+          AND status = 'SUCCESS'
+    </select>
+
     <select id="findDocuments" resultType="kr.co.cleverchat.domain.crawl.model.CrawlDocument">
         SELECT crawl_document_no, target_no, url, title, content, url_hash, content_hash, status, http_status, error_message, fetched_at, frst_reg_dt
         FROM tb_crawl_document
@@ -125,18 +149,69 @@
     </select>
 
     <insert id="insertDocument" parameterType="kr.co.cleverchat.domain.crawl.model.CrawlDocument" useGeneratedKeys="true" keyProperty="crawlDocumentNo">
-        INSERT INTO tb_crawl_document (target_no, url, title, content, url_hash, content_hash, status, http_status, error_message, fetched_at)
-        VALUES (#{targetNo}, #{url}, #{title}, #{content}, #{urlHash}, #{contentHash}, #{status}, #{httpStatus}, #{errorMessage}, #{fetchedAt})
+        INSERT INTO tb_crawl_document (target_no, url, title, content, content_tokens, url_hash, content_hash, status, http_status, error_message, fetched_at)
+        VALUES (#{targetNo}, #{url}, #{title}, #{content}, #{contentTokens}, #{urlHash}, #{contentHash}, #{status}, #{httpStatus}, #{errorMessage}, #{fetchedAt})
     </insert>
 
+    <select id="findDocumentsMissingTokens" resultType="kr.co.cleverchat.domain.crawl.model.CrawlDocument">
+        SELECT crawl_document_no, title, content
+        FROM tb_crawl_document
+        WHERE status = 'SUCCESS'
+          AND content_tokens IS NULL
+        ORDER BY crawl_document_no ASC
+        LIMIT #{limit}
+    </select>
+
+    <update id="updateDocumentTokens">
+        UPDATE tb_crawl_document
+        SET content_tokens = #{tokens}
+        WHERE crawl_document_no = #{id}
+    </update>
+
     <insert id="insertRunLog" parameterType="kr.co.cleverchat.domain.crawl.model.CrawlRunLog" useGeneratedKeys="true" keyProperty="crawlRunLogNo">
-        INSERT INTO tb_crawl_run_log (target_no, document_no, status, failure_code, http_status, message, duration_ms)
-        VALUES (#{targetNo}, #{documentNo}, #{status}, #{failureCode}, #{httpStatus}, #{message}, #{durationMs})
+        INSERT INTO tb_crawl_run_log (target_no, document_no, status, failure_code, http_status, message, duration_ms, export_status, export_path, export_message)
+        VALUES (#{targetNo}, #{documentNo}, #{status}, #{failureCode}, #{httpStatus}, #{message}, #{durationMs}, #{exportStatus}, #{exportPath}, #{exportMessage})
     </insert>
+
+    <update id="updateDocument" parameterType="kr.co.cleverchat.domain.crawl.model.CrawlDocument">
+        UPDATE tb_crawl_document
+        SET url = #{url},
+            title = #{title},
+            content = #{content},
+            content_tokens = #{contentTokens},
+            url_hash = #{urlHash},
+            content_hash = #{contentHash},
+            status = #{status},
+            http_status = #{httpStatus},
+            error_message = #{errorMessage},
+            fetched_at = #{fetchedAt}
+        WHERE crawl_document_no = #{crawlDocumentNo}
+    </update>
+
+    <insert id="insertCoverage" parameterType="kr.co.cleverchat.domain.crawl.model.CrawlCoverage" useGeneratedKeys="true" keyProperty="coverageNo">
+        INSERT INTO tb_crawl_coverage (target_no, run_log_no, list_pages, list_items_found, details_fetched, details_failed, truncated_yn)
+        VALUES (#{targetNo}, #{runLogNo}, #{listPages}, #{listItemsFound}, #{detailsFetched}, #{detailsFailed}, #{truncatedYn})
+    </insert>
+
+    <select id="findCoverages" resultType="kr.co.cleverchat.domain.crawl.model.CrawlCoverage">
+        SELECT coverage_no, target_no, run_log_no, list_pages, list_items_found, details_fetched, details_failed, truncated_yn, frst_reg_dt
+        FROM tb_crawl_coverage
+        <where>
+            <if test="targetId != null">
+                target_no = #{targetId}
+            </if>
+        </where>
+        ORDER BY frst_reg_dt DESC, coverage_no DESC
+        LIMIT #{limit}
+    </select>
 
     <sql id="runLogColumns">
         crawl_run_log_no, target_no, document_no, status, failure_code, http_status, message, duration_ms, frst_reg_dt,
-        reviewed, reviewed_by, reviewed_at, review_comment
+        reviewed, reviewed_by, reviewed_at, review_comment, export_status, export_path, export_message
+    </sql>
+
+    <sql id="jobColumns">
+        crawl_job_no, target_no, trigger_type, status, requested_by, requested_at, started_at, finished_at, attempt_count, message
     </sql>
 
     <select id="findRunLogs" resultType="kr.co.cleverchat.domain.crawl.model.CrawlRunLog">
@@ -156,6 +231,68 @@
         ORDER BY frst_reg_dt DESC, crawl_run_log_no DESC
         LIMIT #{limit}
     </select>
+
+    <select id="findJobs" resultType="kr.co.cleverchat.domain.crawl.model.CrawlJob">
+        SELECT <include refid="jobColumns"/>
+        FROM tb_crawl_job
+        <where>
+            <if test="targetId != null">
+                target_no = #{targetId}
+            </if>
+        </where>
+        ORDER BY requested_at DESC, crawl_job_no DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="enqueueJob" resultType="kr.co.cleverchat.domain.crawl.model.CrawlJob">
+        INSERT INTO tb_crawl_job (target_no, trigger_type, status, requested_by)
+        SELECT #{targetId}, #{triggerType}, 'PENDING', #{requestedBy}
+        WHERE NOT EXISTS (
+            SELECT 1
+            FROM tb_crawl_job
+            WHERE target_no = #{targetId}
+              AND status IN ('PENDING', 'RUNNING')
+        )
+        RETURNING <include refid="jobColumns"/>
+    </select>
+
+    <select id="claimNextJob" resultType="kr.co.cleverchat.domain.crawl.model.CrawlJob">
+        WITH picked AS (
+            SELECT crawl_job_no
+            FROM tb_crawl_job
+            WHERE status = 'PENDING'
+              AND attempt_count &lt; #{maxAttempts}
+            ORDER BY requested_at ASC, crawl_job_no ASC
+            LIMIT 1
+            FOR UPDATE SKIP LOCKED
+        )
+        UPDATE tb_crawl_job job
+        SET status = 'RUNNING',
+            started_at = now(),
+            finished_at = NULL,
+            attempt_count = job.attempt_count + 1,
+            message = NULL
+        WHERE job.crawl_job_no = (SELECT crawl_job_no FROM picked)
+        RETURNING <include refid="jobColumns"/>
+    </select>
+
+    <update id="completeJob">
+        UPDATE tb_crawl_job
+        SET status = #{status},
+            finished_at = now(),
+            message = #{message}
+        WHERE crawl_job_no = #{id}
+          AND status = 'RUNNING'
+    </update>
+
+    <update id="recoverTimedOutJobs">
+        UPDATE tb_crawl_job
+        SET status = CASE WHEN attempt_count &gt;= #{maxAttempts} THEN 'FAILED' ELSE 'PENDING' END,
+            finished_at = CASE WHEN attempt_count &gt;= #{maxAttempts} THEN now() ELSE NULL END,
+            message = #{message}
+        WHERE status = 'RUNNING'
+          AND started_at &lt; #{cutoff}
+    </update>
 
     <select id="findFailedRunLogs" resultType="kr.co.cleverchat.domain.crawl.model.CrawlRunLog">
         SELECT <include refid="runLogColumns"/>
@@ -207,4 +344,18 @@
         WHERE frst_reg_dt &lt; #{cutoff}
           AND status IN ('FAILED', 'DUPLICATE')
     </delete>
+    <sql id="documentSearchWhere">
+        WHERE target_no = #{targetId}
+        <if test="query != null and query != ''">
+            AND (strpos(lower(coalesce(title,'')),lower(#{query})) &gt; 0 OR strpos(lower(url),lower(#{query})) &gt; 0)
+        </if>
+    </sql>
+    <select id="countDocuments" resultType="long">
+        SELECT count(*) FROM tb_crawl_document <include refid="documentSearchWhere"/>
+    </select>
+    <select id="findDocumentPage" resultType="kr.co.cleverchat.domain.crawl.model.CrawlDocument">
+        SELECT crawl_document_no,target_no,url,title,left(content,300) AS content,status,http_status,fetched_at
+        FROM tb_crawl_document <include refid="documentSearchWhere"/>
+        ORDER BY fetched_at DESC,crawl_document_no DESC LIMIT #{limit} OFFSET #{offset}
+    </select>
 </mapper>

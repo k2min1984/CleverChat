@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{admmgr/common/head :: adminHead('Crawl targets | CleverChat')}"></head>
+<head th:replace="~{admmgr/common/head :: adminHead('크롤링 관리 | CleverChat')}"></head>
 <body>
 <div class="admin-wrap">
     <div th:replace="~{admmgr/common/sidebar :: adminSidebar}"></div>
@@ -8,124 +8,142 @@
         <div th:replace="~{admmgr/common/header :: adminHeader}"></div>
         <div th:replace="~{admmgr/common/navigation :: adminNavigation}"></div>
         <main class="content-area" data-crawl-targets-root>
-            <header>
-                <h1>Crawl targets</h1>
-                <nav class="actions" aria-label="Crawl operations">
-                    <a class="button" th:href="@{/admin/crawl-documents}">Documents</a>
-                    <a class="button" th:href="@{/admin/crawl-runs}">Runs</a>
-                </nav>
-            </header>
-            <form method="get" th:action="@{/admin/crawl-targets}" aria-label="Crawl target filters">
-                <label>
-                    Enabled
-                    <select name="enabled">
-                        <option value="" th:selected="${enabled == null}">All</option>
-                        <option value="true" th:selected="${enabled == true}">Enabled</option>
-                        <option value="false" th:selected="${enabled == false}">Disabled</option>
-                    </select>
-                </label>
-                <button type="submit">Filter</button>
-            </form>
-            <section aria-label="Create crawl target">
-                <h2>New target</h2>
-                <form id="crawlTargetForm">
-                    <label>
-                        URL
-                        <input type="url" name="url" maxlength="1000" placeholder="https://example.com/help" required>
-                    </label>
-                    <label>
-                        Label
-                        <input type="text" name="label" maxlength="200">
-                    </label>
-                    <label>
-                        <input type="checkbox" name="useYn" checked>
-                        Enabled
-                    </label>
-                    <label>
-                        <input type="checkbox" name="scheduleEnabled">
-                        Auto run
-                    </label>
-                    <label>
-                        Schedule mode
-                        <select name="scheduleMode">
-                            <option value="INTERVAL">Interval</option>
-                            <option value="CRON">Cron</option>
-                        </select>
-                    </label>
-                    <label>
-                        Interval minutes
-                        <input type="number" name="scheduleIntervalMinutes" min="5" max="10080" value="1440">
-                    </label>
-                    <label>
-                        Cron expression
-                        <input type="text" name="scheduleCron" maxlength="120" placeholder="0 */30 * * * *">
-                    </label>
-                    <button type="button" data-preview-schedule>Preview schedule</button>
-                    <small data-schedule-preview role="status" aria-live="polite"></small>
-                    <button type="submit">Create</button>
+            <div class="page-wrap">
+                <form method="get" th:action="@{/admin/crawl-targets}" class="search-card search-card-horizontal" aria-label="크롤링 검색 조건">
+                    <div class="box-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                        검색 조건
+                    </div>
+                    <div class="search-row">
+                        <div class="search-field">
+                            <label for="enabled" class="search-label">사용 여부</label>
+                            <select id="enabled" name="enabled" class="search-select">
+                                <option value="" th:selected="${enabled == null}">전체</option>
+                                <option value="true" th:selected="${enabled == true}">사용</option>
+                                <option value="false" th:selected="${enabled == false}">미사용</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="search-actions">
+                        <a class="btn-reset" th:href="@{/admin/crawl-targets}">초기화</a>
+                        <button type="submit" class="btn-search">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                            검색
+                        </button>
+                    </div>
                 </form>
-                <p id="crawlStatus" role="status" aria-live="polite"></p>
-            </section>
-            <table aria-label="Crawl target list">
-                <caption>Crawl target list</caption>
-                <thead>
-                <tr>
-                    <th scope="col">ID</th>
-                    <th scope="col">Label</th>
-                    <th scope="col">URL</th>
-                    <th scope="col">Enabled</th>
-                    <th scope="col">Schedule</th>
-                    <th scope="col">Robots</th>
-                    <th scope="col">Last status</th>
-                    <th scope="col">Last run</th>
-                    <th scope="col">Actions</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="target : ${targets}">
-                    <td th:text="${target.crawlTargetNo}">1</td>
-                    <td th:text="${target.label ?: '-'}">Help</td>
-                    <td><a th:href="${target.url}" th:text="${target.url}" target="_blank" rel="noopener noreferrer">https://example.com</a></td>
-                    <td th:text="${target.useYn == 'Y' ? 'Y' : 'N'}">Y</td>
-                    <td>
-                        <form class="crawl-schedule-form" th:attr="data-schedule-target-id=${target.crawlTargetNo}">
-                            <label>
-                                <input type="checkbox" name="scheduleEnabled" th:checked="${target.scheduleEnabled}">
-                                Auto
-                            </label>
-                            <label>
-                                <span class="sr-only">Schedule mode</span>
-                                <select name="scheduleMode" th:attr="aria-label=${'Schedule mode for crawl target ' + target.crawlTargetNo}">
-                                    <option value="INTERVAL" th:selected="${target.scheduleMode == null || target.scheduleMode == 'INTERVAL'}">Interval</option>
-                                    <option value="CRON" th:selected="${target.scheduleMode == 'CRON'}">Cron</option>
-                                </select>
-                            </label>
-                            <input type="number" name="scheduleIntervalMinutes" min="5" max="10080" th:value="${target.scheduleIntervalMinutes ?: 1440}" aria-label="Schedule interval minutes">
-                            <input type="text" name="scheduleCron" maxlength="120" th:value="${target.scheduleCron}" aria-label="Schedule cron expression" placeholder="0 */30 * * * *">
-                            <button type="button" data-preview-schedule th:attr="aria-label=${'Preview schedule for crawl target ' + target.crawlTargetNo}">Preview</button>
-                            <button type="submit">Save</button>
-                            <small th:text="${target.nextRunAt == null ? '-' : #temporals.format(target.nextRunAt, 'yyyy-MM-dd HH:mm')}">-</small>
-                            <small data-schedule-preview role="status" aria-live="polite"></small>
-                        </form>
-                    </td>
-                    <td th:text="${target.robotsAllowed == null ? '-' : (target.robotsAllowed ? 'Allowed' : 'Blocked')}">-</td>
-                    <td th:text="${target.lastStatus ?: '-'}">SUCCESS</td>
-                    <td th:text="${target.lastRunAt == null ? '-' : #temporals.format(target.lastRunAt, 'yyyy-MM-dd HH:mm')}">2026-05-27 13:00</td>
-                    <td>
-                        <button type="button" class="button" th:attr="data-run-target-id=${target.crawlTargetNo},aria-label=${'Run crawl target ' + target.crawlTargetNo}">Run</button>
-                        <a class="button" th:href="@{/admin/crawl-documents(targetId=${target.crawlTargetNo})}">Documents</a>
-                        <a class="button" th:href="@{/admin/crawl-runs(targetId=${target.crawlTargetNo})}">Runs</a>
-                    </td>
-                </tr>
-                <tr th:if="${#lists.isEmpty(targets)}">
-                    <td colspan="9">No crawl targets found.</td>
-                </tr>
-                </tbody>
-            </table>
+
+                <p id="crawlStatus" role="status" aria-live="polite" class="help-text"
+                   th:text="${successMessage ?: errorMessage ?: ''}"></p>
+
+                <div class="result-header">
+                    <div class="result-count">검색 결과 총 <strong th:text="${#lists.size(targets)} + '건'">0건</strong></div>
+                    <a class="btn btn-sm btn-solid btn-emerald" th:href="@{/admin/crawl-targets/new}">
+                        + 등록
+                    </a>
+                </div>
+
+                <div class="table-card">
+                    <div class="table-wrap">
+                        <div class="admin-table-wrap">
+                            <table class="admin-table" aria-label="크롤링 대상 목록">
+                                <caption>크롤링 대상 목록</caption>
+                                <colgroup>
+                                    <col style="width:70px">
+                                    <col style="width:180px">
+                                    <col>
+                                    <col style="width:90px">
+                                    <col style="width:120px">
+                                    <col style="width:120px">
+                                    <col style="width:150px">
+                                    <col style="width:260px">
+                                </colgroup>
+                                <thead>
+                                <tr>
+                                    <th scope="col">ID</th>
+                                    <th scope="col">이름</th>
+                                    <th scope="col">URL</th>
+                                    <th scope="col">상태</th>
+                                    <th scope="col">최근 결과</th>
+                                    <th scope="col">Robots</th>
+                                    <th scope="col">최근 실행</th>
+                                    <th scope="col">관리</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="target : ${targets}">
+                                    <td th:text="${target.crawlTargetNo}">1</td>
+                                    <td class="td-left" th:text="${target.label ?: '-'}">고객센터 공지</td>
+                                    <td class="td-left"><a class="link-detail" th:href="${target.url}" th:text="${target.url}" target="_blank" rel="noopener noreferrer">https://example.com</a></td>
+                                    <td>
+                                        <span class="badge badge-success" th:if="${target.useYn == 'Y'}">사용</span>
+                                        <span class="badge badge-default" th:if="${target.useYn != 'Y'}">미사용</span>
+                                    </td>
+                                    <td>
+                                        <span th:if="${target.lastStatus == null}">-</span>
+                                        <span class="badge badge-success" th:if="${target.lastStatus == 'SUCCESS'}">성공</span>
+                                        <span class="badge badge-danger" th:if="${target.lastStatus == 'FAILED'}">실패</span>
+                                        <span class="badge badge-warning" th:if="${target.lastStatus == 'DUPLICATE'}">중복</span>
+                                        <span class="badge badge-default"
+                                              th:if="${target.lastStatus != null and target.lastStatus != 'SUCCESS' and target.lastStatus != 'FAILED' and target.lastStatus != 'DUPLICATE'}"
+                                              th:text="${target.lastStatus}">상태</span>
+                                    </td>
+                                    <td th:text="${target.robotsAllowed == null ? '-' : (target.robotsAllowed ? '허용' : '차단')}">-</td>
+                                    <td th:text="${target.lastRunAt == null ? '-' : #temporals.format(target.lastRunAt, 'yyyy-MM-dd HH:mm')}">-</td>
+                                    <td>
+                                        <div class="row-actions">
+                                            <a class="btn btn-xs btn-secondary" th:href="@{/admin/crawl-targets/{id}(id=${target.crawlTargetNo})}">상세</a>
+                                            <a class="btn btn-xs btn-secondary" th:href="@{/admin/crawl-targets/{id}/edit(id=${target.crawlTargetNo})}">수정</a>
+                                            <form th:action="@{/admin/crawl-targets/{id}/run(id=${target.crawlTargetNo})}" method="post">
+                                                <th:block th:replace="~{admmgr/common/_csrfHidden :: csrfHidden}"></th:block>
+                                                <button type="submit" class="btn btn-xs btn-secondary">실행</button>
+                                            </form>
+                                            <details class="crawl-run-accordion" th:with="targetRuns=${recentRuns.get(target.crawlTargetNo)}">
+                                                <summary class="btn btn-xs btn-secondary">이력</summary>
+                                                <div class="crawl-run-panel">
+                                                    <table class="admin-table" th:attr="aria-label=${'크롤링 대상 ' + target.crawlTargetNo + ' 실행 이력'}">
+                                                        <caption th:text="${'크롤링 대상 ' + target.crawlTargetNo + ' 실행 이력'}">실행 이력</caption>
+                                                        <thead>
+                                                        <tr>
+                                                            <th scope="col">일시</th>
+                                                            <th scope="col">결과</th>
+                                                            <th scope="col">HTTP</th>
+                                                            <th scope="col">메시지</th>
+                                                        </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                        <tr th:each="run : ${targetRuns}">
+                                                            <td th:text="${#temporals.format(run.frstRegDt, 'yyyy-MM-dd HH:mm')}">2026-06-04 10:00</td>
+                                                            <td>
+                                                                <span class="badge badge-success" th:if="${run.status == 'SUCCESS'}">성공</span>
+                                                                <span class="badge badge-danger" th:if="${run.status == 'FAILED'}">실패</span>
+                                                                <span class="badge badge-warning" th:if="${run.status == 'DUPLICATE'}">중복</span>
+                                                            </td>
+                                                            <td th:text="${run.httpStatus ?: '-'}">200</td>
+                                                            <td class="td-left" th:text="${run.message ?: '-'}">-</td>
+                                                        </tr>
+                                                        <tr th:if="${#lists.isEmpty(targetRuns)}" class="td-empty">
+                                                            <td colspan="4">실행 이력이 없습니다.</td>
+                                                        </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </details>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(targets)}" class="td-empty">
+                                    <td colspan="8">등록된 크롤링 대상이 없습니다.</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </main>
         <div th:replace="~{admmgr/common/footer :: adminFooter}"></div>
     </div>
 </div>
-<script th:src="@{/asset/admmgr/style2/js/ADM.CrawlTargets.js}" defer></script>
 </body>
 </html>

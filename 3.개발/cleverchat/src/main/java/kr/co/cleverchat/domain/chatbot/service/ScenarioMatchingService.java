@@ -60,6 +60,15 @@ public class ScenarioMatchingService implements ScenarioMatchingCacheInvalidator
                 .filter(result -> result.score() >= THRESHOLD);
     }
 
+    public Optional<MatchResult> matchInitialScenario(String input) {
+        String normalizedInput = normalize(input);
+        if (normalizedInput.isBlank()) {
+            return Optional.empty();
+        }
+        return bestGlobalKeywordMatch(normalizedInput)
+                .filter(result -> result.score() >= THRESHOLD);
+    }
+
     private Optional<MatchResult> matchCurrentOptions(Long scenarioId, Long nodeId, String input) {
         if (nodeId == null) {
             return Optional.empty();
@@ -143,6 +152,67 @@ public class ScenarioMatchingService implements ScenarioMatchingCacheInvalidator
         return List.of(currentKeyword, currentSynonym, globalKeyword, globalSynonym).stream()
                 .flatMap(Optional::stream)
                 .max(matchComparator());
+    }
+
+    private Optional<MatchResult> bestGlobalKeywordMatch(String input) {
+        Optional<MatchResult> globalKeyword =
+                globalKeywordCache
+                        .get("active", ignored -> keywordMapper.findEnabledForActiveScenarios())
+                        .stream()
+                        .map(keyword -> initialKeywordResult(keyword, input))
+                        .flatMap(Optional::stream)
+                        .max(matchComparator());
+        Optional<MatchResult> globalSynonym =
+                globalSynonymCache
+                        .get("active", ignored -> synonymMapper.findEnabledForActiveScenarios())
+                        .stream()
+                        .map(row -> initialSynonymResult(row, input))
+                        .flatMap(Optional::stream)
+                        .max(matchComparator());
+
+        return List.of(globalKeyword, globalSynonym).stream()
+                .flatMap(Optional::stream)
+                .max(matchComparator());
+    }
+
+    private Optional<MatchResult> initialKeywordResult(ScenarioKeyword keyword, String input) {
+        String normalizedKeyword = normalize(keyword.getKeyword());
+        if (normalizedKeyword.isBlank()) {
+            return Optional.empty();
+        }
+        if (normalizedKeyword.equals(input)) {
+            return Optional.of(keywordResult(keyword, 60.0, false));
+        }
+        if (containsWholeTerm(input, normalizedKeyword)) {
+            return Optional.of(keywordResult(keyword, 55.0, false));
+        }
+        return Optional.empty();
+    }
+
+    private Optional<MatchResult> initialSynonymResult(ScenarioSynonymRow row, String input) {
+        String normalizedSynonym = normalize(row.getSynonym());
+        if (normalizedSynonym.isBlank()) {
+            return Optional.empty();
+        }
+        if (normalizedSynonym.equals(input)) {
+            return Optional.of(synonymResult(row, 50.0, false));
+        }
+        if (containsWholeTerm(input, normalizedSynonym)) {
+            return Optional.of(synonymResult(row, 50.0, false));
+        }
+        return Optional.empty();
+    }
+
+    private boolean containsWholeTerm(String input, String term) {
+        if (input == null || term == null || term.isBlank() || input.equals(term)) {
+            return false;
+        }
+        for (String token : input.split("\\s+")) {
+            if (token.equals(term)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private MatchResult keywordResult(

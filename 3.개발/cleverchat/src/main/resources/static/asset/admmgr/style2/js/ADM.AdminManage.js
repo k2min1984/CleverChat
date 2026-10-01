@@ -63,7 +63,7 @@
 
     function request(url, method, payload) {
         setStatus('Saving...');
-        return fetch(url, {
+        return CleverChat.fetch(url, {
             method: method,
             credentials: 'same-origin',
             headers: csrfHeaders({

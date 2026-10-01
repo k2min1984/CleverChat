@@ -15,7 +15,11 @@
                         <div class="regist-header" th:text="${scenario != null ? '시나리오 수정' : '시나리오 등록'}">시나리오 등록</div>
                         <div class="regist-body">
                             <table class="tbl-fixed">
-                                <caption class="sr-only">Scenario form</caption>
+                                <caption class="sr-only">시나리오 입력 폼</caption>
+                                <colgroup>
+                                    <col style="width:25%">
+                                    <col style="width:75%">
+                                </colgroup>
                                 <tbody>
                                 <tr>
                                     <th scope="row"><label for="categoryNo">카테고리 <em class="required">*</em></label></th>

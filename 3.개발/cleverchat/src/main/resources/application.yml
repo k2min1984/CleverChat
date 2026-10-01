@@ -1,8 +1,10 @@
 spring:
+  task:
+    scheduling:
+      pool:
+        size: 2
   application:
     name: cleverchat
-  profiles:
-    active: ${SPRING_PROFILES_ACTIVE:dev}
   mvc:
     throw-exception-if-no-handler-found: true
   web:
@@ -51,6 +53,7 @@ server:
     include-stacktrace: never
     include-binding-errors: never
   servlet:
+    context-path: ${CLEVERCHAT_CONTEXT_PATH:}
     session:
       cookie:
         http-only: true
@@ -62,13 +65,35 @@ logging:
     root: INFO
     kr.co.cleverchat: INFO
 
+chat:
+  search:
+    pool-limit: ${CHAT_SEARCH_POOL_LIMIT:10}
+    display-max: ${CHAT_SEARCH_DISPLAY_MAX:5}
+    relative-threshold: ${CHAT_SEARCH_RELATIVE_THRESHOLD:0.5}
+    min-score: ${CHAT_SEARCH_MIN_SCORE:0.0}
+    max-crawl-documents: ${CHAT_SEARCH_MAX_CRAWL_DOCUMENTS:3}
+    more-enabled: ${CHAT_SEARCH_MORE_ENABLED:true}
+    label:
+      delimiters: "${CHAT_SEARCH_LABEL_DELIMITERS:|,>,·, - ,/}"
+      site-suffixes: "${CHAT_SEARCH_LABEL_SITE_SUFFIXES:한국전력공사,KEPCO}"
+      prefer: ${CHAT_SEARCH_LABEL_PREFER:FIRST}
+
 cleverchat:
+  gateway:
+    shared-secret: ${CLEVERCHAT_GATEWAY_SHARED_SECRET:}
   ai:
+    vllm:
+      base-url: ${CLEVERCHAT_VLLM_BASE_URL:}
+      model: ${CLEVERCHAT_VLLM_MODEL:}
+      api-key: ${CLEVERCHAT_VLLM_API_KEY:}
     answer-suggestion:
       enabled: ${CLEVERCHAT_AI_ANSWER_SUGGESTION_ENABLED:false}
   external-api:
     enabled: ${CLEVERCHAT_EXTERNAL_API_ENABLED:false}
     api-key-sha256: ${CLEVERCHAT_EXTERNAL_API_KEY_SHA256:}
+  admin:
+    ip-whitelist:
+      enabled: ${CLEVERCHAT_ADMIN_IP_WHITELIST_ENABLED:true}
   security:
     field-encryption:
       key-base64: ${CLEVERCHAT_FIELD_ENCRYPTION_KEY_BASE64:}
@@ -80,8 +105,42 @@ cleverchat:
     email:
       from: ${CLEVERCHAT_NOTIFICATION_EMAIL_FROM:no-reply@localhost}
   crawl:
+    worker:
+      enabled: ${CLEVERCHAT_CRAWL_WORKER_ENABLED:true}
+      poll-delay-ms: ${CLEVERCHAT_CRAWL_WORKER_POLL_DELAY_MS:${CLEVERCHAT_CRAWL_BROWSER_POLL_DELAY_MS:5000}}
+    # 0 means unlimited. URL de-duplication prevents discovery loops.
+    max-discovered-pages: ${CLEVERCHAT_CRAWL_MAX_DISCOVERED_PAGES:0}
     url-policy:
       allowed-hosts: ${CLEVERCHAT_CRAWL_ALLOWED_HOSTS:}
+    browser:
+      enabled: ${CLEVERCHAT_CRAWL_BROWSER_ENABLED:false}
+      poll-delay-ms: ${CLEVERCHAT_CRAWL_BROWSER_POLL_DELAY_MS:5000}
+      max-concurrent: ${CLEVERCHAT_CRAWL_BROWSER_MAX_CONCURRENT:1}
+      job-timeout-minutes: ${CLEVERCHAT_CRAWL_BROWSER_JOB_TIMEOUT_MINUTES:180}
+      max-attempts: ${CLEVERCHAT_CRAWL_BROWSER_MAX_ATTEMPTS:2}
+      board-retry-attempts: ${CLEVERCHAT_CRAWL_BROWSER_BOARD_RETRY_ATTEMPTS:3}
+      board-retry-delay-ms: ${CLEVERCHAT_CRAWL_BROWSER_BOARD_RETRY_DELAY_MS:10000}
+      # 0 means unlimited. Crawling continues until the board's last page.
+      max-pages: ${CLEVERCHAT_CRAWL_BROWSER_MAX_PAGES:0}
+      max-details: ${CLEVERCHAT_CRAWL_BROWSER_MAX_DETAILS:0}
+      navigation-timeout-ms: ${CLEVERCHAT_CRAWL_BROWSER_NAVIGATION_TIMEOUT_MS:30000}
+      browsers-path: ${PLAYWRIGHT_BROWSERS_PATH:}
+      native-library-path: ${CLEVERCHAT_CRAWL_BROWSER_NATIVE_LIBRARY_PATH:}
+      native-upload-enabled: ${CLEVERCHAT_CRAWL_BROWSER_NATIVE_UPLOAD_ENABLED:false}
+      native-staging-path: ${CLEVERCHAT_CRAWL_BROWSER_NATIVE_STAGING_PATH:}
+      native-active-path: ${CLEVERCHAT_CRAWL_BROWSER_NATIVE_ACTIVE_PATH:${CLEVERCHAT_CRAWL_BROWSER_NATIVE_LIBRARY_PATH:}}
+      native-max-bundle-bytes: ${CLEVERCHAT_CRAWL_BROWSER_NATIVE_MAX_BUNDLE_BYTES:52428800}
+      native-allowed-sonames: ${CLEVERCHAT_CRAWL_BROWSER_NATIVE_ALLOWED_SONAMES:}
+      native-trusted-signatures: ${CLEVERCHAT_CRAWL_BROWSER_NATIVE_TRUSTED_SIGNATURES:}
+      proxy-server: ${CLEVERCHAT_CRAWL_BROWSER_PROXY_SERVER:}
+      proxy-username: ${CLEVERCHAT_CRAWL_BROWSER_PROXY_USERNAME:}
+      proxy-password: ${CLEVERCHAT_CRAWL_BROWSER_PROXY_PASSWORD:}
+      ca-certificate-path: ${CLEVERCHAT_CRAWL_BROWSER_CA_CERTIFICATE_PATH:}
+      row-selector: "${CLEVERCHAT_CRAWL_BROWSER_ROW_SELECTOR:main a[href^='javascript:fn_Detail'], main a[href^='javascript:fn_SubDetail']}"
+      inline-row-selector: "${CLEVERCHAT_CRAWL_BROWSER_INLINE_ROW_SELECTOR:main .card-list-box.column-03 > .card.link.style01, main .row > .card.link.style01, main .internalrule-content .card.board, main .public-resources-list > .public-resources-list-item, main .esgreport-container .esgreport-top-box, main .esgreport-container .card, main .media-container .media-list-item, main .content-list-wrap > .list-item, main .board-list-tbody > .board-list-row}"
+      title-selector: "${CLEVERCHAT_CRAWL_BROWSER_TITLE_SELECTOR:main .board-detail .sub-component-title, main .board-detail .detail-top h4, main h1, main h2}"
+      content-selector: "${CLEVERCHAT_CRAWL_BROWSER_CONTENT_SELECTOR:main .detail-content, main .board-detail .detail-content, main .board-detail article, main .board-detail, main .container-box-m}"
+      next-selector: "${CLEVERCHAT_CRAWL_BROWSER_NEXT_SELECTOR:.pagination .arrow-box.next a[onclick], a[rel=next], a.next}"
   chat:
     rate-limit:
       store: ${CLEVERCHAT_CHAT_RATE_LIMIT_STORE:memory}

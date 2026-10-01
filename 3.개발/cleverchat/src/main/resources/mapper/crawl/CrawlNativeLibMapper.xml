@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.cleverchat.domain.crawl.browser.CrawlNativeLibMapper">
+    <sql id="columns">
+        native_lib_registry_no, bundle_version, original_file_name, staging_path, active_path,
+        checksum_sha256, signature, allowed_sonames, status, uploaded_by, uploaded_at,
+        activated_by, activated_at, message
+    </sql>
+
+    <insert id="insert" parameterType="kr.co.cleverchat.domain.crawl.browser.CrawlNativeLibBundle" useGeneratedKeys="true" keyProperty="nativeLibRegistryNo">
+        INSERT INTO tb_crawl_native_lib_registry (
+            bundle_version, original_file_name, staging_path, active_path, checksum_sha256,
+            signature, allowed_sonames, status, uploaded_by, message
+        )
+        VALUES (
+            #{bundleVersion}, #{originalFileName}, #{stagingPath}, #{activePath}, #{checksumSha256},
+            #{signature}, #{allowedSonames}, #{status}, #{uploadedBy}, #{message}
+        )
+    </insert>
+
+    <select id="findById" resultType="kr.co.cleverchat.domain.crawl.browser.CrawlNativeLibBundle">
+        SELECT <include refid="columns"/>
+        FROM tb_crawl_native_lib_registry
+        WHERE native_lib_registry_no = #{id}
+    </select>
+
+    <select id="findRecent" resultType="kr.co.cleverchat.domain.crawl.browser.CrawlNativeLibBundle">
+        SELECT <include refid="columns"/>
+        FROM tb_crawl_native_lib_registry
+        ORDER BY uploaded_at DESC, native_lib_registry_no DESC
+        LIMIT #{limit}
+    </select>
+
+    <update id="markActive">
+        UPDATE tb_crawl_native_lib_registry
+        SET status = 'ACTIVE',
+            active_path = #{activePath},
+            activated_by = #{activatedBy},
+            activated_at = now(),
+            message = #{message}
+        WHERE native_lib_registry_no = #{id}
+          AND status = 'VERIFIED'
+    </update>
+
+    <update id="deactivateOthers">
+        UPDATE tb_crawl_native_lib_registry
+        SET status = 'VERIFIED',
+            message = 'Superseded by bundle #' || #{id}
+        WHERE native_lib_registry_no != #{id}
+          AND status = 'ACTIVE'
+    </update>
+</mapper>

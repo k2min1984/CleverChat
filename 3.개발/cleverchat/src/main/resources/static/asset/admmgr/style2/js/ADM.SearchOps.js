@@ -38,7 +38,7 @@
             var limit = Number(testForm.querySelector('[name="limit"]').value || 5);
             setStatus('Running search...');
             if (results) results.textContent = '';
-            fetch('/admin/api/search/test', {
+            CleverChat.fetch('/admin/api/search/test', {
                 method: 'POST',
                 credentials: 'same-origin',
                 headers: csrfHeaders({
@@ -66,7 +66,7 @@
             event.preventDefault();
             var statDate = rebuildForm.querySelector('[name="statDate"]').value;
             setStatus('Rebuilding popular searches...');
-            fetch('/admin/api/search/popular/rebuild', {
+            CleverChat.fetch('/admin/api/search/popular/rebuild', {
                 method: 'POST',
                 credentials: 'same-origin',
                 headers: csrfHeaders({
@@ -91,7 +91,7 @@
             var url = '/admin/api/search/logs/expired?retentionDays=' + encodeURIComponent(retentionDays)
                 + '&dryRun=' + encodeURIComponent(String(dryRun));
             setStatus(dryRun ? 'Checking expired logs...' : 'Deleting expired logs...');
-            fetch(url, {
+            CleverChat.fetch(url, {
                 method: 'DELETE',
                 credentials: 'same-origin',
                 headers: csrfHeaders({ 'Accept': 'application/json' })

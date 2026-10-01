@@ -161,10 +161,10 @@ class AccessibilityTemplateTest {
 
         assertThat(html)
                 .contains(
-                        "value=\"EMAIL_SMTP\"",
-                        "Email SMTP",
+                        "adminCommonCodes['NOTIFICATION_CHANNEL_TYPE']",
+                        "th:value=\"${code.value}\"",
                         "aria-describedby=\"notificationEndpointHelp\"",
-                        "Webhook URL env key or email recipient env key.");
+                        "Webhook URL 환경키 또는 이메일 수신자 환경키.");
     }
 
     @Test

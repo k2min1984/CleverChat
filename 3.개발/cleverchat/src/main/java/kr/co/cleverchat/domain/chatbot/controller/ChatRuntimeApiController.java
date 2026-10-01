@@ -9,11 +9,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import kr.co.cleverchat.common.api.ApiResponse;
+import kr.co.cleverchat.domain.chatbot.dto.ChatRuntimeDtos.AutoStartRequest;
 import kr.co.cleverchat.domain.chatbot.dto.ChatRuntimeDtos.FeedbackRequest;
 import kr.co.cleverchat.domain.chatbot.dto.ChatRuntimeDtos.FeedbackResponse;
 import kr.co.cleverchat.domain.chatbot.dto.ChatRuntimeDtos.FreeTextRequest;
 import kr.co.cleverchat.domain.chatbot.dto.ChatRuntimeDtos.HistorySessionResponse;
 import kr.co.cleverchat.domain.chatbot.dto.ChatRuntimeDtos.SelectOptionRequest;
+import kr.co.cleverchat.domain.chatbot.dto.ChatRuntimeDtos.SelectSearchResultRequest;
 import kr.co.cleverchat.domain.chatbot.dto.ChatRuntimeDtos.SessionResponse;
 import kr.co.cleverchat.domain.chatbot.dto.ChatRuntimeDtos.StartRequest;
 import kr.co.cleverchat.domain.chatbot.service.ChatRuntimeService;
@@ -48,6 +50,16 @@ public class ChatRuntimeApiController {
         return ApiResponse.ok(chatRuntimeService.start(request.scenarioId(), context));
     }
 
+    @PostMapping("/sessions/auto")
+    public ApiResponse<SessionResponse> autoStart(
+            @Valid @RequestBody AutoStartRequest request,
+            @CookieValue(name = ANONYMOUS_COOKIE, required = false) String anonymousCookie,
+            HttpServletRequest servletRequest,
+            HttpServletResponse servletResponse) {
+        ChatRequestContext context = context(anonymousCookie, servletRequest, servletResponse);
+        return ApiResponse.ok(chatRuntimeService.startWithText(request.text(), context));
+    }
+
     @GetMapping("/scenarios")
     public ApiResponse<?> scenarios() {
         return ApiResponse.ok(chatRuntimeService.activeScenarios());
@@ -75,7 +87,10 @@ public class ChatRuntimeApiController {
 
     @GetMapping("/history")
     public ApiResponse<List<HistorySessionResponse>> historyList(
-            @CookieValue(name = ANONYMOUS_COOKIE, required = false) String anonymousCookie) {
+            @CookieValue(name = ANONYMOUS_COOKIE, required = false) String anonymousCookie,
+            HttpServletRequest servletRequest) {
+        Long userNo = linkedUserNo(servletRequest);
+        if (userNo != null) return ApiResponse.ok(chatRuntimeService.userHistory(userNo));
         Optional<UUID> anonymousId = parseUuid(anonymousCookie);
         if (anonymousId.isEmpty()) {
             return ApiResponse.ok(List.of());
@@ -92,7 +107,50 @@ public class ChatRuntimeApiController {
             HttpServletResponse servletResponse) {
         ChatRequestContext context = context(anonymousCookie, servletRequest, servletResponse);
         return ApiResponse.ok(
-                chatRuntimeService.selectOption(sessionId, request.optionId(), context));
+                chatRuntimeService.selectOption(
+                        sessionId,
+                        request.optionId(),
+                        request.sourceNodeId(),
+                        request.sourceMessageId(),
+                        context));
+    }
+
+    @PostMapping("/sessions/{sessionId}/select-search-result")
+    public ApiResponse<SessionResponse> selectSearchResult(
+            @PathVariable UUID sessionId,
+            @Valid @RequestBody SelectSearchResultRequest request,
+            @CookieValue(name = ANONYMOUS_COOKIE, required = false) String anonymousCookie,
+            HttpServletRequest servletRequest,
+            HttpServletResponse servletResponse) {
+        ChatRequestContext context = context(anonymousCookie, servletRequest, servletResponse);
+        return ApiResponse.ok(
+                chatRuntimeService.selectSearchResult(
+                        sessionId,
+                        request.crawlDocumentNo(),
+                        request.scenarioNo(),
+                        request.scenarioNodeNo(),
+                        request.sourceMessageId(),
+                        context));
+    }
+
+    @PostMapping("/sessions/{sessionId}/search-more")
+    public ApiResponse<SessionResponse> searchMore(
+            @PathVariable UUID sessionId,
+            @CookieValue(name = ANONYMOUS_COOKIE, required = false) String anonymousCookie,
+            HttpServletRequest servletRequest,
+            HttpServletResponse servletResponse) {
+        ChatRequestContext context = context(anonymousCookie, servletRequest, servletResponse);
+        return ApiResponse.ok(chatRuntimeService.searchMore(sessionId, context));
+    }
+
+    @PostMapping("/sessions/{sessionId}/back")
+    public ApiResponse<SessionResponse> goBack(
+            @PathVariable UUID sessionId,
+            @CookieValue(name = ANONYMOUS_COOKIE, required = false) String anonymousCookie,
+            HttpServletRequest servletRequest,
+            HttpServletResponse servletResponse) {
+        ChatRequestContext context = context(anonymousCookie, servletRequest, servletResponse);
+        return ApiResponse.ok(chatRuntimeService.goBack(sessionId, context));
     }
 
     @PostMapping("/sessions/{sessionId}/free-text")
@@ -134,13 +192,31 @@ public class ChatRuntimeApiController {
                                     Cookie cookie =
                                             new Cookie(ANONYMOUS_COOKIE, generated.toString());
                                     cookie.setHttpOnly(true);
-                                    cookie.setPath("/");
+                                    cookie.setPath(
+                                            request.getContextPath().isEmpty()
+                                                    ? "/"
+                                                    : request.getContextPath());
                                     cookie.setMaxAge(60 * 60 * 24 * 90);
                                     response.addCookie(cookie);
                                     return generated;
                                 });
         return new ChatRequestContext(
-                anonymousId, clientIp(request), request.getHeader("User-Agent"));
+                anonymousId,
+                clientIp(request),
+                request.getHeader("User-Agent"),
+                linkedUserNo(request));
+    }
+
+    private Long linkedUserNo(HttpServletRequest request) {
+        var session = request.getSession(false);
+        if (session == null
+                || !"GATEWAY"
+                        .equals(
+                                session.getAttribute(
+                                        kr.co.cleverchat.domain.settings.SystemAuthenticationFilter
+                                                .PROVIDER))) return null;
+        var current = kr.co.cleverchat.domain.auth.security.CurrentAdminProvider.current(request);
+        return current == null ? null : current.getId();
     }
 
     private Optional<UUID> parseUuid(String value) {

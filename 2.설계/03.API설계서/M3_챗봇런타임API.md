@@ -30,6 +30,10 @@
 |---|---|---|---|
 | GET | `/chat/api/scenarios` | 활성 시나리오 목록 | 비로그인 가능 |
 | POST | `/chat/api/sessions` | 새 세션 시작 | 비로그인 가능 |
+| POST | `/chat/api/sessions/auto` | 검색어로 상담 시작 | 비로그인 가능 |
+| POST | `/chat/api/sessions/{id}/select-search-result` | 검색한 세부 안내 또는 자료 선택 | 본인만 |
+| POST | `/chat/api/sessions/{id}/search-more` | 관련성이 확인된 나머지 검색 결과 표시 | 본인만 |
+| POST | `/chat/api/sessions/{id}/back` | 이전 상담 또는 검색 결과 복원 | 본인만 |
 | GET | `/chat/api/sessions/{id}` | 세션 현재 상태 | 본인만 |
 | POST | `/chat/api/sessions/{id}/select-option` | 버튼 선택 진행 | 본인만 |
 | POST | `/chat/api/sessions/{id}/free-text` | 자유 텍스트 매칭/fallback | 본인만 |
@@ -436,6 +440,87 @@ FallbackSearchResult search(String text, Long currentScenarioId, UUID sessionId)
 - `chat_recommendation.enabled=true`이고 연결 시나리오가 활성 상태인 항목만 반환한다.
 - 연결 시나리오의 카테고리가 비활성화된 경우 사용자 응답에서 제외한다.
 - 정렬은 priority ASC, id ASC다.
+
+### 3.11 검색 결과 선택 — 2026-09-23 반영
+
+`POST /chat/api/sessions/auto`의 `text` 또는 기존 상담의 `free-text`로 검색한다. 응답의 `searchOptions`와 각 메시지의 `searchOptions`에 아래 항목이 포함된다.
+
+```json
+{
+  "crawlDocumentNo": null,
+  "scenarioNo": 6,
+  "scenarioNodeNo": 355,
+  "label": "신청·요금조회·납부",
+  "matchedField": "NODE",
+  "optionType": "SCENARIO"
+}
+```
+
+위 ID는 예시이며, 클라이언트는 검색 응답에서 받은 값을 그대로 사용한다.
+
+`POST /chat/api/sessions/{id}/select-search-result` 요청:
+
+```json
+{
+  "scenarioNo": 6,
+  "scenarioNodeNo": 355
+}
+```
+
+- 세부 안내는 `scenarioNo`와 `scenarioNodeNo`를 함께 보내면 해당 노드의 답변·링크·선택지를 바로 제공한다. 대메뉴의 시작 노드로 이동하지 않는다.
+- 시나리오 주제 자체를 선택하는 기존 요청은 `scenarioNo`만, 수집 문서는 `crawlDocumentNo`만 보낸다. 문서 ID와 시나리오 ID는 동시에 보낼 수 없다.
+- 같은 상담에서 실제 노출된 ID 조합만 선택할 수 있다. `overflowOptions`의 항목은 더 보기로 노출된 뒤에 선택할 수 있다.
+- 세부 노드는 현재 활성 시나리오의 게시 버전에 속하는 `QUESTION` 또는 `ANSWER`여야 한다. 검색 뒤 게시 버전이 바뀌었다면 다시 검색해야 한다.
+- 검색 결과 복원 및 이력에도 `scenarioNodeNo`를 보존한다. 기존 문서/대메뉴 선택 요청과 호환되며 DB 스키마 변경은 없다.
+- 화면 그룹명은 `상담 안내`, `관련 자료`를 사용한다.
+
+### 3.12 실제 방문 화면 기준 이전 단계 복귀 — 2026-09-23 반영
+
+`POST /chat/api/sessions/{id}/back`은 현재 응답을 열었던 화면으로 복귀한다.
+
+- 상담 중 검색 자료를 열었을 때: **자료 → 해당 검색 목록 → 검색하기 전 상담 단계** 순서로 돌아간다. 서버에 남아 있는 시나리오 노드 때문에 검색 목록을 건너뛰지 않는다.
+- 더 보기에서 자료를 열었을 때: **자료 → 더 보기 목록 → 최초 목록** 순서로 복귀하며, 더 보기 잔여 건수도 복원한다.
+- 같은 상담 답변을 다시 방문하거나 여러 번 뒤로 가도 지나온 두 화면을 반복하지 않는다. 최초 화면에서는 `canGoBack=false`다.
+- 검색 결과 선택과 일반 선택지 요청에 선택 사항인 `sourceMessageId`를 추가했다. 현재 UI는 클릭한 말풍선의 `messages[].id`를 전송한다. 같은 문서가 여러 검색 결과에 있어도 클릭한 목록으로 돌아간다. 기존 클라이언트는 생략할 수 있으며, 이때 같은 세션에서 해당 항목을 가장 최근에 제공한 메시지를 사용한다.
+- `sourceMessageId`는 본인 세션의 BOT 메시지이며 선택한 항목을 제공한 메시지인지 서버에서 검증한다. 임의의 메시지나 노드를 복귀 대상으로 지정할 수 없다.
+
+검색 항목 선택 예시:
+
+```json
+{
+  "crawlDocumentNo": 3111,
+  "sourceMessageId": 12345
+}
+```
+
+일반 선택지 예시:
+
+```json
+{
+  "optionId": 1001,
+  "sourceNodeId": 101,
+  "sourceMessageId": 12346
+}
+```
+
+ID는 예시이며 응답에서 받은 값을 사용한다. `SessionResponse`에는 기존 `canGoBack`에 더해 `backTargetType`을 반환한다.
+
+| 값 | 의미 | 현재 UI |
+|---|---|---|
+| `SEARCH_RESULTS` | 검색 결과 목록으로 복귀 | `이전` 버튼 |
+| `SCENARIO` | 앞서 방문한 상담 단계로 복귀 | `이전` 버튼 |
+| `ANSWER` | 앞서 표시한 일반 답변으로 복귀 | `이전` 버튼 |
+| `null` | 복귀 대상이 없거나 이전 형식의 이력 | `canGoBack`에 따라 기존 표시 규칙 적용 |
+
+새 BOT 메시지는 기존 JSON payload에 `navigation.parentMessageNo`를 기록한다. 복귀 시 원래 메시지의 답변·선택지·복귀 경로를 복원하며, 이미 되돌아온 화면을 새 복귀 대상으로 쌓지 않는다. DB 스키마 변경은 없다. 이 정보가 없는 기존 대화는 기존 이력으로 복귀 대상을 찾되, 검색 자료에서는 검색 목록 복귀를 우선한다.
+
+검증: 관련 단위·통합 테스트 68개 통과. 실제 브라우저에서 상담 중 자료 열기/복귀, 동일 답변 재방문, 이전 말풍선에서 같은 자료 다시 선택, 더 보기 후 연속 복귀를 확인했다. 검색 정합성 브라우저 검증 9개도 유지된다.
+
+### 3.13 공통 이동 버튼 통일
+
+공개 챗봇의 이동은 시스템이 제공하는 `이전`을 사용한다. 시나리오에는 내용 선택지와 `안내 종료`를 등록하며, 고정 노드로 연결하는 `상위 메뉴`·`처음으로`·`이전` 선택지는 사용하지 않는다. 돌아갈 이력이 있는 일반 답변은 `이전 · 안내 종료` 순서로 표시된다. 기존 대화에 예전 이동 선택지가 남아 있어도 공개 화면에서 숨긴다.
+
+KEPCO 6개 시나리오는 v3에서 상위 메뉴·처음으로 193개를 제거했으며, 이전 버전의 그래프와 본문은 보존했다.
 
 ## 4. 관리자 엔드포인트
 

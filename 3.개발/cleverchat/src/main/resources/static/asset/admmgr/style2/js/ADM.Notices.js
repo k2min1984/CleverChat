@@ -49,7 +49,7 @@
         createForm.addEventListener('submit', function (event) {
             event.preventDefault();
             setStatus('Creating notice...');
-            fetch('/admin/api/notices', {
+            CleverChat.fetch('/admin/api/notices', {
                 method: 'POST',
                 credentials: 'same-origin',
                 headers: csrfHeaders({
@@ -71,7 +71,7 @@
             var id = button.getAttribute('data-save-notice-id');
             var row = button.closest('tr');
             setStatus('Saving notice #' + id + '...');
-            fetch('/admin/api/notices/' + encodeURIComponent(id), {
+            CleverChat.fetch('/admin/api/notices/' + encodeURIComponent(id), {
                 method: 'PUT',
                 credentials: 'same-origin',
                 headers: csrfHeaders({
@@ -92,7 +92,7 @@
         button.addEventListener('click', function () {
             var id = button.getAttribute('data-disable-notice-id');
             setStatus('Disabling notice #' + id + '...');
-            fetch('/admin/api/notices/' + encodeURIComponent(id), {
+            CleverChat.fetch('/admin/api/notices/' + encodeURIComponent(id), {
                 method: 'DELETE',
                 credentials: 'same-origin',
                 headers: csrfHeaders({ 'Accept': 'application/json' })

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${document.title ?: '원문 보기'}">원문 보기</title>
+    <link rel="stylesheet" th:href="@{/asset/chat/chat.css(v='20260715-document1')}">
+</head>
+<body>
+<main class="chat-shell document-shell">
+    <section class="chat-panel document-panel">
+        <header class="chat-header">
+            <div class="brand-block">
+                <span class="brand-mark" aria-hidden="true">C</span>
+                <div>
+                    <p class="eyebrow">CleverChat</p>
+                    <h1>원문 보기</h1>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button type="button" class="secondary" data-close-document
+                        th:data-fallback-url="@{/chat}">창 닫기</button>
+            </div>
+        </header>
+
+        <div class="document-scroll">
+            <article class="document-card">
+                <header class="document-heading">
+                    <h2 class="document-title" th:text="${document.title ?: '제목 없음'}">제목 없음</h2>
+                    <p class="document-meta">
+                        <span>문서번호 <strong th:text="${document.crawlDocumentNo}">0</strong></span>
+                        <span th:if="${document.fetchedAt != null}"
+                              th:text="'수집일시 ' + ${#temporals.format(document.fetchedAt, 'yyyy-MM-dd HH:mm')}">수집일시</span>
+                    </p>
+                </header>
+                <div class="document-content" th:text="${displayContent ?: '본문이 없습니다.'}">본문이 없습니다.</div>
+                <footer class="document-actions">
+                    <a class="button-link secondary"
+                       th:if="${sourceUrl != null and !#strings.isEmpty(sourceUrl)}"
+                       th:href="${sourceUrl}" target="_blank" rel="noopener noreferrer">원사이트 목록 열기</a>
+                    <button type="button" data-close-document
+                            th:data-fallback-url="@{/chat}">창 닫기</button>
+                </footer>
+            </article>
+        </div>
+    </section>
+</main>
+<script th:src="@{/asset/chat/crawlDocument.js(v='20260715-close1')}" defer></script>
+</body>
+</html>

@@ -44,18 +44,18 @@
         var output = scheduleForm.querySelector('[data-schedule-preview]');
         if (!output) return;
         if (!data || !data.nextRunTimes || data.nextRunTimes.length === 0) {
-            output.textContent = 'No automatic runs scheduled.';
+            output.textContent = '예약된 자동 실행이 없습니다.';
             return;
         }
-        output.textContent = 'Next: ' + data.nextRunTimes.slice(0, 5).map(function (value) {
+        output.textContent = '다음 실행: ' + data.nextRunTimes.slice(0, 5).map(function (value) {
             return String(value).replace('T', ' ').slice(0, 16);
         }).join(', ');
     }
 
     function previewSchedule(scheduleForm) {
         var output = scheduleForm.querySelector('[data-schedule-preview]');
-        if (output) output.textContent = 'Checking schedule...';
-        fetch('/admin/api/crawl-targets/schedule/preview', {
+        if (output) output.textContent = '스케줄을 확인하는 중입니다...';
+        CleverChat.fetch('/admin/api/crawl-targets/schedule/preview', {
             method: 'POST',
             credentials: 'same-origin',
             headers: csrfHeaders({
@@ -79,8 +79,8 @@
                 label: form.querySelector('[name="label"]').value,
                 useYn: form.querySelector('[name="useYn"]').checked ? 'Y' : 'N'
             }, schedulePayload(form));
-            setStatus('Creating crawl target...');
-            fetch('/admin/api/crawl-targets', {
+            setStatus('크롤링 대상을 등록하는 중입니다...');
+            CleverChat.fetch('/admin/api/crawl-targets', {
                 method: 'POST',
                 credentials: 'same-origin',
                 headers: csrfHeaders({
@@ -89,7 +89,7 @@
                 }),
                 body: JSON.stringify(payload)
             }).then(parseJson).then(function () {
-                setStatus('Crawl target created.');
+                setStatus('크롤링 대상이 등록되었습니다.');
                 window.location.reload();
             }).catch(function (error) {
                 setStatus(error.message);
@@ -107,14 +107,14 @@
     root.querySelectorAll('[data-run-target-id]').forEach(function (button) {
         button.addEventListener('click', function () {
             var id = button.getAttribute('data-run-target-id');
-            setStatus('Running crawl target #' + id + '...');
+            setStatus('크롤링 대상 #' + id + ' 실행 중입니다...');
             button.disabled = true;
-            fetch('/admin/api/crawl-targets/' + encodeURIComponent(id) + '/run', {
+            CleverChat.fetch('/admin/api/crawl-targets/' + encodeURIComponent(id) + '/run', {
                 method: 'POST',
                 credentials: 'same-origin',
                 headers: csrfHeaders({ 'Accept': 'application/json' })
             }).then(parseJson).then(function (data) {
-                setStatus('Run completed: ' + data.run.status + '.');
+                setStatus('실행이 완료되었습니다: ' + data.run.status + '.');
                 window.location.reload();
             }).catch(function (error) {
                 setStatus(error.message);
@@ -128,8 +128,8 @@
             event.preventDefault();
             var id = scheduleForm.getAttribute('data-schedule-target-id');
             var payload = schedulePayload(scheduleForm);
-            setStatus('Saving schedule for target #' + id + '...');
-            fetch('/admin/api/crawl-targets/' + encodeURIComponent(id) + '/schedule', {
+            setStatus('크롤링 대상 #' + id + ' 스케줄 저장 중입니다...');
+            CleverChat.fetch('/admin/api/crawl-targets/' + encodeURIComponent(id) + '/schedule', {
                 method: 'PUT',
                 credentials: 'same-origin',
                 headers: csrfHeaders({
@@ -138,7 +138,7 @@
                 }),
                 body: JSON.stringify(payload)
             }).then(parseJson).then(function () {
-                setStatus('Schedule saved.');
+                setStatus('스케줄이 저장되었습니다.');
                 window.location.reload();
             }).catch(function (error) {
                 setStatus(error.message);

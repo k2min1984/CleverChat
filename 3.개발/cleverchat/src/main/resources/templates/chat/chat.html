@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="ctx" th:content="@{/}">
+    <script th:src="@{/asset/common/app-url.js}"></script>
     <title>CleverChat</title>
-    <link rel="stylesheet" th:href="@{/asset/chat/chat.css}">
+    <link rel="stylesheet" th:href="@{/asset/chat/chat.css(v='20260723-search-more1')}">
 </head>
 <body>
 <main class="chat-shell" data-chat-root>
@@ -33,9 +35,6 @@
                 </li>
             </ul>
         </section>
-
-        <section class="status-line" id="statusLine" role="status" aria-live="polite">상담 주제를 불러오는 중입니다.</section>
-        <section class="status-line error" id="errorLine" role="alert" hidden></section>
 
         <div class="chat-layout">
             <aside class="chat-sidebar" aria-label="상담 주제">
@@ -73,21 +72,23 @@
                     </div>
                 </section>
 
-                <section class="option-list" id="optionList" role="list" aria-label="Available answers"></section>
+                <section class="option-list" id="optionList" role="list" aria-label="선택 가능한 답변"></section>
 
                 <form class="chat-input" id="chatForm">
                     <label for="freeText">질문 입력</label>
                     <div class="input-row">
                         <input id="freeText" type="text" maxlength="500" autocomplete="off"
                                placeholder="질문을 입력하세요" aria-describedby="freeTextHelp">
-                        <button type="submit">전송</button>
+                        <button type="submit" class="send-btn">전송</button>
                     </div>
-                    <p id="freeTextHelp">상담 주제를 선택한 뒤 질문을 입력할 수 있습니다.</p>
+                    <p id="freeTextHelp" class="sr-only">상담 주제를 선택하거나 질문을 바로 입력할 수 있습니다.</p>
+                    <p class="chat-status" id="statusLine" role="status" aria-live="polite"></p>
+                    <p class="chat-status is-error" id="errorLine" role="alert" aria-live="assertive"></p>
                 </form>
             </section>
         </div>
     </section>
 </main>
-<script th:src="@{/asset/chat/chat.js}" defer></script>
+<script th:src="@{/asset/chat/chat.js(v='20260923-navigation3')}" defer></script>
 </body>
 </html>

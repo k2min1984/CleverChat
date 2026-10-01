@@ -1,104 +1,32 @@
 # CleverChat
 
-시나리오 챗봇 시스템 (Spring Boot + MyBatis + PostgreSQL).
+시나리오 상담·검색·웹 크롤링 애플리케이션입니다. 전체 설치 안내는 [저장소 README](../../README.md)에서 볼 수 있습니다.
 
-기술 기준 요약:
-- JPA는 사용하지 않습니다. DB 접근은 Flyway + MyBatis mapper/XML 기준입니다.
-- Spring Security 기반 인증/인가는 사용하지 않습니다. 관리자 인증/인가, CSRF, 세션, 보안 헤더는 HandlerInterceptor + 세션 VO 기반 구현을 기준으로 합니다.
-- `8.소스/OverseasNPP_20260511`은 프레임워크 전환용 베이스가 아니라 화면/자산/업무 흐름/SQL 패턴 참고 소스입니다. 상세 기준은 [docs/Security_JPA_8소스_기준정리.md](docs/Security_JPA_8소스_기준정리.md)를 참고합니다.
+## 실행
 
-## 요구 환경
-
-- JDK 17
-- Maven 3.9+
-- Docker (로컬 PostgreSQL, Testcontainers 통합 테스트용)
-
-Docker는 개발과 테스트에만 사용합니다. 운영 배포는 실행 가능 JAR, systemd, nginx HTTPS 종단, 물리 PostgreSQL을 기준으로 하며 운영용 compose 파일은 제공하지 않습니다. 상세 기준은 [docker/README.md](docker/README.md)를 참고합니다.
-
-## 실행 (dev)
+Windows에서 **JDK 17**을 준비하고 **Docker Desktop(Linux containers)**을 실행한 뒤, 이 폴더에서 아래 명령을 실행합니다.
 
 ```powershell
-# 1. PostgreSQL 기동 (호스트 PG와 충돌 회피용 5433 매핑)
-docker compose -f docker/docker-compose.yml up -d
-
-# 2. 패키징 후 실행 (한글 경로/CP949 환경에서 안전)
-./mvnw -DskipTests package
-& "$env:JAVA_HOME\bin\java.exe" '-Dspring.profiles.active=dev' -jar target/cleverchat.jar
+.\start-local.cmd
 ```
 
-브라우저: http://localhost:8080
+DB 준비, 기본 메뉴·코드·권한 구성, 빌드와 서버 실행이 자동으로 진행됩니다. 새 설치는 최초 관리자 ID·비밀번호를 입력하고, 기존 설치는 기존 계정을 사용합니다.
 
-> dev 프로파일은 호스트 5433 → 컨테이너 5432로 매핑된 PostgreSQL을 가정합니다.
-> 호스트에 별도 PostgreSQL 서비스가 5432를 점유하고 있어도 충돌하지 않습니다.
+`READY`와 `health UP`이 나오면 [관리자 로그인](http://127.0.0.1:8080/login) 또는 [상담 화면](http://127.0.0.1:8080/chat)에 접속합니다. 종료는 **Ctrl+C**, 재실행은 같은 명령입니다.
 
-## 빌드
+## 개발
+
+Spring Boot + MyBatis + Flyway + PostgreSQL을 사용합니다. 소스는 `src`, 실행 도구는 `tools`, 기본 데이터와 운영 샘플은 `deploy`에 있습니다.
 
 ```powershell
-./mvnw clean package
-java -jar target/cleverchat.jar --spring.profiles.active=dev
+.\mvnw.cmd test          # 기본 테스트
+.\mvnw.cmd -Pit test     # Docker가 필요한 통합 테스트 포함
+.\mvnw.cmd package       # target/cleverchat.jar 생성
 ```
 
-## 프로파일
+## 상세 안내
 
-| 프로파일 | 비고 |
-|----------|------|
-| dev      | 로컬, Docker PostgreSQL |
-| stage    | 검증, 환경변수 주입 |
-| prod     | 운영, 환경변수 주입, nginx HTTPS 종단 |
-
-운영 환경변수:
-- `SPRING_PROFILES_ACTIVE`
-- `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`
-- `SERVER_PORT` (선택)
-
-## 디렉토리
-
-```
-src/main/java/kr/co/cleverchat
-├── CleverChatApplication.java
-├── config/         설정 (Web, MyBatis, 인터셉터)
-├── common/         공용 (예외, AOP, 유틸)
-└── domain/         도메인 모듈
-    ├── auth, admin, scenario, chatbot, search, crawl, ops
-
-src/main/resources
-├── application*.yml
-├── logback-spring.xml
-├── mapper/         MyBatis XML
-├── templates/      Thymeleaf
-├── static/         정적 자원
-└── db/migration/   Flyway
-```
-
-## 테스트
-
-### 단위 테스트 (Docker 불필요)
-
-```powershell
-.\mvnw.cmd test
-```
-
-기본 테스트는 `integration` 태그를 제외하므로 Docker 없이 순수 단위 테스트만 실행합니다.
-
-### 통합 테스트 (Docker Desktop 필수)
-
-```powershell
-docker info
-.\mvnw.cmd -Pit test
-```
-
-Docker Desktop이 기동되지 않은 상태에서 통합 테스트를 실행하면 컨테이너 생성 단계에서 즉시 실패합니다. 단위 테스트만 실행할 때는 Docker 기동이 필요하지 않습니다.
-
-통합 테스트만 단독 실행할 때는 다음 명령을 사용합니다.
-
-```powershell
-.\mvnw.cmd -Pit -Dgroups=integration test
-```
-
-## 운영 (prod 가이드)
-
-- nginx 리버스 프록시에서 HTTPS 종단
-- 앱은 `forward-headers-strategy=framework`로 X-Forwarded-* 신뢰
-- systemd 서비스 등록 권장
-- 로그: `/var/log/cleverchat/`
-- 시크릿: 환경변수 또는 외부 properties 주입
+- [설치·실행·접속](../../README.md)
+- [실행 옵션·오류 해결·운영 배포](../../5.배포/02.환경구축가이드/환경구축_배포가이드.md)
+- [기본 메뉴·코드·계정·권한](deploy/seed/README.md)
+- [인수인계·설정·DB 명세](../../5.배포/06.인수인계/README.md)

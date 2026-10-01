@@ -6,12 +6,16 @@ import kr.co.cleverchat.common.ops.OpsEventLogger;
 import kr.co.cleverchat.domain.auth.mapper.LoginLogMapper;
 import kr.co.cleverchat.domain.auth.mapper.UserMapper;
 import kr.co.cleverchat.domain.auth.model.UserAccount;
+import kr.co.cleverchat.domain.settings.RuntimeSetting;
+import kr.co.cleverchat.domain.settings.RuntimeSettingsService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class LoginAuditService {
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private RuntimeSettingsService runtimeSettings;
 
     private final LoginLogMapper loginLogMapper;
     private final UserMapper userMapper;
@@ -40,6 +44,14 @@ public class LoginAuditService {
 
     @Transactional
     public void recordFailure(String username, String message, HttpServletRequest request) {
+        int maxFailedAttempts =
+                runtimeSettings == null
+                        ? this.maxFailedAttempts
+                        : runtimeSettings.current().integer(RuntimeSetting.LOGIN_FAILURES);
+        int lockMinutes =
+                runtimeSettings == null
+                        ? this.lockMinutes
+                        : runtimeSettings.current().integer(RuntimeSetting.LOGIN_LOCK_MINUTES);
         loginLogMapper.insert(username, false, message, clientIp(request), userAgent(request));
         if (userMapper.countByUsername(username) == 0) {
             return;

@@ -1,78 +1,111 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{admmgr/common/head :: adminHead('Chat session detail | CleverChat')}"></head>
+<head th:replace="~{admmgr/common/head :: adminHead('대화 상세 | CleverChat')}"></head>
 <body>
 <div class="admin-wrap">
     <div th:replace="~{admmgr/common/sidebar :: adminSidebar}"></div>
     <div class="main-area">
         <div th:replace="~{admmgr/common/header :: adminHeader}"></div>
         <div th:replace="~{admmgr/common/navigation :: adminNavigation}"></div>
-        <main class="content-area">
-            <header>
-                <h1>Chat session detail</h1>
-                <nav class="actions" aria-label="Chat session actions">
-                    <a class="button" th:href="@{/admin/chat/sessions}">List</a>
-                </nav>
-            </header>
-            <section>
-                <h2>Session</h2>
-                <p><strong>Session</strong> <span th:text="${detail.session.sessionKey}">abcdef12</span></p>
-                <p><strong>Scenario</strong> <span th:text="${detail.session.scenarioTitle}">Scenario</span></p>
-                <p><strong>State</strong> <span th:text="${detail.session.state}">ACTIVE</span></p>
-                <p><strong>Current node</strong> <span th:text="${detail.session.currentNodeNo ?: '-'}">-</span></p>
-            </section>
-            <section>
-                <h2>Messages</h2>
-                <table aria-label="Session message trace">
-                    <caption>Session message trace</caption>
-                    <thead>
-                    <tr>
-                        <th scope="col">Seq</th>
-                        <th scope="col">Direction</th>
-                        <th scope="col">Content</th>
-                        <th scope="col">Feedback</th>
-                        <th scope="col">Created</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr th:each="message : ${detail.messages}">
-                        <td th:text="${message.seq}">1</td>
-                        <td th:text="${message.direction}">BOT</td>
-                        <td th:text="${message.content}">Message</td>
-                        <td th:text="${message.feedbackRating ?: '-'}">-</td>
-                        <td th:text="${#temporals.format(message.frstRegDt, 'yyyy-MM-dd HH:mm')}">2026-05-27 13:00</td>
-                    </tr>
-                    <tr th:if="${#lists.isEmpty(detail.messages)}">
-                        <td colspan="5">No messages found.</td>
-                    </tr>
-                    </tbody>
-                </table>
-            </section>
-            <section>
-                <h2>Failures</h2>
-                <table aria-label="Session failure trace">
-                    <caption>Session failure trace</caption>
-                    <thead>
-                    <tr>
-                        <th scope="col">Reason</th>
-                        <th scope="col">Detail</th>
-                        <th scope="col">Reviewed</th>
-                        <th scope="col">Created</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr th:each="failure : ${detail.failures}">
-                        <td th:text="${failure.reason}">NO_MATCH</td>
-                        <td><code th:text="${failure.detail}">{}</code></td>
-                        <td th:text="${failure.reviewed ? 'Reviewed' : 'Open'}">Open</td>
-                        <td th:text="${#temporals.format(failure.frstRegDt, 'yyyy-MM-dd HH:mm')}">2026-05-27 13:00</td>
-                    </tr>
-                    <tr th:if="${#lists.isEmpty(detail.failures)}">
-                        <td colspan="4">No failures found.</td>
-                    </tr>
-                    </tbody>
-                </table>
-            </section>
+        <main class="content-area board-page">
+            <div class="page-wrap">
+                <div th:replace="~{admmgr/common/board :: heading('대화 상세', '선택한 세션의 대화 내용과 응답 실패 이력을 확인합니다.')}"></div>
+                <div class="view-card">
+                    <div class="view-header">
+                        <div class="view-title">
+                            <span th:text="${detail.session.sessionKey}">abcdef12</span>
+                            <span class="badge" th:classappend="${detail.session.state == 'ACTIVE'} ? ' badge-success' : ' badge-default'" th:text="${detail.session.state}">ACTIVE</span>
+                        </div>
+                        <div class="view-meta">
+                            <span>시나리오 <strong th:text="${detail.session.scenarioTitle}">시나리오</strong></span>
+                            <span class="view-meta-sep">/</span>
+                            <span>현재 노드 <strong th:text="${detail.session.currentNodeNo ?: '-'}">-</strong></span>
+                        </div>
+                    </div>
+                    <div class="view-footer">
+                        <a class="btn btn-md btn-secondary" th:href="@{/admin/chat/sessions}">목록</a>
+                    </div>
+                </div>
+
+                <div class="result-header">
+                    <div class="result-count">메시지 조회 <strong th:text="${#lists.size(detail.messages)} + '건'">0건</strong></div>
+                </div>
+                <div class="table-card">
+                    <div class="table-wrap">
+                        <div class="admin-table-wrap">
+                            <table class="admin-table" data-board-pagination aria-label="Session message trace">
+                                <caption>Session message trace</caption>
+                                <colgroup>
+                                    <col style="width:70px">
+                                    <col style="width:100px">
+                                    <col>
+                                    <col style="width:100px">
+                                    <col style="width:160px">
+                                </colgroup>
+                                <thead>
+                                <tr>
+                                    <th scope="col">순번</th>
+                                    <th scope="col">방향</th>
+                                    <th scope="col">내용</th>
+                                    <th scope="col">피드백</th>
+                                    <th scope="col">등록일</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="message : ${detail.messages}">
+                                    <td th:text="${message.seq}">1</td>
+                                    <td><span class="badge" th:classappend="${message.direction == 'BOT'} ? ' badge-info' : ' badge-default'" th:text="${message.direction == 'BOT' ? '챗봇' : (message.direction == 'USER' ? '사용자' : message.direction)}">챗봇</span></td>
+                                    <td class="td-left board-content" th:text="${message.content}">메시지</td>
+                                    <td th:text="${message.feedbackRating ?: '-'}">-</td>
+                                    <td class="board-date" th:text="${#temporals.format(message.frstRegDt, 'yyyy-MM-dd HH:mm')}">2026-05-27 13:00</td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(detail.messages)}" class="td-empty">
+                                    <td colspan="5"><span class="board-empty-message">메시지가 없습니다.</span></td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="result-header">
+                    <div class="result-count">실패 내역 조회 <strong th:text="${#lists.size(detail.failures)} + '건'">0건</strong></div>
+                </div>
+                <div class="table-card">
+                    <div class="table-wrap">
+                        <div class="admin-table-wrap">
+                            <table class="admin-table" data-board-pagination aria-label="Session failure trace">
+                                <caption>Session failure trace</caption>
+                                <colgroup>
+                                    <col style="width:130px">
+                                    <col>
+                                    <col style="width:90px">
+                                    <col style="width:160px">
+                                </colgroup>
+                                <thead>
+                                <tr>
+                                    <th scope="col">사유</th>
+                                    <th scope="col">상세</th>
+                                    <th scope="col">검토</th>
+                                    <th scope="col">등록일</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="failure : ${detail.failures}">
+                                    <td><span class="badge badge-default" th:text="${failure.reason}">NO_MATCH</span></td>
+                                    <td class="td-left"><details class="board-inline-detail"><summary>상세 보기</summary><pre th:text="${failure.detail}">{}</pre></details></td>
+                                    <td><span class="badge" th:classappend="${failure.reviewed} ? ' badge-success' : ' badge-default'" th:text="${failure.reviewed ? '검토완료' : '대기'}">대기</span></td>
+                                    <td class="board-date" th:text="${#temporals.format(failure.frstRegDt, 'yyyy-MM-dd HH:mm')}">2026-05-27 13:00</td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(detail.failures)}" class="td-empty">
+                                    <td colspan="4"><span class="board-empty-message">실패 내역이 없습니다.</span></td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </main>
         <div th:replace="~{admmgr/common/footer :: adminFooter}"></div>
     </div>

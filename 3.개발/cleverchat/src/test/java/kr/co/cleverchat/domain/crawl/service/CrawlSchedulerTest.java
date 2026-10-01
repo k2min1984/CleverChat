@@ -25,7 +25,7 @@ class CrawlSchedulerTest {
 
     @Test
     void deletesExpiredOperationalData() {
-        when(crawlService.deleteExpired(null, null, false))
+        when(crawlService.deleteExpiredScheduled())
                 .thenReturn(
                         new kr.co.cleverchat.domain.crawl.dto.CrawlDtos.RetentionResponse(
                                 365,
@@ -40,6 +40,6 @@ class CrawlSchedulerTest {
 
         scheduler.deleteExpiredOperationalData();
 
-        verify(crawlService).deleteExpired(null, null, false);
+        verify(crawlService).deleteExpiredScheduled();
     }
 }

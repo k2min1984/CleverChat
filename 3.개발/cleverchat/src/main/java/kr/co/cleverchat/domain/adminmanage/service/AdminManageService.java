@@ -43,10 +43,20 @@ public class AdminManageService {
         return mapper.findCodesByParent(parentId);
     }
 
+    public Map<String, List<Map<String, Object>>> activeCodeOptions() {
+        Map<String, List<Map<String, Object>>> grouped = new LinkedHashMap<>();
+        for (Map<String, Object> option : mapper.findActiveCodeOptions()) {
+            String groupCode = String.valueOf(option.get("groupCode"));
+            grouped.computeIfAbsent(groupCode, ignored -> new ArrayList<>()).add(option);
+        }
+        return grouped;
+    }
+
     @Audited(action = "ADMIN_CODE_CREATE", targetType = "ADMIN_CODE")
     @RequireRole("ADMIN")
     public AdminCode createCode(CodeRequest request, Long actorId) {
         AdminCode code = toCode(null, request, actorId);
+        code.setDepth(resolveCodeDepth(null, code.getParentId()));
         mapper.insertCode(code);
         return mapper.findCodeById(code.getId());
     }
@@ -55,6 +65,7 @@ public class AdminManageService {
     @RequireRole("ADMIN")
     public AdminCode updateCode(Long id, CodeRequest request, Long actorId) {
         AdminCode code = toCode(id, request, actorId);
+        code.setDepth(resolveCodeDepth(id, code.getParentId()));
         int updated = mapper.updateCode(code);
         if (updated == 0) {
             throw new BusinessException(ErrorCode.NOT_FOUND);
@@ -74,7 +85,9 @@ public class AdminManageService {
 
     @RequireRole("ADMIN")
     public boolean createLegacyCode(Long parentId, String name, Integer depth, Long actorId) {
-        mapper.insertLegacyCode(normalizeParent(parentId), trimRequired(name), depth == null ? 1 : depth, actorId);
+        Long normalizedParent = normalizeParent(parentId);
+        int resolvedDepth = resolveCodeDepth(null, normalizedParent);
+        mapper.insertLegacyCode(normalizedParent, trimRequired(name), resolvedDepth, actorId);
         return true;
     }
 
@@ -93,7 +106,12 @@ public class AdminManageService {
 
     @RequireRole("ADMIN")
     public boolean updateLegacyCodeLayer(
-            Long id, String name, String value, String codeGroup, String description, Long actorId) {
+            Long id,
+            String name,
+            String value,
+            String codeGroup,
+            String description,
+            Long actorId) {
         return mapper.updateCodeLayer(
                         id,
                         trimRequired(name),
@@ -315,13 +333,14 @@ public class AdminManageService {
         if (!Boolean.TRUE.equals(menu.getEnabled()) || !Boolean.TRUE.equals(menu.getVisible())) {
             return false;
         }
-        return mapper.countReadableMenuForRoles(menu.getId(), toRoleCodes(adminSession.getRoles())) > 0;
+        return mapper.countReadableMenuForRoles(menu.getId(), toRoleCodes(adminSession.getRoles()))
+                > 0;
     }
 
     private AdminCode toCode(Long id, CodeRequest request, Long actorId) {
         AdminCode code = new AdminCode();
         code.setId(id);
-        code.setParentId(request.parentId());
+        code.setParentId(normalizeParent(request.parentId()));
         code.setCode(trimRequired(request.code()).toUpperCase(Locale.ROOT));
         code.setName(trimRequired(request.name()));
         code.setValue(blankToNull(request.value()));
@@ -331,6 +350,26 @@ public class AdminManageService {
         code.setCreatedBy(actorId);
         code.setUpdatedBy(actorId);
         return code;
+    }
+
+    private int resolveCodeDepth(Long codeId, Long parentId) {
+        Long normalizedParent = normalizeParent(parentId);
+        if (normalizedParent == null) {
+            return 1;
+        }
+        if (normalizedParent.equals(codeId)) {
+            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "코드 자신을 상위 그룹으로 지정할 수 없습니다.");
+        }
+        AdminCode parent = mapper.findCodeById(normalizedParent);
+        if (parent == null
+                || !Boolean.TRUE.equals(parent.getEnabled())
+                || parent.getDepth() == null) {
+            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "활성화된 상위 코드를 선택해 주세요.");
+        }
+        if (parent.getDepth() >= 3) {
+            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "코드는 최대 3뎁스까지 등록할 수 있습니다.");
+        }
+        return parent.getDepth() + 1;
     }
 
     private AdminMenu toMenu(Long id, MenuRequest request, Long actorId) {

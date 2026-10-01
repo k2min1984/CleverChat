@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admmgr/common/head :: adminHead('크롤링 대상 입력 | CleverChat')}"></head>
+<body>
+<div class="admin-wrap">
+    <div th:replace="~{admmgr/common/sidebar :: adminSidebar}"></div>
+    <div class="main-area">
+        <div th:replace="~{admmgr/common/header :: adminHeader}"></div>
+        <div th:replace="~{admmgr/common/navigation :: adminNavigation}"></div>
+        <main class="content-area">
+            <div class="page-wrap">
+                <form th:action="@{${formAction}}" method="post">
+                    <th:block th:replace="~{admmgr/common/_csrfHidden :: csrfHidden}"></th:block>
+                    <div class="regist-card">
+                        <div class="regist-header" th:text="${mode == 'edit' ? '크롤링 대상 수정' : '크롤링 대상 등록'}">크롤링 대상 등록</div>
+                        <div class="regist-body">
+                            <table class="tbl-fixed">
+                                <caption class="sr-only">크롤링 대상 입력</caption>
+                                <colgroup>
+                                    <col style="width:25%">
+                                    <col style="width:75%">
+                                </colgroup>
+                                <tbody>
+                                <tr th:if="${errorMessage != null}">
+                                    <th scope="row">오류</th>
+                                    <td><p role="alert" class="help-text text-danger" th:text="${errorMessage}">오류 메시지</p></td>
+                                </tr>
+                                <tr>
+                                    <th scope="row"><label for="url">URL <em class="required">*</em></label></th>
+                                    <td>
+                                        <input id="url" type="url" name="url" maxlength="1000" required
+                                               th:value="${target.url}" placeholder="https://example.com/help">
+                                        <p class="help-text">http 또는 https 주소만 등록할 수 있습니다.</p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row"><label for="label">이름</label></th>
+                                    <td>
+                                        <input id="label" type="text" name="label" maxlength="200"
+                                               th:value="${target.label}" placeholder="관리자가 알아볼 이름을 입력하세요.">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">사용 여부</th>
+                                    <td>
+                                        <label class="check-inline" for="useYn">
+                                            <input id="useYn" type="checkbox" name="useYn" value="Y" th:checked="${target.useYn == null or target.useYn == 'Y'}">
+                                            사용
+                                        </label>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">JSON 파일 저장</th>
+                                    <td>
+                                        <label class="check-inline" for="jsonExportEnabled">
+                                            <input id="jsonExportEnabled" type="checkbox" name="jsonExportEnabled" value="true"
+                                                   th:checked="${target.jsonExportEnabled}">
+                                            수집한 데이터를 JSON 파일로 저장
+                                        </label>
+                                        <p class="help-text">직접 실행과 자동 실행 모두 적용됩니다. 수집할 때마다 페이지별 새 파일이 생성됩니다.</p>
+                                    </td>
+                                </tr>
+                                <tr id="jsonExportDirectoryRow">
+                                    <th scope="row"><label for="jsonExportDirectory">JSON 저장 폴더</label></th>
+                                    <td>
+                                        <input id="jsonExportDirectory" type="text" name="jsonExportDirectory" maxlength="1000"
+                                               th:value="${target.jsonExportDirectory}" placeholder="예: C:/cleverchat/crawl-json 또는 /data/cleverchat/crawl-json"
+                                               aria-describedby="jsonExportDirectoryHelp">
+                                        <p id="jsonExportDirectoryHelp" class="help-text">비워 두면 시스템 설정의 기본 저장 폴더를 사용합니다. 별도 지정 시 서버의 절대 경로를 입력하세요.</p>
+                                        <p class="help-text" th:text="${'시스템 기본: ' + (defaultExportDirectory ?: '미설정 — 관리자가 시스템 설정에서 지정할 수 있습니다.')}"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">자동 실행</th>
+                                    <td>
+                                        <label class="check-inline" for="scheduleEnabled">
+                                            <input id="scheduleEnabled" type="checkbox" name="scheduleEnabled" value="true" th:checked="${target.scheduleEnabled}">
+                                            자동 실행 사용
+                                        </label>
+                                        <p class="help-text">필요할 때만 켜면 됩니다. 직접 테스트는 상세 화면의 실행 버튼을 사용하세요.</p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row"><label for="scheduleMode">스케줄 방식</label></th>
+                                    <td>
+                                        <select id="scheduleMode" name="scheduleMode" data-schedule-mode>
+                                            <option th:each="code : ${adminCommonCodes['CRAWL_SCHEDULE_MODE']}"
+                                                    th:value="${code.value}"
+                                                    th:selected="${target.scheduleMode == code.value or (target.scheduleMode == null and code.value == 'INTERVAL')}"
+                                                    th:text="${code.name}">스케줄 방식</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr data-schedule-row="INTERVAL">
+                                    <th scope="row"><label for="scheduleIntervalMinutes">실행 간격(분)</label></th>
+                                    <td>
+                                        <input id="scheduleIntervalMinutes" type="number" name="scheduleIntervalMinutes" min="5" max="10080"
+                                               th:value="${target.scheduleIntervalMinutes ?: 1440}">
+                                    </td>
+                                </tr>
+                                <tr data-schedule-row="CRON">
+                                    <th scope="row"><label for="scheduleCron">Cron 표현식</label></th>
+                                    <td>
+                                        <input id="scheduleCron" type="text" name="scheduleCron" maxlength="120"
+                                               th:value="${target.scheduleCron}" placeholder="0 */30 * * * *">
+                                        <p class="help-text">Cron 방식을 선택한 경우에만 입력합니다.</p>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="regist-footer">
+                            <a class="btn btn-md btn-secondary" th:href="@{/admin/crawl-targets}">목록</a>
+                            <a th:if="${mode == 'edit'}" class="btn btn-md btn-secondary" th:href="@{/admin/crawl-targets/{id}(id=${target.crawlTargetNo})}">상세</a>
+                            <button type="submit" class="btn btn-md btn-solid btn-primary">저장</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </main>
+        <div th:replace="~{admmgr/common/footer :: adminFooter}"></div>
+    </div>
+</div>
+<script th:src="@{/asset/admmgr/style2/js/ADM.CrawlTargetForm.js}" defer></script>
+</body>
+</html>

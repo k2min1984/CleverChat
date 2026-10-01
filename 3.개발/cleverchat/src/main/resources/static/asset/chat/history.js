@@ -19,7 +19,7 @@
     }
 
     function api(path) {
-        return fetch(path, {
+        return CleverChat.fetch(path, {
             headers: { Accept: 'application/json' },
             credentials: 'same-origin'
         }).then(function (response) {
@@ -38,7 +38,7 @@
     function render(items) {
         historyList.innerHTML = '';
         if (!items || items.length === 0) {
-            historyList.textContent = 'No chat history from the last 90 days.';
+            historyList.textContent = 'No chat history within the configured period.';
             setStatus('');
             return;
         }
@@ -61,7 +61,7 @@
 
             var link = document.createElement('a');
             link.className = 'button-link secondary';
-            link.href = '/chat/api/sessions/' + item.sessionId + '/history';
+            link.href = CleverChat.url('/chat/api/sessions/' + item.sessionId + '/history');
             link.textContent = 'API history';
             link.setAttribute('aria-label', 'Open API history for ' + (item.scenarioTitle || 'scenario'));
             card.appendChild(link);

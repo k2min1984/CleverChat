@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.cleverchat.domain.scenario.mapper.ScenarioNodeLinkMapper">
+    <select id="findByNodeId" resultType="kr.co.cleverchat.domain.scenario.model.ScenarioNodeLink">
+        SELECT scenario_node_link_no, node_no, label, url, link_type, sort_order, use_yn, frst_reg_dt, lst_chg_dt
+        FROM tb_scenario_node_link
+        WHERE node_no = #{nodeId}
+        ORDER BY sort_order, scenario_node_link_no
+    </select>
+
+    <select id="findEnabledByNodeId" resultType="kr.co.cleverchat.domain.scenario.model.ScenarioNodeLink">
+        SELECT scenario_node_link_no, node_no, label, url, link_type, sort_order, use_yn, frst_reg_dt, lst_chg_dt
+        FROM tb_scenario_node_link
+        WHERE node_no = #{nodeId}
+          AND use_yn = 'Y'
+        ORDER BY sort_order, scenario_node_link_no
+    </select>
+
+    <insert id="insert" parameterType="kr.co.cleverchat.domain.scenario.model.ScenarioNodeLink" useGeneratedKeys="true" keyProperty="scenarioNodeLinkNo">
+        INSERT INTO tb_scenario_node_link (node_no, label, url, link_type, sort_order, use_yn)
+        VALUES (#{nodeNo}, #{label}, #{url}, #{linkType}, #{sortOrder}, #{useYn})
+    </insert>
+
+    <delete id="deleteByVersionId">
+        DELETE FROM tb_scenario_node_link
+        WHERE node_no IN (SELECT scenario_node_no FROM tb_scenario_node WHERE version_no = #{versionId})
+    </delete>
+</mapper>

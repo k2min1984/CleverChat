@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admmgr/common/head :: adminHead('Scenario version detail | CleverChat')}"></head>
+<body>
+<div class="admin-wrap">
+    <div th:replace="~{admmgr/common/sidebar :: adminSidebar}"></div>
+    <div class="main-area">
+        <div th:replace="~{admmgr/common/header :: adminHeader}"></div>
+        <div th:replace="~{admmgr/common/navigation :: adminNavigation}"></div>
+        <main class="content-area" th:attr="data-graph-load-url=${graphLoadUrl}">
+            <header class="page-title-row">
+                <div>
+                    <h1>
+                        <span th:text="${scenario.title}">시나리오</span>
+                        <small th:text="'v' + ${version.versionNo} + ' (' + ${version.status} + ')'">v1</small>
+                    </h1>
+                    <p class="help-text">이 버전의 노드, 답변, 바로가기 링크, 선택지 연결을 읽기 전용으로 확인합니다.</p>
+                </div>
+                <nav class="actions" aria-label="시나리오 버전 상세 작업">
+                    <a class="btn btn-md btn-secondary" th:href="${backUrl}">상세</a>
+                    <a class="btn btn-md btn-secondary" th:href="${previewUrl}">미리보기</a>
+                    <form th:action="@{/admin/scenarios/{scenarioId}/versions/{versionId}/copy(scenarioId=${scenario.scenarioNo},versionId=${version.scenarioVersionNo})}" method="post">
+                        <th:block th:replace="~{admmgr/common/_csrfHidden :: csrfHidden}"></th:block>
+                        <button class="btn btn-md btn-solid btn-emerald" type="submit">이 버전으로 새 초안 생성</button>
+                    </form>
+                </nav>
+            </header>
+
+            <section aria-live="polite" role="status" id="graphMsg" class="msg" hidden></section>
+
+            <section class="graph-editor-workspace" aria-label="시나리오 버전 상세">
+                <aside class="graph-node-sidebar" aria-label="노드 목록">
+                    <div class="graph-sidebar-header">
+                        <div>
+                            <h2>노드 목록</h2>
+                            <p class="help-text">선택하면 오른쪽에서 내용을 확인합니다.</p>
+                        </div>
+                    </div>
+                    <div class="graph-node-nav" id="nodeNav" role="list" aria-label="시나리오 노드 목록"></div>
+                    <p id="nodeEmptyHelp" class="graph-empty" hidden>저장된 노드가 없습니다.</p>
+                </aside>
+
+                <section class="graph-node-editor-panel" aria-label="선택한 노드 상세">
+                    <div id="nodeDetail" class="graph-node-editor"></div>
+                    <p id="nodeSelectHelp" class="graph-empty">왼쪽에서 노드를 선택해 주세요.</p>
+                </section>
+            </section>
+        </main>
+        <div th:replace="~{admmgr/common/footer :: adminFooter}"></div>
+    </div>
+</div>
+<script th:src="@{/asset/admmgr/style2/js/ADM.ScenarioGraphReadonly.js(v='20260611-links1')}" defer></script>
+</body>
+</html>

@@ -8,6 +8,7 @@ public class CrawlDocument {
     private String url;
     private String title;
     private String content;
+    private String contentTokens;
     private String urlHash;
     private String contentHash;
     private String status;
@@ -54,6 +55,14 @@ public class CrawlDocument {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public String getContentTokens() {
+        return contentTokens;
+    }
+
+    public void setContentTokens(String contentTokens) {
+        this.contentTokens = contentTokens;
     }
 
     public String getUrlHash() {

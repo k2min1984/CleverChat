@@ -47,3 +47,14 @@ bin/
 
 ### Test ###
 .h2.server.properties
+
+.env.workstation.json
+
+.env.workstation-debug
+
+# Local database backups and runtime secrets
+backups/
+*.dump
+.env.*
+!.env.example
+

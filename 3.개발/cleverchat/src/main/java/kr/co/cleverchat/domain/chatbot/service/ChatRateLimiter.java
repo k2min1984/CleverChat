@@ -11,6 +11,8 @@ import java.util.Deque;
 import java.util.HexFormat;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import kr.co.cleverchat.domain.settings.RuntimeSetting;
+import kr.co.cleverchat.domain.settings.RuntimeSettingsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
@@ -21,6 +23,8 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class ChatRateLimiter {
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private RuntimeSettingsService runtimeSettings;
 
     private static final Logger log = LoggerFactory.getLogger(ChatRateLimiter.class);
     private static final String STORE_REDIS = "redis";
@@ -67,6 +71,17 @@ public class ChatRateLimiter {
     }
 
     private boolean isMemoryAllowed(String key) {
+        int maxRequests =
+                runtimeSettings == null
+                        ? this.maxRequests
+                        : runtimeSettings.current().integer(RuntimeSetting.CHAT_RATE_REQUESTS);
+        Duration window =
+                runtimeSettings == null
+                        ? this.window
+                        : Duration.ofSeconds(
+                                runtimeSettings
+                                        .current()
+                                        .integer(RuntimeSetting.CHAT_RATE_SECONDS));
         Instant now = Instant.now(clock);
         Deque<Instant> bucket =
                 buckets.computeIfAbsent(hashedKey(key), ignored -> new ArrayDeque<>());
@@ -83,6 +98,17 @@ public class ChatRateLimiter {
     }
 
     private boolean isRedisAllowed(String key) {
+        int maxRequests =
+                runtimeSettings == null
+                        ? this.maxRequests
+                        : runtimeSettings.current().integer(RuntimeSetting.CHAT_RATE_REQUESTS);
+        Duration window =
+                runtimeSettings == null
+                        ? this.window
+                        : Duration.ofSeconds(
+                                runtimeSettings
+                                        .current()
+                                        .integer(RuntimeSetting.CHAT_RATE_SECONDS));
         if (redisTemplate == null) {
             log.warn("RATE_LIMIT_REDIS_UNAVAILABLE reason=template_missing");
             return true;

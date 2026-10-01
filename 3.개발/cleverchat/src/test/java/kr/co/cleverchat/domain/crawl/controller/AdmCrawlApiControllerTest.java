@@ -15,10 +15,11 @@ import java.util.Set;
 import kr.co.cleverchat.common.error.GlobalExceptionHandler;
 import kr.co.cleverchat.domain.auth.security.AdminSession;
 import kr.co.cleverchat.domain.auth.security.CurrentUser;
+import kr.co.cleverchat.domain.crawl.dto.CrawlDtos.JobResponse;
 import kr.co.cleverchat.domain.crawl.dto.CrawlDtos.RetentionResponse;
-import kr.co.cleverchat.domain.crawl.dto.CrawlDtos.RunResponse;
 import kr.co.cleverchat.domain.crawl.dto.CrawlDtos.SchedulePreviewResponse;
 import kr.co.cleverchat.domain.crawl.model.CrawlDocument;
+import kr.co.cleverchat.domain.crawl.model.CrawlJob;
 import kr.co.cleverchat.domain.crawl.model.CrawlRunLog;
 import kr.co.cleverchat.domain.crawl.model.CrawlTarget;
 import kr.co.cleverchat.domain.crawl.service.CrawlService;
@@ -73,17 +74,16 @@ class AdmCrawlApiControllerTest {
 
     @Test
     void runReturnsEnvelope() throws Exception {
-        CrawlRunLog runLog = new CrawlRunLog();
-        runLog.setStatus("SUCCESS");
-        CrawlDocument document = new CrawlDocument();
-        document.setCrawlDocumentNo(9L);
-        when(crawlService.run(1L)).thenReturn(new RunResponse(runLog, document));
+        CrawlJob job = new CrawlJob();
+        job.setCrawlJobNo(9L);
+        job.setStatus("PENDING");
+        when(crawlService.run(1L)).thenReturn(new JobResponse(job, true));
 
         mockMvc.perform(post("/admin/api/crawl-targets/1/run"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.run.status").value("SUCCESS"))
-                .andExpect(jsonPath("$.data.document.crawlDocumentNo").value(9));
+                .andExpect(jsonPath("$.data.enqueued").value(true))
+                .andExpect(jsonPath("$.data.job.crawlJobNo").value(9));
     }
 
     @Test

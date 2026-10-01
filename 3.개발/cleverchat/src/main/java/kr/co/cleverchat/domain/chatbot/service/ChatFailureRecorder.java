@@ -5,12 +5,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Map;
 import kr.co.cleverchat.domain.chatbot.mapper.ChatFailureMapper;
 import kr.co.cleverchat.domain.chatbot.model.ChatFailure;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Component
 public class ChatFailureRecorder {
+
+    private static final Logger log = LoggerFactory.getLogger(ChatFailureRecorder.class);
 
     private final ChatFailureMapper failureMapper;
     private final ObjectMapper objectMapper;
@@ -33,7 +38,11 @@ public class ChatFailureRecorder {
         failure.setMessageNo(messageId);
         failure.setReason(reason);
         failure.setDetail(toJson(detail));
-        failureMapper.insert(failure);
+        try {
+            failureMapper.insert(failure);
+        } catch (DataAccessException e) {
+            log.warn("Failed to record chat failure: sessionId={}, reason={}", sessionId, reason);
+        }
     }
 
     private String toJson(Map<String, ?> value) {

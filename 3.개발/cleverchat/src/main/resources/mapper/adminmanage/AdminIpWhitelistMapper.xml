@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.cleverchat.domain.adminmanage.mapper.AdminIpWhitelistMapper">
+
+    <sql id="columns">
+        admin_ip_whitelist_no, ip_cidr, description, use_yn,
+        frst_regr_empno, frst_reg_dt, lst_chgr_empno, lst_chg_dt, frst_regr_ip, lst_chgr_ip
+    </sql>
+
+    <select id="findActive" resultType="kr.co.cleverchat.domain.adminmanage.model.AdminIpWhitelist">
+        SELECT <include refid="columns"/>
+        FROM tb_admin_ip_whitelist
+        WHERE use_yn = 'Y'
+        ORDER BY admin_ip_whitelist_no ASC
+    </select>
+
+    <select id="findAll" resultType="kr.co.cleverchat.domain.adminmanage.model.AdminIpWhitelist">
+        SELECT <include refid="columns"/>
+        FROM tb_admin_ip_whitelist
+        ORDER BY use_yn DESC, lst_chg_dt DESC, admin_ip_whitelist_no DESC
+    </select>
+
+    <select id="findById" resultType="kr.co.cleverchat.domain.adminmanage.model.AdminIpWhitelist">
+        SELECT <include refid="columns"/>
+        FROM tb_admin_ip_whitelist
+        WHERE admin_ip_whitelist_no = #{id}
+    </select>
+
+    <insert id="insert" parameterType="kr.co.cleverchat.domain.adminmanage.model.AdminIpWhitelist" useGeneratedKeys="true" keyProperty="adminIpWhitelistNo">
+        INSERT INTO tb_admin_ip_whitelist (
+            ip_cidr, description, use_yn, frst_regr_empno, lst_chgr_empno, frst_regr_ip, lst_chgr_ip
+        )
+        VALUES (
+            #{ipCidr}, #{description}, #{useYn}, #{frstRegrEmpno}, #{lstChgrEmpno}, #{frstRegrIp}, #{lstChgrIp}
+        )
+    </insert>
+
+    <update id="update" parameterType="kr.co.cleverchat.domain.adminmanage.model.AdminIpWhitelist">
+        UPDATE tb_admin_ip_whitelist
+        SET ip_cidr = #{ipCidr},
+            description = #{description},
+            use_yn = #{useYn},
+            lst_chgr_empno = #{lstChgrEmpno},
+            lst_chgr_ip = #{lstChgrIp},
+            lst_chg_dt = now()
+        WHERE admin_ip_whitelist_no = #{adminIpWhitelistNo}
+    </update>
+
+    <update id="disable">
+        UPDATE tb_admin_ip_whitelist
+        SET use_yn = 'N',
+            lst_chgr_empno = #{actor},
+            lst_chgr_ip = #{clientIp},
+            lst_chg_dt = now()
+        WHERE admin_ip_whitelist_no = #{id}
+          AND use_yn = 'Y'
+    </update>
+</mapper>

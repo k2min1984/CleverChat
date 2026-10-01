@@ -3,7 +3,8 @@
     "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="kr.co.cleverchat.domain.chatbot.mapper.ChatSessionMapper">
     <select id="findById" resultType="kr.co.cleverchat.domain.chatbot.model.ChatSession">
-        SELECT chat_session_no, anonymous_id, user_no, scenario_no, version_no, current_node_no, state,
+        SELECT chat_session_no, anonymous_id, user_no, scenario_no, version_no, current_node_no,
+               session_type, state,
                started_at, last_activity_at, expires_at, ip_hash, user_agent_hash, frst_reg_dt
         FROM tb_chat_session
         WHERE chat_session_no = #{id}::uuid
@@ -12,7 +13,7 @@
         s.chat_session_no,
         left(s.chat_session_no::text, 8) AS session_key,
         s.scenario_no,
-        sc.title AS scenario_title,
+        COALESCE(sc.title, CHR(44160) || CHR(49353)) AS scenario_title,
         s.state,
         s.current_node_no,
         s.started_at,
@@ -51,9 +52,10 @@
     <select id="findHistoryByAnonymousId" resultType="kr.co.cleverchat.domain.chatbot.model.ChatSessionListItem">
         SELECT <include refid="sessionListColumns"/>
         FROM tb_chat_session s
-        JOIN tb_scenario sc ON sc.scenario_no = s.scenario_no
+        LEFT JOIN tb_scenario sc ON sc.scenario_no = s.scenario_no
         LEFT JOIN tb_chat_message m ON m.session_no = s.chat_session_no
         WHERE s.anonymous_id = #{anonymousId}::uuid
+          AND s.user_no IS NULL
           AND s.frst_reg_dt &gt;= #{cutoff}
         GROUP BY s.chat_session_no, sc.title
         ORDER BY s.last_activity_at DESC, s.chat_session_no DESC
@@ -62,7 +64,7 @@
     <select id="findAdminList" resultType="kr.co.cleverchat.domain.chatbot.model.ChatSessionListItem">
         SELECT <include refid="sessionListColumns"/>
         FROM tb_chat_session s
-        JOIN tb_scenario sc ON sc.scenario_no = s.scenario_no
+        LEFT JOIN tb_scenario sc ON sc.scenario_no = s.scenario_no
         LEFT JOIN tb_chat_message m ON m.session_no = s.chat_session_no
         GROUP BY s.chat_session_no, sc.title
         ORDER BY s.last_activity_at DESC, s.chat_session_no DESC
@@ -71,7 +73,7 @@
     <select id="findAdminDetail" resultType="kr.co.cleverchat.domain.chatbot.model.ChatSessionListItem">
         SELECT <include refid="sessionListColumns"/>
         FROM tb_chat_session s
-        JOIN tb_scenario sc ON sc.scenario_no = s.scenario_no
+        LEFT JOIN tb_scenario sc ON sc.scenario_no = s.scenario_no
         LEFT JOIN tb_chat_message m ON m.session_no = s.chat_session_no
         WHERE s.chat_session_no = #{id}::uuid
         GROUP BY s.chat_session_no, sc.title
@@ -79,11 +81,11 @@
     <insert id="insert" parameterType="kr.co.cleverchat.domain.chatbot.model.ChatSession">
         INSERT INTO tb_chat_session (
             chat_session_no, anonymous_id, user_no, scenario_no, version_no, current_node_no,
-            state, expires_at, ip_hash, user_agent_hash
+            session_type, state, expires_at, ip_hash, user_agent_hash
         )
         VALUES (
             #{chatSessionNo}::uuid, #{anonymousId}::uuid, #{userNo}, #{scenarioNo}, #{versionNo}, #{currentNodeNo},
-            #{state}, #{expiresAt}, #{ipHash}, #{userAgentHash}
+            COALESCE(#{sessionType}, 'SCENARIO'), #{state}, #{expiresAt}, #{ipHash}, #{userAgentHash}
         )
     </insert>
     <select id="lockSessionByAdvisoryKey" resultType="int">
@@ -100,6 +102,74 @@
             last_activity_at = now()
         WHERE chat_session_no = #{id}::uuid
     </update>
+    <update id="updateScenarioContext">
+        UPDATE tb_chat_session
+        SET scenario_no = #{scenarioNo},
+            version_no = #{versionNo},
+            current_node_no = #{currentNodeNo},
+            session_type = #{sessionType},
+            state = #{state},
+            expires_at = #{expiresAt},
+            last_activity_at = now()
+        WHERE chat_session_no = #{id}::uuid
+    </update>
+    <update id="restoreSearchSession">
+        UPDATE tb_chat_session
+        SET scenario_no = NULL,
+            version_no = NULL,
+            current_node_no = NULL,
+            session_type = 'SEARCH',
+            state = 'ACTIVE',
+            expires_at = #{expiresAt},
+            last_activity_at = now()
+        WHERE chat_session_no = #{id}::uuid
+    </update>
+    <insert id="insertScenarioSwitchEvent">
+        INSERT INTO tb_chat_session_event (
+            session_no, event_type, from_scenario_no, to_scenario_no, trigger_message_no, detail
+        )
+        VALUES (
+            #{sessionId}::uuid, 'SCENARIO_SWITCH', #{fromScenarioNo}, #{toScenarioNo},
+            #{triggerMessageNo}, CAST(#{detail} AS jsonb)
+        )
+    </insert>
+    <select id="findLatestScenarioSwitchTriggerMessageNo" resultType="long">
+        SELECT trigger_message_no
+        FROM tb_chat_session_event
+        WHERE session_no = #{sessionId}::uuid
+          AND event_type = 'SCENARIO_SWITCH'
+          AND to_scenario_no = #{toScenarioNo}
+          AND trigger_message_no IS NOT NULL
+        ORDER BY chat_session_event_no DESC
+        LIMIT 1
+    </select>
+    <select id="findSearchBackRestoredFromMessageNo" resultType="long">
+        SELECT (detail ->> 'restoredFromMessageNo')::bigint
+        FROM tb_chat_session_event
+        WHERE session_no = #{sessionId}::uuid
+          AND event_type = 'SEARCH_BACK'
+          AND trigger_message_no = #{triggerMessageNo}
+          AND detail ->> 'restoredFromMessageNo' IS NOT NULL
+        ORDER BY chat_session_event_no DESC
+        LIMIT 1
+    </select>
+    <insert id="insertNodeBackEvent">
+        INSERT INTO tb_chat_session_event (
+            session_no, event_type, trigger_message_no, detail
+        )
+        VALUES (
+            #{sessionId}::uuid, 'NODE_BACK', #{triggerMessageNo}, CAST(#{detail} AS jsonb)
+        )
+    </insert>
+    <insert id="insertSearchBackEvent">
+        INSERT INTO tb_chat_session_event (
+            session_no, event_type, from_scenario_no, trigger_message_no, detail
+        )
+        VALUES (
+            #{sessionId}::uuid, 'SEARCH_BACK', #{fromScenarioNo},
+            #{triggerMessageNo}, CAST(#{detail} AS jsonb)
+        )
+    </insert>
     <update id="markExpired">
         UPDATE tb_chat_session
         SET state = 'EXPIRED',
@@ -124,4 +194,13 @@
             LIMIT #{limit}
         )
     </delete>
+    <select id="findHistoryByUser" resultType="kr.co.cleverchat.domain.chatbot.model.ChatSessionListItem">
+        SELECT <include refid="sessionListColumns"/>
+        FROM tb_chat_session s
+        LEFT JOIN tb_scenario sc ON sc.scenario_no=s.scenario_no
+        LEFT JOIN tb_chat_message m ON m.session_no=s.chat_session_no
+        WHERE s.user_no=#{userNo} AND s.frst_reg_dt &gt;= #{cutoff}
+        GROUP BY s.chat_session_no,sc.title
+        ORDER BY s.last_activity_at DESC,s.chat_session_no DESC LIMIT #{limit}
+    </select>
 </mapper>

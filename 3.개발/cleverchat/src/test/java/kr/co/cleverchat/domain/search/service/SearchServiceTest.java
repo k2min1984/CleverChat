@@ -31,7 +31,8 @@ class SearchServiceTest {
         result.setScenarioNo(10L);
         result.setScenarioTitle("FAQ");
         when(piiGuard.detectTypes("shipping help")).thenReturn(List.of());
-        when(searchMapper.searchScenarios("shipping help", List.of("shipping", "help"), 5))
+        when(searchMapper.searchScenarios(
+                        "shipping help", List.of("shipping", "help"), "shipping help", 5))
                 .thenReturn(List.of(result));
         ArgumentCaptor<SearchLog> logCaptor = ArgumentCaptor.forClass(SearchLog.class);
 
@@ -39,7 +40,9 @@ class SearchServiceTest {
 
         assertThat(response.normalizedQuery()).isEqualTo("shipping help");
         assertThat(response.resultCount()).isEqualTo(1);
-        verify(searchMapper).searchScenarios("shipping help", List.of("shipping", "help"), 5);
+        verify(searchMapper)
+                .searchScenarios(
+                        "shipping help", List.of("shipping", "help"), "shipping help", 5);
         verify(searchMapper).insertLog(logCaptor.capture());
         assertThat(logCaptor.getValue().getTopScenarioNo()).isEqualTo(10L);
         assertThat(logCaptor.getValue().getSource()).isEqualTo("ADMIN_TEST");
@@ -52,14 +55,32 @@ class SearchServiceTest {
         result.setScenarioTitle("Password reset");
         when(piiGuard.detectTypes("password reset password")).thenReturn(List.of());
         when(searchMapper.searchScenarios(
-                        "password reset password", List.of("password", "reset"), 20))
+                        "password reset password",
+                        List.of("password", "reset"),
+                        "password reset",
+                        20))
                 .thenReturn(List.of(result));
 
         var response = service.search("Password reset password", "ADMIN_TEST", null, null, null);
 
         assertThat(response.resultCount()).isEqualTo(1);
         verify(searchMapper)
-                .searchScenarios("password reset password", List.of("password", "reset"), 20);
+                .searchScenarios(
+                        "password reset password",
+                        List.of("password", "reset"),
+                        "password reset",
+                        20);
+    }
+
+    @Test
+    void searchDropsSingleHangulMorphemeTerms() {
+        when(piiGuard.detectTypes("하남시")).thenReturn(List.of());
+        when(searchMapper.searchScenarios("하남시", List.of("하남시", "하남"), "하남시 하남", 20))
+                .thenReturn(List.of());
+
+        service.search("하남시", "CHAT_FALLBACK", null, null, null);
+
+        verify(searchMapper).searchScenarios("하남시", List.of("하남시", "하남"), "하남시 하남", 20);
     }
 
     @Test
@@ -69,7 +90,7 @@ class SearchServiceTest {
         result.setScenarioTitle("Policy document");
         result.setMatchedField("CRAWL_DOCUMENT");
         when(piiGuard.detectTypes("policy")).thenReturn(List.of());
-        when(searchMapper.searchScenarios("policy", List.of("policy"), 5))
+        when(searchMapper.searchScenarios("policy", List.of("policy"), "policy", 5))
                 .thenReturn(List.of(result));
         ArgumentCaptor<SearchLog> logCaptor = ArgumentCaptor.forClass(SearchLog.class);
 
@@ -107,7 +128,7 @@ class SearchServiceTest {
                         "test@example.com 010-1234-5678 900101-1234567 4111-1111-1111-1111"
                                 .length());
         org.mockito.Mockito.verify(searchMapper, org.mockito.Mockito.never())
-                .searchScenarios(any(), any(), org.mockito.Mockito.anyInt());
+                .searchScenarios(any(), any(), any(), org.mockito.Mockito.anyInt());
         org.mockito.Mockito.verify(searchMapper, org.mockito.Mockito.never())
                 .insertLog(any(SearchLog.class));
     }

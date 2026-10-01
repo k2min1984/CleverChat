@@ -8,6 +8,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import kr.co.cleverchat.common.ops.OpsEventLogger;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -34,7 +35,8 @@ public class CsrfInterceptor implements HandlerInterceptor {
     public boolean preHandle(
             HttpServletRequest request, HttpServletResponse response, Object handler)
             throws IOException {
-        if (!"POST".equalsIgnoreCase(request.getMethod())) {
+        if (Set.of("GET", "HEAD", "OPTIONS", "TRACE")
+                .contains(request.getMethod().toUpperCase(Locale.ROOT))) {
             return true;
         }
 

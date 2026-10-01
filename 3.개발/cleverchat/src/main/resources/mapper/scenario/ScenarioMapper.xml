@@ -4,6 +4,7 @@
 <mapper namespace="kr.co.cleverchat.domain.scenario.mapper.ScenarioMapper">
     <select id="findAll" resultType="kr.co.cleverchat.domain.scenario.model.Scenario">
         SELECT s.scenario_no, s.category_no, c.name AS category_name, s.title, s.description, s.status,
+               s.sort_order,
                s.active_version_no, s.frst_reg_dt, s.lst_chg_dt
         FROM tb_scenario s
         JOIN tb_scenario_category c ON c.scenario_category_no = s.category_no
@@ -15,6 +16,7 @@
     </select>
     <select id="findById" resultType="kr.co.cleverchat.domain.scenario.model.Scenario">
         SELECT s.scenario_no, s.category_no, c.name AS category_name, s.title, s.description, s.status,
+               s.sort_order,
                s.active_version_no, s.frst_reg_dt, s.lst_chg_dt
         FROM tb_scenario s
         JOIN tb_scenario_category c ON c.scenario_category_no = s.category_no
@@ -22,23 +24,77 @@
     </select>
     <select id="findActiveForMatching" resultType="kr.co.cleverchat.domain.scenario.model.Scenario">
         SELECT s.scenario_no, s.category_no, c.name AS category_name, s.title, s.description, s.status,
+               s.sort_order,
                s.active_version_no, s.frst_reg_dt, s.lst_chg_dt
         FROM tb_scenario s
         JOIN tb_scenario_category c ON c.scenario_category_no = s.category_no
         WHERE s.status = 'ACTIVE'
           AND s.active_version_no IS NOT NULL
           AND c.use_yn = 'Y'
-        ORDER BY s.scenario_no
+        ORDER BY COALESCE(NULLIF(s.sort_order, 0), s.scenario_no) DESC, s.scenario_no DESC
+    </select>
+    <select id="findActiveMenuMatches" resultType="kr.co.cleverchat.domain.scenario.model.Scenario">
+        SELECT s.scenario_no, s.category_no, c.name AS category_name, s.title, s.description, s.status,
+               s.sort_order,
+               s.active_version_no, s.frst_reg_dt, s.lst_chg_dt
+        FROM tb_scenario s
+        JOIN tb_scenario_category c ON c.scenario_category_no = s.category_no
+        WHERE s.status = 'ACTIVE'
+          AND s.active_version_no IS NOT NULL
+          AND c.use_yn = 'Y'
+          AND (
+              lower(s.title) LIKE '%' || lower(#{query}) || '%'
+              OR lower(COALESCE(s.description, '')) LIKE '%' || lower(#{query}) || '%'
+              OR EXISTS (
+                  SELECT 1
+                  FROM tb_scenario_node n
+                  WHERE n.version_no = s.active_version_no
+                    AND (
+                        lower(COALESCE(n.title, '')) LIKE '%' || lower(#{query}) || '%'
+                        OR lower(COALESCE(n.content, '')) LIKE '%' || lower(#{query}) || '%'
+                    )
+              )
+              OR EXISTS (
+                  SELECT 1
+                  FROM tb_scenario_node_option o
+                  JOIN tb_scenario_node n ON n.scenario_node_no = o.node_no
+                  WHERE n.version_no = s.active_version_no
+                    AND o.use_yn = 'Y'
+                    AND lower(o.label) LIKE '%' || lower(#{query}) || '%'
+              )
+              OR EXISTS (
+                  SELECT 1
+                  FROM tb_scenario_keyword k
+                  WHERE k.scenario_no = s.scenario_no
+                    AND k.use_yn = 'Y'
+                    AND lower(k.keyword) LIKE '%' || lower(#{query}) || '%'
+              )
+              OR EXISTS (
+                  SELECT 1
+                  FROM tb_scenario_keyword k
+                  JOIN tb_scenario_synonym sy ON sy.keyword_no = k.scenario_keyword_no
+                  WHERE k.scenario_no = s.scenario_no
+                    AND k.use_yn = 'Y'
+                    AND sy.use_yn = 'Y'
+                    AND lower(sy.synonym) LIKE '%' || lower(#{query}) || '%'
+              )
+          )
+        ORDER BY
+          CASE WHEN lower(s.title) LIKE '%' || lower(#{query}) || '%' THEN 0 ELSE 1 END,
+          COALESCE(NULLIF(s.sort_order, 0), s.scenario_no) DESC,
+          s.scenario_no DESC
+        LIMIT 10
     </select>
     <insert id="insert" parameterType="kr.co.cleverchat.domain.scenario.model.Scenario" useGeneratedKeys="true" keyProperty="scenarioNo">
-        INSERT INTO tb_scenario (category_no, title, description, status)
-        VALUES (#{categoryNo}, #{title}, #{description}, #{status})
+        INSERT INTO tb_scenario (category_no, title, description, status, sort_order)
+        VALUES (#{categoryNo}, #{title}, #{description}, #{status}, COALESCE(#{sortOrder}, 0))
     </insert>
     <update id="update" parameterType="kr.co.cleverchat.domain.scenario.model.Scenario">
         UPDATE tb_scenario
         SET category_no = #{categoryNo},
             title = #{title},
             description = #{description},
+            sort_order = COALESCE(#{sortOrder}, 0),
             lst_chg_dt = now()
         WHERE scenario_no = #{scenarioNo}
     </update>
@@ -47,6 +103,13 @@
         SET status = #{status},
             lst_chg_dt = now()
         WHERE scenario_no = #{id}
+    </update>
+    <update id="updateSortOrder">
+        UPDATE tb_scenario
+        SET sort_order = COALESCE(#{sortOrder}, 0),
+            lst_chg_dt = now()
+        WHERE scenario_no = #{id}
+          AND status != 'DELETED'
     </update>
     <update id="activate">
         UPDATE tb_scenario

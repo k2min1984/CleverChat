@@ -8,50 +8,78 @@
         <div th:replace="~{admmgr/common/header :: adminHeader}"></div>
         <div th:replace="~{admmgr/common/navigation :: adminNavigation}"></div>
         <main class="content-area">
-            <header>
-                <h1>Crawl documents</h1>
-                <nav class="actions" aria-label="Crawl document operations">
-                    <a class="button" th:href="@{/admin/crawl-targets}">Targets</a>
-                    <a class="button" th:href="@{/admin/crawl-runs}">Runs</a>
-                </nav>
-            </header>
-            <form method="get" th:action="@{/admin/crawl-documents}" aria-label="Crawl document filters">
-                <label>
-                    Target ID
-                    <input type="number" name="targetId" min="1" th:value="${targetId}">
-                </label>
-                <button type="submit">Filter</button>
-            </form>
-            <table aria-label="Crawl document list">
-                <caption>Crawl document list</caption>
-                <thead>
-                <tr>
-                    <th scope="col">ID</th>
-                    <th scope="col">Target</th>
-                    <th scope="col">Status</th>
-                    <th scope="col">Title</th>
-                    <th scope="col">URL</th>
-                    <th scope="col">Hash</th>
-                    <th scope="col">Preview</th>
-                    <th scope="col">Fetched</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="document : ${documents}">
-                    <td th:text="${document.crawlDocumentNo}">1</td>
-                    <td th:text="${document.targetNo}">10</td>
-                    <td th:text="${document.status}">SUCCESS</td>
-                    <td th:text="${document.title ?: '-'}">Help</td>
-                    <td><a th:href="${document.url}" th:text="${document.url}" target="_blank" rel="noopener noreferrer">https://example.com</a></td>
-                    <td th:text="${#strings.abbreviate(document.contentHash, 12)}">abcdef</td>
-                    <td th:text="${#strings.abbreviate(document.content, 160)}">Preview</td>
-                    <td th:text="${#temporals.format(document.fetchedAt, 'yyyy-MM-dd HH:mm')}">2026-05-27 13:00</td>
-                </tr>
-                <tr th:if="${#lists.isEmpty(documents)}">
-                    <td colspan="8">No crawl documents found.</td>
-                </tr>
-                </tbody>
-            </table>
+            <div class="page-wrap">
+                <form method="get" th:action="@{/admin/crawl-documents}" class="search-card search-card-horizontal" aria-label="Crawl document filters">
+                    <div class="box-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                        검색 조건
+                    </div>
+                    <div class="search-row">
+                        <div class="search-field">
+                            <label for="targetId" class="search-label">대상 ID</label>
+                            <input id="targetId" name="targetId" class="search-input" type="number" min="1" th:value="${targetId}" placeholder="대상 ID 입력">
+                        </div>
+                    </div>
+                    <div class="search-actions">
+                        <a class="btn-reset" th:href="@{/admin/crawl-documents}">초기화</a>
+                        <button type="submit" class="btn-search">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                            검색
+                        </button>
+                    </div>
+                </form>
+
+                <div class="result-header">
+                    <div class="result-count">수집 문서 총 <strong th:text="${#lists.size(documents)} + '건'">0건</strong></div>
+                </div>
+
+                <div class="table-card">
+                    <div class="table-wrap">
+                        <div class="admin-table-wrap">
+                            <table class="admin-table" aria-label="Crawl document list">
+                                <caption>Crawl document list</caption>
+                                <colgroup>
+                                    <col style="width:60px">
+                                    <col style="width:90px">
+                                    <col style="width:100px">
+                                    <col style="width:180px">
+                                    <col>
+                                    <col style="width:120px">
+                                    <col>
+                                    <col style="width:150px">
+                                </colgroup>
+                                <thead>
+                                <tr>
+                                    <th scope="col">번호</th>
+                                    <th scope="col">대상</th>
+                                    <th scope="col">상태</th>
+                                    <th scope="col">제목</th>
+                                    <th scope="col">URL</th>
+                                    <th scope="col">해시</th>
+                                    <th scope="col">미리보기</th>
+                                    <th scope="col">수집일</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="document, stat : ${documents}">
+                                    <td th:text="${stat.count}">1</td>
+                                    <td th:text="${document.targetNo}">10</td>
+                                    <td><span class="badge" th:classappend="${document.status == 'SUCCESS'} ? ' badge-success' : ' badge-default'" th:text="${document.status}">SUCCESS</span></td>
+                                    <td class="td-left" th:text="${document.title ?: '-'}">Help</td>
+                                    <td class="td-left"><a th:href="${document.url}" th:text="${document.url}" target="_blank" rel="noopener noreferrer">https://example.com</a></td>
+                                    <td th:text="${#strings.abbreviate(document.contentHash, 12)}">abcdef</td>
+                                    <td class="td-left" th:text="${#strings.abbreviate(document.content, 160)}">Preview</td>
+                                    <td th:text="${#temporals.format(document.fetchedAt, 'yyyy-MM-dd HH:mm')}">2026-05-27 13:00</td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(documents)}" class="td-empty">
+                                    <td colspan="8">수집된 문서가 없습니다.</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </main>
         <div th:replace="~{admmgr/common/footer :: adminFooter}"></div>
     </div>

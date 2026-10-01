@@ -1,5 +1,7 @@
 package kr.co.cleverchat.domain.crawl.controller;
 
+import static kr.co.cleverchat.domain.crawl.model.CrawlFailureCodes.PATTERN;
+
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -9,8 +11,8 @@ import jakarta.validation.constraints.Size;
 import kr.co.cleverchat.common.api.ApiResponse;
 import kr.co.cleverchat.domain.auth.security.AdminSession;
 import kr.co.cleverchat.domain.auth.security.CurrentUser;
+import kr.co.cleverchat.domain.crawl.dto.CrawlDtos.JobResponse;
 import kr.co.cleverchat.domain.crawl.dto.CrawlDtos.ReviewRequest;
-import kr.co.cleverchat.domain.crawl.dto.CrawlDtos.RunResponse;
 import kr.co.cleverchat.domain.crawl.dto.CrawlDtos.ScheduleRequest;
 import kr.co.cleverchat.domain.crawl.dto.CrawlDtos.TargetRequest;
 import kr.co.cleverchat.domain.crawl.model.CrawlTarget;
@@ -67,8 +69,26 @@ public class AdmCrawlApiController {
     }
 
     @PostMapping("/crawl-targets/{id}/run")
-    public ApiResponse<RunResponse> run(@PathVariable Long id) {
+    public ApiResponse<JobResponse> run(@PathVariable Long id) {
         return ApiResponse.ok(crawlService.run(id));
+    }
+
+    @GetMapping("/crawl-jobs")
+    public ApiResponse<?> jobs(
+            @RequestParam(required = false) @Positive Long targetId,
+            @RequestParam(required = false) @Min(1) @Max(100) Integer limit) {
+        validatePositive(targetId);
+        validateRange(limit, 1, 100);
+        return ApiResponse.ok(crawlService.jobs(targetId, limit));
+    }
+
+    @GetMapping("/crawl-coverages")
+    public ApiResponse<?> coverages(
+            @RequestParam(required = false) @Positive Long targetId,
+            @RequestParam(required = false) @Min(1) @Max(100) Integer limit) {
+        validatePositive(targetId);
+        validateRange(limit, 1, 100);
+        return ApiResponse.ok(crawlService.coverages(targetId, limit));
     }
 
     @GetMapping("/crawl-documents")
@@ -84,11 +104,7 @@ public class AdmCrawlApiController {
                     @Size(max = 30)
                     @Pattern(regexp = "SUCCESS|FAILED|DUPLICATE")
                     String status,
-            @RequestParam(required = false)
-                    @Size(max = 40)
-                    @Pattern(
-                            regexp =
-                                    "ROBOTS_BLOCKED|HTTP_ERROR|TIMEOUT|PARSE_ERROR|DUP_HASH|FETCH_ERROR|NOT_HTML|URL_BLOCKED|SCHEDULE_INVALID|SYSTEM_ERROR")
+            @RequestParam(required = false) @Size(max = 40) @Pattern(regexp = PATTERN)
                     String failureCode,
             @RequestParam(required = false) @Min(1) @Max(200) Integer limit) {
         validatePositive(targetId);
@@ -101,11 +117,7 @@ public class AdmCrawlApiController {
     @GetMapping("/crawl-runs/failures")
     public ApiResponse<?> failures(
             @RequestParam(required = false) Boolean reviewed,
-            @RequestParam(required = false)
-                    @Size(max = 40)
-                    @Pattern(
-                            regexp =
-                                    "ROBOTS_BLOCKED|HTTP_ERROR|TIMEOUT|PARSE_ERROR|DUP_HASH|FETCH_ERROR|NOT_HTML|URL_BLOCKED|SCHEDULE_INVALID|SYSTEM_ERROR")
+            @RequestParam(required = false) @Size(max = 40) @Pattern(regexp = PATTERN)
                     String failureCode,
             @RequestParam(required = false) @Min(1) @Max(200) Integer limit) {
         validateFailureCode(failureCode);
@@ -152,9 +164,7 @@ public class AdmCrawlApiController {
     }
 
     private void validateFailureCode(String failureCode) {
-        if (failureCode != null
-                && !failureCode.matches(
-                        "ROBOTS_BLOCKED|HTTP_ERROR|TIMEOUT|PARSE_ERROR|DUP_HASH|FETCH_ERROR|NOT_HTML|URL_BLOCKED|SCHEDULE_INVALID|SYSTEM_ERROR")) {
+        if (failureCode != null && !failureCode.matches(PATTERN)) {
             throw new IllegalArgumentException("Invalid crawl failure code.");
         }
     }

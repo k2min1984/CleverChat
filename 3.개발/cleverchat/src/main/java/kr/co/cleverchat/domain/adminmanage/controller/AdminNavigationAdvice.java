@@ -3,6 +3,7 @@ package kr.co.cleverchat.domain.adminmanage.controller;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import java.util.List;
+import java.util.Map;
 import kr.co.cleverchat.domain.adminmanage.model.AdminMenu;
 import kr.co.cleverchat.domain.adminmanage.service.AdminManageService;
 import kr.co.cleverchat.domain.auth.security.AdminSession;
@@ -26,9 +27,24 @@ public class AdminNavigationAdvice {
         }
         HttpSession session = request.getSession(false);
         if (session == null
-                || !(session.getAttribute(AdminSession.SESSION_KEY) instanceof AdminSession admin)) {
+                || !(session.getAttribute(AdminSession.SESSION_KEY)
+                        instanceof AdminSession admin)) {
             return List.of();
         }
         return adminManageService.sidebarMenus(admin);
+    }
+
+    @ModelAttribute("adminCommonCodes")
+    public Map<String, List<Map<String, Object>>> adminCommonCodes(HttpServletRequest request) {
+        String path = request.getRequestURI().substring(request.getContextPath().length());
+        if (!path.startsWith("/admin") || path.startsWith("/admin/api")) {
+            return Map.of();
+        }
+        HttpSession session = request.getSession(false);
+        if (session == null
+                || !(session.getAttribute(AdminSession.SESSION_KEY) instanceof AdminSession)) {
+            return Map.of();
+        }
+        return adminManageService.activeCodeOptions();
     }
 }

@@ -1,110 +1,137 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{admmgr/common/head :: adminHead('Notices | CleverChat')}"></head>
+<head th:replace="~{admmgr/common/head :: adminHead('공지 관리 | CleverChat')}"></head>
 <body>
 <div class="admin-wrap">
     <div th:replace="~{admmgr/common/sidebar :: adminSidebar}"></div>
     <div class="main-area">
         <div th:replace="~{admmgr/common/header :: adminHeader}"></div>
         <div th:replace="~{admmgr/common/navigation :: adminNavigation}"></div>
-        <main class="content-area" data-notices-root>
-            <header>
-                <h1>Notices</h1>
-                <nav class="actions" aria-label="Operations navigation">
-                    <a class="button" th:href="@{/admin/statistics}">Statistics</a>
-                    <a class="button" th:href="@{/admin/audit-logs}">Audit logs</a>
-                </nav>
-            </header>
+        <main class="content-area board-page" data-notices-root>
+            <div class="page-wrap">
+                <div th:replace="~{admmgr/common/board :: heading('공지 관리', '챗봇에 노출할 공지와 게시 기간을 관리합니다.')}"></div>
+                <section id="noticeStatus" class="status-line" role="status" aria-live="polite"></section>
 
-            <section id="noticeStatus" class="status-line" role="status" aria-live="polite"></section>
+                <details class="board-disclosure" id="board-create"><summary>새 공지 등록<small>펼쳐서 입력</small></summary>
+<section class="search-card" aria-labelledby="noticeCreateTitle">
+                    <div class="box-title" id="noticeCreateTitle">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                        공지 등록
+                    </div>
+                    <form id="noticeCreateForm" class="form-grid" aria-label="Create notice">
+                        <div class="search-field">
+                            <label for="noticeTitle" class="search-label">제목</label>
+                            <input id="noticeTitle" class="search-input" name="title" type="text" maxlength="200" required>
+                        </div>
+                        <div class="search-field">
+                            <label for="noticeContent" class="search-label">내용</label>
+                            <textarea id="noticeContent" class="search-input" name="content" maxlength="4000" required></textarea>
+                        </div>
+                        <div class="search-field">
+                            <label for="noticePriority" class="search-label">우선순위</label>
+                            <input id="noticePriority" class="search-input" name="priority" type="number" min="0" max="10000" value="100">
+                        </div>
+                        <div class="search-field">
+                            <label for="noticeStartsAt" class="search-label">시작일시</label>
+                            <input id="noticeStartsAt" class="search-input" name="startsAt" type="datetime-local">
+                        </div>
+                        <div class="search-field">
+                            <label for="noticeEndsAt" class="search-label">종료일시</label>
+                            <input id="noticeEndsAt" class="search-input" name="endsAt" type="datetime-local">
+                        </div>
+                        <div class="search-field">
+                            <label class="search-label">사용</label>
+                            <label class="inline-check">
+                                <input name="enabled" type="checkbox" checked>
+                                사용
+                            </label>
+                        </div>
+                        <div class="search-actions">
+                            <button type="submit" class="btn btn-sm btn-solid btn-emerald">등록</button>
+                        </div>
+                    </form>
+                </section>
+                </details>
 
-            <section aria-labelledby="noticeCreateTitle">
-                <h2 id="noticeCreateTitle">Create notice</h2>
-                <form id="noticeCreateForm" aria-label="Create notice">
-                    <label for="noticeTitle">Title</label>
-                    <input id="noticeTitle" name="title" type="text" maxlength="200" required>
+                <div class="result-header">
+                    <div class="result-count">공지 조회 <strong th:text="${#lists.size(notices)} + '건'">0건</strong></div>
+                    <div class="result-actions">
+                        <button type="button" class="btn btn-sm btn-solid btn-emerald" data-board-open="board-create" aria-controls="board-create" aria-expanded="false" hidden>+ 등록</button>
+                        <a class="btn btn-sm btn-secondary" th:href="@{/admin/statistics}">통계</a>
+                        <a class="btn btn-sm btn-secondary" th:href="@{/admin/audit-logs}">감사 로그</a>
+                    </div>
+                </div>
 
-                    <label for="noticeContent">Content</label>
-                    <textarea id="noticeContent" name="content" maxlength="4000" required></textarea>
-
-                    <label for="noticePriority">Priority</label>
-                    <input id="noticePriority" name="priority" type="number" min="0" max="10000" value="100">
-
-                    <label for="noticeStartsAt">Starts at</label>
-                    <input id="noticeStartsAt" name="startsAt" type="datetime-local">
-
-                    <label for="noticeEndsAt">Ends at</label>
-                    <input id="noticeEndsAt" name="endsAt" type="datetime-local">
-
-                    <label>
-                        <input name="enabled" type="checkbox" checked>
-                        Enabled
-                    </label>
-
-                    <button type="submit">Create</button>
-                </form>
-            </section>
-
-            <table aria-label="Notice list">
-                <caption>Notice list</caption>
-                <thead>
-                <tr>
-                    <th scope="col">ID</th>
-                    <th scope="col">Title</th>
-                    <th scope="col">Content</th>
-                    <th scope="col">Enabled</th>
-                    <th scope="col">Period</th>
-                    <th scope="col">Priority</th>
-                    <th scope="col">Updated</th>
-                    <th scope="col">Actions</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="notice : ${notices}">
-                    <td th:text="${notice.noticeNo}">1</td>
-                    <td>
-                        <input th:attr="aria-label=${'Title for notice ' + notice.noticeNo}" name="title" maxlength="200"
-                               th:value="${notice.title}" th:data-notice-id="${notice.noticeNo}">
-                    </td>
-                    <td>
-                        <textarea th:attr="aria-label=${'Content for notice ' + notice.noticeNo}" name="content" maxlength="4000"
-                                  th:text="${notice.content}" th:data-notice-id="${notice.noticeNo}"></textarea>
-                    </td>
-                    <td>
-                        <label>
-                            <input name="enabled" type="checkbox" th:checked="${notice.useYn == 'Y'}" th:data-notice-id="${notice.noticeNo}">
-                            Enabled
-                        </label>
-                    </td>
-                    <td>
-                        <label>
-                            <span class="sr-only">Starts at</span>
-                            <input name="startsAt" type="datetime-local"
-                                   th:value="${notice.startsAt == null ? '' : #temporals.format(notice.startsAt, 'yyyy-MM-dd''T''HH:mm')}"
-                                   th:data-notice-id="${notice.noticeNo}">
-                        </label>
-                        <label>
-                            <span class="sr-only">Ends at</span>
-                            <input name="endsAt" type="datetime-local"
-                                   th:value="${notice.endsAt == null ? '' : #temporals.format(notice.endsAt, 'yyyy-MM-dd''T''HH:mm')}"
-                                   th:data-notice-id="${notice.noticeNo}">
-                        </label>
-                    </td>
-                    <td>
-                        <input th:attr="aria-label=${'Priority for notice ' + notice.noticeNo}" name="priority" type="number" min="0" max="10000"
-                               th:value="${notice.priority}" th:data-notice-id="${notice.noticeNo}">
-                    </td>
-                    <td th:text="${#temporals.format(notice.lstChgDt, 'yyyy-MM-dd HH:mm')}">2026-05-27 13:00</td>
-                    <td>
-                        <button type="button" th:data-save-notice-id="${notice.noticeNo}">Save</button>
-                        <button type="button" th:data-disable-notice-id="${notice.noticeNo}">Disable</button>
-                    </td>
-                </tr>
-                <tr th:if="${#lists.isEmpty(notices)}">
-                    <td colspan="8">No notices found.</td>
-                </tr>
-                </tbody>
-            </table>
+                <div class="table-card">
+                    <div class="table-wrap">
+                        <div class="admin-table-wrap">
+                            <table class="admin-table board-editable-table board-notice-table" data-board-pagination aria-label="Notice list">
+                                <caption>Notice list</caption>
+                                <colgroup>
+                                    <col style="width:50px"><col><col style="width:70px"><col style="width:180px">
+                                    <col style="width:80px"><col style="width:130px"><col style="width:135px">
+                                </colgroup>
+                                <thead>
+                                <tr>
+                                    <th scope="col">번호</th>
+                                    <th scope="col">공지</th>
+                                    <th scope="col">사용</th>
+                                    <th scope="col">기간</th>
+                                    <th scope="col">우선순위</th>
+                                    <th scope="col">수정일</th>
+                                    <th scope="col">관리</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="notice, stat : ${notices}">
+                                    <td class="board-number" th:text="${stat.count}">1</td>
+                                    <td class="td-left">
+                                        <input th:attr="aria-label=${'Title for notice ' + notice.noticeNo}" name="title" maxlength="200"
+                                               th:value="${notice.title}" th:data-notice-id="${notice.noticeNo}">
+                                        <textarea th:attr="aria-label=${'Content for notice ' + notice.noticeNo}" name="content" maxlength="4000"
+                                                  th:text="${notice.content}" th:data-notice-id="${notice.noticeNo}"></textarea>
+                                    </td>
+                                    <td>
+                                        <label class="inline-check">
+                                            <input name="enabled" type="checkbox" th:checked="${notice.useYn == 'Y'}" th:data-notice-id="${notice.noticeNo}">
+                                            사용
+                                        </label>
+                                    </td>
+                                    <td class="td-left">
+                                        <label>
+                                            <span class="sr-only">시작일시</span>
+                                            <input name="startsAt" type="datetime-local"
+                                                   th:value="${notice.startsAt == null ? '' : #temporals.format(notice.startsAt, 'yyyy-MM-dd''T''HH:mm')}"
+                                                   th:data-notice-id="${notice.noticeNo}">
+                                        </label>
+                                        <label>
+                                            <span class="sr-only">종료일시</span>
+                                            <input name="endsAt" type="datetime-local"
+                                                   th:value="${notice.endsAt == null ? '' : #temporals.format(notice.endsAt, 'yyyy-MM-dd''T''HH:mm')}"
+                                                   th:data-notice-id="${notice.noticeNo}">
+                                        </label>
+                                    </td>
+                                    <td>
+                                        <input th:attr="aria-label=${'Priority for notice ' + notice.noticeNo}" name="priority" type="number" min="0" max="10000"
+                                               th:value="${notice.priority}" th:data-notice-id="${notice.noticeNo}">
+                                    </td>
+                                    <td class="board-date" th:text="${#temporals.format(notice.lstChgDt, 'yyyy-MM-dd HH:mm')}">2026-05-27 13:00</td>
+                                    <td>
+                                        <div class="row-actions">
+                                            <button type="button" class="btn btn-xs btn-solid btn-emerald" th:data-save-notice-id="${notice.noticeNo}">저장</button>
+                                            <button type="button" class="btn btn-xs btn-secondary" th:data-disable-notice-id="${notice.noticeNo}">비활성</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(notices)}" class="td-empty">
+                                    <td colspan="7"><span class="board-empty-message">등록된 공지가 없습니다.</span></td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </main>
         <div th:replace="~{admmgr/common/footer :: adminFooter}"></div>
     </div>

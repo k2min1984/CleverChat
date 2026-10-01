@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<body>
+<header th:fragment="heading(title, description)" class="board-heading sr-only">
+    <div>
+        <span class="board-heading-mark" aria-hidden="true"></span>
+        <h1 th:text="${title}">관리 목록</h1>
+        <p th:text="${description}">운영 정보를 확인합니다.</p>
+    </div>
+</header>
+</body>
+</html>

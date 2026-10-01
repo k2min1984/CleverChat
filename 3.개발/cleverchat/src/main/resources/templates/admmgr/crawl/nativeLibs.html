@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admmgr/common/head :: adminHead('크롤러 네이티브 라이브러리 | CleverChat')}"></head>
+<body>
+<div class="admin-wrap">
+    <div th:replace="~{admmgr/common/sidebar :: adminSidebar}"></div>
+    <div class="main-area">
+        <div th:replace="~{admmgr/common/header :: adminHeader}"></div>
+        <div th:replace="~{admmgr/common/navigation :: adminNavigation}"></div>
+        <main class="content-area">
+            <div class="page-wrap">
+                <p role="status" aria-live="polite" class="help-text"
+                   th:text="${successMessage ?: errorMessage ?: ''}"></p>
+
+                <section class="table-card crawl-section-card">
+                    <div class="crawl-section-header">
+                        <div>
+                            <h1>크롤러 네이티브 라이브러리</h1>
+                        </div>
+                    </div>
+                    <form th:action="@{/admin/crawl-native-libs}" method="post" enctype="multipart/form-data" class="form-grid">
+                        <th:block th:replace="~{admmgr/common/_csrfHidden :: csrfHidden}"></th:block>
+                        <div class="form-field">
+                            <label for="bundleVersion">번들 버전</label>
+                            <input id="bundleVersion" name="bundleVersion" type="text" maxlength="100" required>
+                        </div>
+                        <div class="form-field">
+                            <label for="checksumSha256">SHA-256 체크섬</label>
+                            <input id="checksumSha256" name="checksumSha256" type="text" maxlength="64" required>
+                        </div>
+                        <div class="form-field">
+                            <label for="signature">서명</label>
+                            <input id="signature" name="signature" type="text" maxlength="1000" required>
+                        </div>
+                        <div class="form-field">
+                            <label for="file">zip 번들</label>
+                            <input id="file" name="file" type="file" accept=".zip,application/zip" required>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-md btn-solid btn-primary">업로드</button>
+                        </div>
+                    </form>
+                </section>
+
+                <section class="table-card crawl-section-card">
+                    <div class="crawl-section-header">
+                        <div>
+                            <h2>번들 이력</h2>
+                        </div>
+                    </div>
+                    <div class="table-wrap">
+                        <div class="admin-table-wrap">
+                            <table class="admin-table" aria-label="네이티브 라이브러리 번들 이력">
+                                <caption>네이티브 라이브러리 번들 이력</caption>
+                                <colgroup>
+                                    <col style="width:80px">
+                                    <col style="width:140px">
+                                    <col style="width:110px">
+                                    <col style="width:150px">
+                                    <col>
+                                    <col style="width:110px">
+                                </colgroup>
+                                <thead>
+                                <tr>
+                                    <th scope="col">ID</th>
+                                    <th scope="col">버전</th>
+                                    <th scope="col">상태</th>
+                                    <th scope="col">업로드</th>
+                                    <th scope="col">SONAME</th>
+                                    <th scope="col">적용</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="bundle : ${bundles}">
+                                    <td th:text="${bundle.nativeLibRegistryNo}">1</td>
+                                    <td th:text="${bundle.bundleVersion}">v1</td>
+                                    <td>
+                                        <span class="badge badge-success" th:if="${bundle.status == 'ACTIVE'}">활성</span>
+                                        <span class="badge badge-warning" th:if="${bundle.status == 'VERIFIED'}">검증</span>
+                                        <span class="badge badge-danger" th:if="${bundle.status == 'REJECTED'}">거부</span>
+                                    </td>
+                                    <td th:text="${bundle.uploadedAt == null ? '-' : #temporals.format(bundle.uploadedAt, 'yyyy-MM-dd HH:mm')}">-</td>
+                                    <td class="td-left" th:text="${bundle.allowedSonames}">-</td>
+                                    <td>
+                                        <form th:if="${bundle.status == 'VERIFIED'}"
+                                              th:action="@{/admin/crawl-native-libs/{id}/activate(id=${bundle.nativeLibRegistryNo})}"
+                                              method="post">
+                                            <th:block th:replace="~{admmgr/common/_csrfHidden :: csrfHidden}"></th:block>
+                                            <button type="submit" class="btn btn-sm btn-secondary">적용</button>
+                                        </form>
+                                        <span th:if="${bundle.status != 'VERIFIED'}">-</span>
+                                    </td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(bundles)}" class="td-empty">
+                                    <td colspan="6">등록된 번들이 없습니다.</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+        <div th:replace="~{admmgr/common/footer :: adminFooter}"></div>
+    </div>
+</div>
+</body>
+</html>

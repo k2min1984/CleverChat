@@ -35,6 +35,7 @@ class ScenarioGraphValidatorTest {
                                         null,
                                         0,
                                         "{}",
+                                        List.of(),
                                         List.of(option("다음", null)))));
 
         assertThatThrownBy(() -> validator.validateForSave(request))
@@ -63,6 +64,7 @@ class ScenarioGraphValidatorTest {
                                         null,
                                         0,
                                         "{}",
+                                        List.of(),
                                         List.of(option("끝", "end"))),
                                 node("end", "END")));
 
@@ -70,7 +72,7 @@ class ScenarioGraphValidatorTest {
     }
 
     private NodeRequest node(String key, String type) {
-        return new NodeRequest(key, type, key, null, 0, "{}", List.of());
+        return new NodeRequest(key, type, key, null, 0, "{}", List.of(), List.of());
     }
 
     private OptionRequest option(String label, String nextNodeKey) {

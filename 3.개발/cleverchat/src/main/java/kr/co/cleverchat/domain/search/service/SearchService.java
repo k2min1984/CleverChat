@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Locale;
 import kr.co.cleverchat.common.error.BusinessException;
 import kr.co.cleverchat.common.error.ErrorCode;
+import kr.co.cleverchat.common.search.KoreanMorphAnalyzer;
 import kr.co.cleverchat.domain.auth.security.RequireRole;
 import kr.co.cleverchat.domain.chatbot.service.ChatPiiGuard;
 import kr.co.cleverchat.domain.search.dto.SearchDtos.PopularRebuildResponse;
@@ -16,21 +17,41 @@ import kr.co.cleverchat.domain.search.model.PopularQueryDaily;
 import kr.co.cleverchat.domain.search.model.SearchBlockLog;
 import kr.co.cleverchat.domain.search.model.SearchLog;
 import kr.co.cleverchat.domain.search.model.SearchResultItem;
+import kr.co.cleverchat.domain.settings.RuntimeSetting;
+import kr.co.cleverchat.domain.settings.RuntimeSettingsService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class SearchService {
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private RuntimeSettingsService runtimeSettings;
 
     private static final int DEFAULT_LIMIT = 20;
     private static final int MAX_LIMIT = 100;
+    private static final int MAX_TERMS = 12;
+    // Nori retains these request phrases as content words. They express the request to answer,
+    // not its subject ("전기요금 알려주세요" should search for 전기 + 요금).
+    private static final java.util.Set<String> REQUEST_TERMS = java.util.Set.of(
+            "알려", "알리", "알려줘", "알려주세요", "주세요", "궁금", "어떻", "어떻게",
+            "무엇", "대해", "대하", "설명", "부탁");
+    private static final java.util.regex.Pattern SINGLE_HANGUL_TOKEN =
+            java.util.regex.Pattern.compile("\\p{IsHangul}");
 
     private final SearchMapper searchMapper;
     private final ChatPiiGuard piiGuard;
+    private final KoreanMorphAnalyzer morphAnalyzer;
 
     public SearchService(SearchMapper searchMapper, ChatPiiGuard piiGuard) {
+        this(searchMapper, piiGuard, new KoreanMorphAnalyzer());
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public SearchService(
+            SearchMapper searchMapper, ChatPiiGuard piiGuard, KoreanMorphAnalyzer morphAnalyzer) {
         this.searchMapper = searchMapper;
         this.piiGuard = piiGuard;
+        this.morphAnalyzer = morphAnalyzer;
     }
 
     @Transactional
@@ -43,9 +64,10 @@ public class SearchService {
             recordBlock(normalized, source, userId, anonymousIdHash, piiTypes);
             throw new BusinessException(ErrorCode.SEARCH_PII_BLOCKED);
         }
+        String tokenQuery = String.join(" ", terms);
         long startedAt = System.nanoTime();
         List<SearchResultItem> results =
-                searchMapper.searchScenarios(normalized, terms, resolveLimit(limit));
+                searchMapper.searchScenarios(normalized, terms, tokenQuery, resolveLimit(limit));
         int latencyMs = (int) ((System.nanoTime() - startedAt) / 1_000_000);
         recordSearch(normalized, source, userId, anonymousIdHash, results, latencyMs);
         return new SearchResponse(normalized, results.size(), results);
@@ -82,7 +104,14 @@ public class SearchService {
     @Transactional
     @RequireRole("OPERATOR")
     public RetentionResponse deleteExpiredLogs(Integer retentionDays, boolean dryRun) {
-        int days = retentionDays == null ? 90 : Math.max(30, retentionDays);
+        int days =
+                retentionDays == null
+                        ? (runtimeSettings == null
+                                ? 90
+                                : runtimeSettings
+                                        .current()
+                                        .integer(RuntimeSetting.SEARCH_RETENTION_DAYS))
+                        : Math.max(30, retentionDays);
         OffsetDateTime cutoff = OffsetDateTime.now().minusDays(days);
         long wouldDeleteSearchLogs = searchMapper.countSearchLogsBefore(cutoff);
         long wouldDeleteBlockLogs = searchMapper.countBlockLogsBefore(cutoff);
@@ -144,13 +173,35 @@ public class SearchService {
         return normalized;
     }
 
+    /**
+     * Splits the query into Korean morphemes (via Lucene Nori) so that query terms line up with the
+     * morpheme tokens indexed at crawl time and with the stems of scenario/keyword/node text. Falls
+     * back to whitespace splitting when morphological analysis yields nothing (e.g. symbol-only
+     * input), so non-Korean queries keep working.
+     */
     private List<String> tokenize(String query) {
+        List<String> morphemes =
+                morphAnalyzer.tokens(query).stream()
+                        .map(String::trim)
+                        .filter(this::isUsefulSearchTerm)
+                        .distinct()
+                        .limit(MAX_TERMS)
+                        .toList();
+        if (!morphemes.isEmpty()) {
+            return morphemes;
+        }
         return List.of(query.split(" ")).stream()
                 .map(String::trim)
-                .filter(term -> !term.isBlank())
+                .filter(this::isUsefulSearchTerm)
                 .distinct()
-                .limit(8)
+                .limit(MAX_TERMS)
                 .toList();
+    }
+
+    private boolean isUsefulSearchTerm(String term) {
+        return term != null && !term.isBlank()
+                && !SINGLE_HANGUL_TOKEN.matcher(term).matches()
+                && !REQUEST_TERMS.contains(term);
     }
 
     private int resolveLimit(Integer limit) {

@@ -157,7 +157,8 @@ public class OpsNotificationService {
 
     private NotificationEvent deliverEvent(
             NotificationEvent event, List<NotificationChannel> channels) {
-        NotificationEvent current = opsMapper.findNotificationEventById(event.getNotificationEventNo());
+        NotificationEvent current =
+                opsMapper.findNotificationEventById(event.getNotificationEventNo());
         int attempts = current.getAttemptCount() == null ? 0 : current.getAttemptCount();
         if (attempts >= MAX_ATTEMPTS) {
             return current;
@@ -238,7 +239,11 @@ public class OpsNotificationService {
                         ? OffsetDateTime.now(clock).plusMinutes(Math.min(30, attempts * 5L))
                         : null;
         opsMapper.updateNotificationDelivery(
-                event.getNotificationEventNo(), status, attempts, truncate(lastError, 500), nextRetryAt);
+                event.getNotificationEventNo(),
+                status,
+                attempts,
+                truncate(lastError, 500),
+                nextRetryAt);
     }
 
     private NotificationWebhookPayload payload(NotificationEvent event) {

@@ -21,9 +21,9 @@ import java.util.concurrent.atomic.AtomicLong;
 import kr.co.cleverchat.common.error.BusinessException;
 import kr.co.cleverchat.common.error.ErrorCode;
 import kr.co.cleverchat.common.security.FieldEncryptionService;
-import kr.co.cleverchat.domain.chatbot.ai.AiAnswerCitation;
 import kr.co.cleverchat.domain.chatbot.ai.AiAnswerSuggestionResponse;
 import kr.co.cleverchat.domain.chatbot.ai.AiAnswerSuggestionService;
+import kr.co.cleverchat.domain.chatbot.config.ChatSearchProperties;
 import kr.co.cleverchat.domain.chatbot.mapper.ChatFeedbackMapper;
 import kr.co.cleverchat.domain.chatbot.mapper.ChatMessageMapper;
 import kr.co.cleverchat.domain.chatbot.mapper.ChatRecommendationMapper;
@@ -36,6 +36,7 @@ import kr.co.cleverchat.domain.chatbot.service.ChatRuntimeService.ChatRequestCon
 import kr.co.cleverchat.domain.chatbot.service.ScenarioMatchingService.MatchResult;
 import kr.co.cleverchat.domain.chatbot.service.ScenarioMatchingService.MatchType;
 import kr.co.cleverchat.domain.scenario.mapper.ScenarioMapper;
+import kr.co.cleverchat.domain.scenario.mapper.ScenarioNodeLinkMapper;
 import kr.co.cleverchat.domain.scenario.mapper.ScenarioNodeMapper;
 import kr.co.cleverchat.domain.scenario.mapper.ScenarioNodeOptionMapper;
 import kr.co.cleverchat.domain.scenario.mapper.ScenarioVersionMapper;
@@ -72,12 +73,14 @@ class ChatRuntimeServiceTest {
     @Mock ScenarioVersionMapper versionMapper;
     @Mock ScenarioNodeMapper nodeMapper;
     @Mock ScenarioNodeOptionMapper optionMapper;
+    @Mock ScenarioNodeLinkMapper linkMapper;
     @Mock ScenarioMatchingService matchingService;
     @Mock ChatPiiGuard piiGuard;
     @Mock ChatRateLimiter rateLimiter;
     @Mock SearchService searchService;
     @Mock AiAnswerSuggestionService aiAnswerSuggestionService;
     FieldEncryptionService fieldEncryptionService;
+    ChatSearchProperties searchProperties;
 
     ChatRuntimeService service;
     ChatRequestContext context;
@@ -87,6 +90,7 @@ class ChatRuntimeServiceTest {
     void setUp() {
         fieldEncryptionService =
                 new FieldEncryptionService("", "test-v1", "", new MockEnvironment());
+        searchProperties = new ChatSearchProperties();
         service =
                 new ChatRuntimeService(
                         sessionMapper,
@@ -98,10 +102,12 @@ class ChatRuntimeServiceTest {
                         versionMapper,
                         nodeMapper,
                         optionMapper,
+                        linkMapper,
                         matchingService,
                         piiGuard,
                         rateLimiter,
                         searchService,
+                        searchProperties,
                         aiAnswerSuggestionService,
                         fieldEncryptionService,
                         new ObjectMapper());
@@ -169,7 +175,7 @@ class ChatRuntimeServiceTest {
 
     @Test
     void activeScenariosReturnsActiveScenarioSummaries() {
-        when(scenarioMapper.findAll("ACTIVE"))
+        when(scenarioMapper.findActiveForMatching())
                 .thenReturn(
                         List.of(
                                 scenario(100L, "ACTIVE", "가입 상담"),
@@ -274,7 +280,7 @@ class ChatRuntimeServiceTest {
         result.setScenarioTitle("Search result");
         when(sessionMapper.findById(SESSION_ID_STR)).thenReturn(Optional.of(session));
         when(matchingService.match(100L, 300L, "unknown")).thenReturn(Optional.empty());
-        when(searchService.search(eq("unknown"), eq("CHAT_FALLBACK"), eq(3), isNull(), any()))
+        when(searchService.search(eq("unknown"), eq("CHAT_FALLBACK"), eq(10), isNull(), any()))
                 .thenReturn(new SearchResponse("unknown", 1, List.of(result)));
         when(messageMapper.selectNextSeq(SESSION_ID_STR)).thenReturn(2);
         ArgumentCaptor<ChatMessage> messageCaptor = ArgumentCaptor.forClass(ChatMessage.class);
@@ -285,11 +291,270 @@ class ChatRuntimeServiceTest {
                 .recordFailure(eq(SESSION_ID_STR), isNull(), eq("NO_MATCH"), any());
         verify(messageMapper, org.mockito.Mockito.times(2)).insert(messageCaptor.capture());
         assertThat(decrypted(messageCaptor.getAllValues().get(1)))
-                .isEqualTo("관련 상담: Search result");
+                .isEqualTo("관련 자료를 찾았어요. 아래에서 선택해 주세요.");
+        assertThat(messageCaptor.getAllValues().get(1).getPayload()).contains("\"label\":\"Search result\"");
     }
 
     @Test
-    void freeTextNoMatchUsesAiSuggestionWhenAvailable() {
+    void crawlSearchResultLinksDirectlyToGetDetailPage() {
+        ChatSession session = activeSession();
+        SearchResultItem result = searchResult(77L, "공지사항", 1.0);
+        result.setCrawlUrl(
+                "https://www.kepco.co.kr/home/customer/notice/boardView.do?boardMngNo=1&boardNo=2");
+        when(sessionMapper.findById(SESSION_ID_STR)).thenReturn(Optional.of(session));
+        when(matchingService.match(100L, 300L, "공지사항")).thenReturn(Optional.empty());
+        when(searchService.search(eq("공지사항"), eq("CHAT_FALLBACK"), eq(10), isNull(), any()))
+                .thenReturn(new SearchResponse("공지사항", 1, List.of(result)));
+        when(messageMapper.selectNextSeq(SESSION_ID_STR)).thenReturn(2);
+        ArgumentCaptor<ChatMessage> messageCaptor = ArgumentCaptor.forClass(ChatMessage.class);
+
+        service.freeText(SESSION_ID, "공지사항", context);
+
+        verify(messageMapper, org.mockito.Mockito.times(2)).insert(messageCaptor.capture());
+        assertThat(messageCaptor.getAllValues().get(1).getPayload())
+                .contains(
+                        "\"label\":\"해당 페이지 이동\"",
+                        "\"linkType\":\"EXTERNAL\"",
+                        "boardView.do?boardMngNo=1&boardNo=2")
+                .doesNotContain("/chat/crawl-documents/", "boardList.do");
+    }
+
+    @Test
+    void crawledDocumentUsesAiAnswerAndKeepsSourceLink() {
+        ChatSession session = activeSession();
+        SearchResultItem result = searchResult(77L, "이용 안내", 1.0);
+        result.setCrawlUrl("https://example.com/guide");
+        when(sessionMapper.findById(SESSION_ID_STR)).thenReturn(Optional.of(session));
+        when(matchingService.match(100L, 300L, "이용 방법")).thenReturn(Optional.empty());
+        when(searchService.search(eq("이용 방법"), eq("CHAT_FALLBACK"), eq(10), isNull(), any()))
+                .thenReturn(new SearchResponse("이용 방법", 1, List.of(result)));
+        when(aiAnswerSuggestionService.suggest(eq("이용 방법"), any(), any()))
+                .thenReturn(
+                        Optional.of(
+                                new AiAnswerSuggestionResponse(
+                                        "근거에 따른 AI 안내", List.of(), "vllm", true)));
+        when(messageMapper.selectNextSeq(SESSION_ID_STR)).thenReturn(2);
+        var messages = ArgumentCaptor.forClass(ChatMessage.class);
+        service.freeText(SESSION_ID, "이용 방법", context);
+        verify(messageMapper, org.mockito.Mockito.times(2)).insert(messages.capture());
+        assertThat(decrypted(messages.getAllValues().get(1))).isEqualTo("근거에 따른 AI 안내");
+        assertThat(messages.getAllValues().get(1).getPayload())
+                .contains("https://example.com/guide");
+    }
+
+    @Test
+    void freeTextSearchResultsExcludeWeakMatchesFromBothDisplayAndOverflow() {
+        ChatSession session = activeSession();
+        searchProperties.setMaxCrawlDocuments(5);
+        SearchResultItem first = searchResult(1L, "first", 1.0);
+        SearchResultItem second = searchResult(2L, "second", 0.75);
+        SearchResultItem third = searchResult(3L, "third", 0.7);
+        SearchResultItem fourth = searchResult(4L, "fourth", 0.65);
+        SearchResultItem fifth = searchResult(5L, "fifth", 0.6);
+        SearchResultItem hidden = searchResult(6L, "hidden", 0.49);
+        when(sessionMapper.findById(SESSION_ID_STR)).thenReturn(Optional.of(session));
+        when(matchingService.match(100L, 300L, "query")).thenReturn(Optional.empty());
+        when(searchService.search(eq("query"), eq("CHAT_FALLBACK"), eq(10), isNull(), any()))
+                .thenReturn(
+                        new SearchResponse(
+                                "query", 6, List.of(first, second, third, fourth, fifth, hidden)));
+        when(messageMapper.selectNextSeq(SESSION_ID_STR)).thenReturn(2);
+        ArgumentCaptor<ChatMessage> messageCaptor = ArgumentCaptor.forClass(ChatMessage.class);
+
+        service.freeText(SESSION_ID, "query", context);
+
+        verify(messageMapper, org.mockito.Mockito.times(2)).insert(messageCaptor.capture());
+        String payload = messageCaptor.getAllValues().get(1).getPayload();
+        assertThat(payload).contains("\"searchOptions\"");
+        assertThat(payload).contains("\"crawlDocumentNo\":1", "\"crawlDocumentNo\":2");
+        assertThat(payload).contains("\"overflowOptions\":[]");
+        assertThat(payload).doesNotContain("\"crawlDocumentNo\":6", "\"more\"");
+    }
+
+    @Test
+    void normalizeCrawlLabelRemovesBreadcrumbAndSiteSuffix() {
+        assertThat(service.normalizeCrawlLabel("Hydrogen | ESG | KEPCO")).isEqualTo("Hydrogen");
+        assertThat(service.normalizeCrawlLabel("KEPCO | Research")).isEqualTo("Research");
+        assertThat(service.normalizeCrawlLabel("KEPCO")).isEqualTo("KEPCO");
+    }
+
+    @Test
+    void searchOptionsExposeOptionTypeAndPreserveRelevanceOrder() {
+        ChatSession session = activeSession();
+        SearchResultItem document = searchResult(77L, "Doc title | KEPCO", 1.0);
+        SearchResultItem scenario = new SearchResultItem();
+        scenario.setScenarioNo(55L);
+        scenario.setScenarioTitle("Scenario title");
+        scenario.setMatchedField("SCENARIO");
+        scenario.setScore(0.9);
+        when(sessionMapper.findById(SESSION_ID_STR)).thenReturn(Optional.of(session));
+        when(matchingService.match(100L, 300L, "power")).thenReturn(Optional.empty());
+        when(searchService.search(eq("power"), eq("CHAT_FALLBACK"), eq(10), isNull(), any()))
+                .thenReturn(new SearchResponse("power", 2, List.of(document, scenario)));
+        when(messageMapper.selectNextSeq(SESSION_ID_STR)).thenReturn(2);
+        ArgumentCaptor<ChatMessage> messageCaptor = ArgumentCaptor.forClass(ChatMessage.class);
+
+        service.freeText(SESSION_ID, "power", context);
+
+        verify(messageMapper, org.mockito.Mockito.times(2)).insert(messageCaptor.capture());
+        String payload = messageCaptor.getAllValues().get(1).getPayload();
+        assertThat(payload).contains("\"optionType\":\"SCENARIO\"", "\"optionType\":\"DOCUMENT\"");
+        assertThat(payload).contains("\"label\":\"Doc title\"");
+        assertThat(payload.indexOf("\"crawlDocumentNo\":77"))
+                .isLessThan(payload.indexOf("\"scenarioNo\":55"));
+    }
+
+    @Test
+    void selectForDisplayAppliesMinScoreAndCrawlDocumentCapWithoutForcingWeakResult() {
+        searchProperties.setDisplayMax(2);
+        searchProperties.setMinScore(0.5);
+        searchProperties.setMaxCrawlDocuments(2);
+        SearchResultItem first = searchResult(1L, "first", 1.0);
+        SearchResultItem second = searchResult(2L, "second", 0.9);
+        SearchResultItem capped = searchResult(3L, "capped", 0.8);
+        SearchResultItem cut = searchResult(4L, "cut", 0.1);
+
+        var selection = service.selectForDisplay(List.of(first, second, capped, cut));
+
+        assertThat(selection.shown())
+                .extracting(SearchResultItem::getCrawlDocumentNo)
+                .containsExactly(1L, 2L);
+        assertThat(selection.hidden())
+                .extracting(SearchResultItem::getCrawlDocumentNo)
+                .containsExactly(3L);
+
+        searchProperties.setMinScore(2.0);
+        var topOnly = service.selectForDisplay(List.of(first, second));
+        assertThat(topOnly.shown()).isEmpty();
+        assertThat(topOnly.hidden()).isEmpty();
+    }
+
+    @Test
+    void selectForDisplayAppliesRelativeThresholdWithinEachResultGroupAndSortsByScore() {
+        searchProperties.setRelativeThreshold(0.5);
+        SearchResultItem topDocument = searchResult(1L, "top document", 10.0);
+        SearchResultItem firstScenario = scenarioResult(11L, "first scenario", 4.0);
+        SearchResultItem secondScenario = scenarioResult(12L, "second scenario", 3.0);
+        SearchResultItem secondDocument = searchResult(2L, "second document", 8.0);
+
+        var selection =
+                service.selectForDisplay(
+                        List.of(topDocument, firstScenario, secondScenario, secondDocument));
+
+        assertThat(selection.shown())
+                .extracting(SearchResultItem::getScenarioTitle)
+                .containsExactly(
+                        "top document", "second document", "first scenario", "second scenario");
+        assertThat(selection.hidden()).isEmpty();
+    }
+
+    @Test
+    void selectForDisplayAppliesRelevanceThresholdEvenToSmallResultSets() {
+        SearchResultItem first = searchResult(1L, "first", 100.0);
+        SearchResultItem second = searchResult(2L, "second", 10.0);
+        SearchResultItem third = searchResult(3L, "third", 5.0);
+        SearchResultItem fourth = searchResult(4L, "fourth", 1.0);
+
+        var selection = service.selectForDisplay(List.of(first, second, third, fourth));
+
+        assertThat(selection.shown())
+                .extracting(SearchResultItem::getCrawlDocumentNo)
+                .containsExactly(1L);
+        assertThat(selection.hidden()).isEmpty();
+    }
+
+    @Test
+    void selectForDisplayDeduplicatesDocumentsWithSameVisibleTitle() {
+        SearchResultItem higher = searchResult(6480L, "서울 동남권지역 전기공급시설 전력구 건설(동서울#2-강남1차)", 10.0);
+        SearchResultItem duplicate = searchResult(6405L, "서울 동남권지역 전기공급시설 전력구 건설(동서울#2-강남1차)", 9.0);
+        SearchResultItem other = searchResult(3925L, "동해안-동서울 HVDC 건설사업", 8.0);
+
+        var selection = service.selectForDisplay(List.of(higher, duplicate, other));
+
+        assertThat(selection.shown())
+                .extracting(SearchResultItem::getCrawlDocumentNo)
+                .containsExactly(6480L, 3925L);
+        assertThat(selection.hidden()).isEmpty();
+    }
+
+    @Test
+    void selectSearchResultRejectsOverflowOptionUntilMoreIsRequested() {
+        ChatSession session = activeSession();
+        String payload =
+                "{\"searchOptions\":[{\"crawlDocumentNo\":1,\"label\":\"shown\"}],"
+                        + "\"overflowOptions\":[{\"crawlDocumentNo\":3,\"label\":\"hidden\"}]}";
+        when(sessionMapper.findById(SESSION_ID_STR)).thenReturn(Optional.of(session));
+        when(messageMapper.findBySessionId(SESSION_ID_STR))
+                .thenReturn(List.of(botMessageWithPayload(payload)));
+
+        assertBusinessError(
+                () -> service.selectSearchResult(SESSION_ID, 3L, null, context),
+                ErrorCode.VALIDATION_ERROR);
+
+        verify(failureRecorder)
+                .recordFailure(eq(SESSION_ID_STR), isNull(), eq("INVALID_OPTION"), any());
+    }
+
+    @Test
+    void documentCapAlsoAppliesWhenResultsFitWithinDisplayMax() {
+        searchProperties.setDisplayMax(5);
+        searchProperties.setMaxCrawlDocuments(1);
+        var selection = service.selectForDisplay(List.of(
+                searchResult(1L, "납부 방법", 10), searchResult(2L, "자동이체", 9)));
+        assertThat(selection.shown()).extracting(SearchResultItem::getCrawlDocumentNo).containsExactly(1L);
+        assertThat(selection.hidden()).extracting(SearchResultItem::getCrawlDocumentNo).containsExactly(2L);
+    }
+
+    @Test
+    void belowMinimumScoreProducesNoMatchInsteadOfAnUnrelatedAnswer() {
+        searchProperties.setMinScore(5);
+        ChatSession session = activeSession();
+        when(sessionMapper.findById(SESSION_ID_STR)).thenReturn(Optional.of(session));
+        when(matchingService.match(100L, 300L, "unknown")).thenReturn(Optional.empty());
+        when(searchService.search(eq("unknown"), eq("CHAT_FALLBACK"), eq(10), isNull(), any()))
+                .thenReturn(new SearchResponse("unknown", 1, List.of(searchResult(1L, "무관한 자료", 1))));
+        when(messageMapper.selectNextSeq(SESSION_ID_STR)).thenReturn(2);
+        service.freeText(SESSION_ID, "unknown", context);
+        verify(failureRecorder).recordFailure(eq(SESSION_ID_STR), isNull(), eq("NO_MATCH"), any());
+        verify(aiAnswerSuggestionService, never()).suggest(any(), any(), any());
+    }
+
+    @Test
+    void searchMoreAppendsAllRemainingOptionsWithoutAnotherMoreButton() {
+        ChatSession session = activeSession();
+        String payload =
+                "{\"searchOptions\":[{\"crawlDocumentNo\":1,\"label\":\"shown\"}],"
+                        + "\"overflowOptions\":["
+                        + "{\"crawlDocumentNo\":3,\"label\":\"hidden 1\"},"
+                        + "{\"crawlDocumentNo\":4,\"label\":\"hidden 2\"},"
+                        + "{\"crawlDocumentNo\":5,\"label\":\"hidden 3\"},"
+                        + "{\"crawlDocumentNo\":6,\"label\":\"hidden 4\"},"
+                        + "{\"crawlDocumentNo\":7,\"label\":\"hidden 5\"},"
+                        + "{\"crawlDocumentNo\":8,\"label\":\"hidden 6\"},"
+                        + "{\"crawlDocumentNo\":9,\"label\":\"hidden 7\"}]}";
+        when(sessionMapper.findById(SESSION_ID_STR)).thenReturn(Optional.of(session));
+        when(messageMapper.findBySessionId(SESSION_ID_STR))
+                .thenReturn(List.of(botMessageWithPayload(payload)), List.of());
+        when(messageMapper.selectNextSeq(SESSION_ID_STR)).thenReturn(7);
+        ArgumentCaptor<ChatMessage> messageCaptor = ArgumentCaptor.forClass(ChatMessage.class);
+
+        service.searchMore(SESSION_ID, context);
+
+        verify(messageMapper).insert(messageCaptor.capture());
+        ChatMessage botMessage = messageCaptor.getValue();
+        assertThat(botMessage.getSeq()).isEqualTo(7);
+        assertThat(botMessage.getPayload())
+                .contains(
+                        "\"searchOptions\"",
+                        "\"crawlDocumentNo\":3",
+                        "\"crawlDocumentNo\":8",
+                        "\"crawlDocumentNo\":9");
+        assertThat(botMessage.getPayload()).contains("\"overflowOptions\":[]");
+        assertThat(botMessage.getPayload()).doesNotContain("\"more\"");
+    }
+
+    @Test
+    void singleScenarioSearchResultRemainsSelectable() {
         ChatSession session = activeSession();
         SearchResultItem result = new SearchResultItem();
         result.setScenarioNo(200L);
@@ -297,24 +562,8 @@ class ChatRuntimeServiceTest {
         result.setMatchedField("SCENARIO");
         when(sessionMapper.findById(SESSION_ID_STR)).thenReturn(Optional.of(session));
         when(matchingService.match(100L, 300L, "unknown")).thenReturn(Optional.empty());
-        when(searchService.search(eq("unknown"), eq("CHAT_FALLBACK"), eq(3), isNull(), any()))
+        when(searchService.search(eq("unknown"), eq("CHAT_FALLBACK"), eq(10), isNull(), any()))
                 .thenReturn(new SearchResponse("unknown", 1, List.of(result)));
-        when(aiAnswerSuggestionService.suggest(eq("unknown"), any(), any()))
-                .thenReturn(
-                        Optional.of(
-                                new AiAnswerSuggestionResponse(
-                                        "AI scaffold answer",
-                                        List.of(
-                                                new AiAnswerCitation(
-                                                        "SCENARIO",
-                                                        200L,
-                                                        "Search result",
-                                                        null,
-                                                        null,
-                                                        "SCENARIO",
-                                                        null)),
-                                        "stub",
-                                        true)));
         when(messageMapper.selectNextSeq(SESSION_ID_STR)).thenReturn(2);
         ArgumentCaptor<ChatMessage> messageCaptor = ArgumentCaptor.forClass(ChatMessage.class);
 
@@ -323,27 +572,28 @@ class ChatRuntimeServiceTest {
         verify(failureRecorder, never())
                 .recordFailure(eq(SESSION_ID_STR), isNull(), eq("NO_MATCH"), any());
         verify(messageMapper, org.mockito.Mockito.times(2)).insert(messageCaptor.capture());
-        assertThat(decrypted(messageCaptor.getAllValues().get(1))).isEqualTo("AI scaffold answer");
+        assertThat(messageCaptor.getAllValues().get(1).getPayload()).contains("\"scenarioNo\":200");
+        verify(aiAnswerSuggestionService, never()).suggest(eq("unknown"), any(), any());
     }
 
     @Test
-    void freeTextMatchWithNextNodeAdvancesSession() {
+    void contextualKeywordDoesNotInjectAnUnrankedParentMenu() {
         ChatSession session = activeSession();
+        SearchResultItem document = searchResult(77L, "환경 보고서", 20.0);
         when(sessionMapper.findById(SESSION_ID_STR)).thenReturn(Optional.of(session));
         when(matchingService.match(100L, 300L, "배송"))
                 .thenReturn(
                         Optional.of(
                                 new MatchResult(
                                         100L, null, 400L, 80.0, 100, 0, MatchType.KEYWORD)));
+        when(searchService.search(eq("배송"), eq("CHAT_FALLBACK"), eq(10), isNull(), any()))
+                .thenReturn(new SearchResponse("배송", 1, List.of(document)));
         when(messageMapper.selectNextSeq(SESSION_ID_STR)).thenReturn(2);
-        when(nodeMapper.findById(400L)).thenReturn(node(400L, 200L, "ANSWER", "배송", "배송 안내"));
         ArgumentCaptor<ChatMessage> messageCaptor = ArgumentCaptor.forClass(ChatMessage.class);
 
         service.freeText(SESSION_ID, "배송", context);
 
-        verify(sessionMapper)
-                .updateCurrentNode(
-                        eq(SESSION_ID_STR), eq(400L), eq("ACTIVE"), any(OffsetDateTime.class));
+        verify(sessionMapper, never()).updateCurrentNode(any(), any(), any(), any());
         verify(messageMapper, org.mockito.Mockito.times(2)).insert(messageCaptor.capture());
         assertThat(messageCaptor.getAllValues().get(0).getPayload())
                 .contains(
@@ -351,12 +601,14 @@ class ChatRuntimeServiceTest {
                         "\"score\":80.0",
                         "\"matchType\":\"KEYWORD\"",
                         "\"scenarioId\":100");
-        assertThat(messageCaptor.getAllValues().get(1).getLatencyMs()).isNotNull();
+        assertThat(messageCaptor.getAllValues().get(1).getPayload()).doesNotContain("\"scenarioNo\":100");
+        verify(scenarioMapper, never()).findActiveMenuMatches(any());
     }
 
     @Test
-    void freeTextMatchWithoutNextNodeReturnsScenarioTitle() {
+    void freeTextGlobalScenarioMatchStillUsesIntegratedSearch() {
         ChatSession session = activeSession();
+        SearchResultItem document = searchResult(88L, "환불 안내문", 10.0);
         when(sessionMapper.findById(SESSION_ID_STR)).thenReturn(Optional.of(session));
         when(matchingService.match(100L, 300L, "환불"))
                 .thenReturn(
@@ -364,14 +616,17 @@ class ChatRuntimeServiceTest {
                                 new MatchResult(
                                         200L, null, null, 60.0, 100, 1, MatchType.KEYWORD)));
         when(messageMapper.selectNextSeq(SESSION_ID_STR)).thenReturn(2);
-        when(scenarioMapper.findById(200L)).thenReturn(scenario(200L, "ACTIVE", "환불 상담"));
+        when(searchService.search(eq("환불"), eq("CHAT_FALLBACK"), eq(10), isNull(), any()))
+                .thenReturn(new SearchResponse("환불", 1, List.of(document)));
         ArgumentCaptor<ChatMessage> messageCaptor = ArgumentCaptor.forClass(ChatMessage.class);
 
         service.freeText(SESSION_ID, "환불", context);
 
         verify(sessionMapper, never()).updateCurrentNode(eq(SESSION_ID_STR), any(), any(), any());
         verify(messageMapper, org.mockito.Mockito.times(2)).insert(messageCaptor.capture());
-        assertThat(decrypted(messageCaptor.getAllValues().get(1))).isEqualTo("환불 상담");
+        assertThat(messageCaptor.getAllValues().get(1).getPayload())
+                .doesNotContain("\"scenarioNo\":200");
+        verify(scenarioMapper, never()).findActiveMenuMatches(any());
     }
 
     @Test
@@ -436,6 +691,255 @@ class ChatRuntimeServiceTest {
     }
 
     @Test
+    void goBackAppendsBotMessageAndRecordsNodeBackEvent() {
+        ChatSession session = activeSession();
+        session.setCurrentNodeNo(302L);
+        ScenarioNode previous = node(301L, 200L, "QUESTION", "previous", "previous content");
+        ChatMessage first = botMessage(10L, SESSION_ID_STR);
+        first.setSeq(1);
+        first.setNodeNo(300L);
+        ChatMessage middle = botMessage(11L, SESSION_ID_STR);
+        middle.setSeq(3);
+        middle.setNodeNo(301L);
+        ChatMessage current = botMessage(12L, SESSION_ID_STR);
+        current.setSeq(5);
+        current.setNodeNo(302L);
+        when(sessionMapper.findById(SESSION_ID_STR)).thenReturn(Optional.of(session));
+        when(messageMapper.findBySessionId(SESSION_ID_STR))
+                .thenReturn(List.of(first, middle, current), List.of(first, middle, current));
+        when(nodeMapper.findById(301L)).thenReturn(previous);
+        when(messageMapper.selectNextSeq(SESSION_ID_STR)).thenReturn(6);
+        ArgumentCaptor<ChatMessage> messageCaptor = ArgumentCaptor.forClass(ChatMessage.class);
+
+        var response = service.goBack(SESSION_ID, context);
+
+        verify(sessionMapper).updateCurrentNode(eq(SESSION_ID_STR), eq(301L), eq("ACTIVE"), any());
+        verify(sessionMapper)
+                .insertNodeBackEvent(
+                        eq(SESSION_ID_STR),
+                        eq(302L),
+                        eq(301L),
+                        any(),
+                        org.mockito.ArgumentMatchers.contains("\"fromNodeNo\":302"));
+        verify(messageMapper).insert(messageCaptor.capture());
+        assertThat(messageCaptor.getValue().getDirection()).isEqualTo("BOT");
+        assertThat(messageCaptor.getValue().getNodeNo()).isEqualTo(301L);
+        assertThat(decrypted(messageCaptor.getValue())).contains("이전 단계로 돌아갑니다.");
+        assertThat(response.canGoBack()).isTrue();
+    }
+
+    @Test
+    void goBackReplaysPriorBackPayloadAsNavigationStack() {
+        ChatSession session = activeSession();
+        session.setCurrentNodeNo(301L);
+        ScenarioNode previous = node(300L, 200L, "QUESTION", "start", "start content");
+        ChatMessage first = botMessage(10L, SESSION_ID_STR);
+        first.setSeq(1);
+        first.setNodeNo(300L);
+        ChatMessage middle = botMessage(11L, SESSION_ID_STR);
+        middle.setSeq(3);
+        middle.setNodeNo(301L);
+        ChatMessage current = botMessage(12L, SESSION_ID_STR);
+        current.setSeq(5);
+        current.setNodeNo(302L);
+        ChatMessage priorBack =
+                botMessageWithPayload(
+                        "{\"source\":\"NODE_BACK\",\"fromNodeNo\":302,\"toNodeNo\":301}");
+        priorBack.setSeq(6);
+        priorBack.setNodeNo(301L);
+        when(sessionMapper.findById(SESSION_ID_STR)).thenReturn(Optional.of(session));
+        when(messageMapper.findBySessionId(SESSION_ID_STR))
+                .thenReturn(List.of(first, middle, current, priorBack), List.of());
+        when(nodeMapper.findById(300L)).thenReturn(previous);
+        when(messageMapper.selectNextSeq(SESSION_ID_STR)).thenReturn(7);
+
+        service.goBack(SESSION_ID, context);
+
+        verify(sessionMapper).updateCurrentNode(eq(SESSION_ID_STR), eq(300L), eq("ACTIVE"), any());
+    }
+
+    @Test
+    void goBackInSearchSessionRestoresPreviousSearchOptions() {
+        ChatSession session = searchSession();
+        String searchPayload =
+                "{\"searchOptions\":[{\"crawlDocumentNo\":77,\"label\":\"Doc\","
+                        + "\"matchedField\":\"CRAWL_DOCUMENT\",\"optionType\":\"DOCUMENT\"}],"
+                        + "\"overflowOptions\":[]}";
+        ChatMessage searchOptions = botMessageWithPayload(searchPayload);
+        searchOptions.setChatMessageNo(10L);
+        searchOptions.setSeq(2);
+        ChatMessage answer = botMessageWithPayload("{\"source\":\"SEARCH_RESULT\"}");
+        answer.setChatMessageNo(11L);
+        answer.setSeq(4);
+        when(sessionMapper.findById(SESSION_ID_STR)).thenReturn(Optional.of(session));
+        when(messageMapper.findBySessionId(SESSION_ID_STR))
+                .thenReturn(List.of(searchOptions, answer), List.of(searchOptions, answer));
+        when(messageMapper.selectNextSeq(SESSION_ID_STR)).thenReturn(5);
+        ArgumentCaptor<ChatMessage> messageCaptor = ArgumentCaptor.forClass(ChatMessage.class);
+
+        service.goBack(SESSION_ID, context);
+
+        verify(sessionMapper).restoreSearchSession(eq(SESSION_ID_STR), any());
+        verify(sessionMapper)
+                .insertSearchBackEvent(
+                        eq(SESSION_ID_STR),
+                        isNull(),
+                        any(),
+                        org.mockito.ArgumentMatchers.contains("\"restoredFromMessageNo\":10"));
+        verify(messageMapper).insert(messageCaptor.capture());
+        assertThat(messageCaptor.getValue().getPayload()).contains("\"crawlDocumentNo\":77");
+    }
+
+    @Test
+    void repeatedSearchBackWalksPastRestoredPageInsteadOfToggling() {
+        ChatSession session = searchSession();
+        ChatMessage initial = searchPayloadMessage(10L, 2, 101L, "확정지역 최초 결과", List.of(102L, 103L));
+        ChatMessage pageTwo = searchPayloadMessage(20L, 3, 102L, "검색결과 더 보기 7건", List.of(103L));
+        ChatMessage pageThree = searchPayloadMessage(30L, 4, 103L, "검색결과 더 보기 2건", List.of());
+        ChatMessage restoredPageTwo =
+                searchPayloadMessage(40L, 5, 102L, "검색결과 더 보기 7건", List.of(103L));
+        when(sessionMapper.findById(SESSION_ID_STR)).thenReturn(Optional.of(session));
+        when(messageMapper.findBySessionId(SESSION_ID_STR))
+                .thenReturn(
+                        List.of(initial, pageTwo, pageThree, restoredPageTwo),
+                        List.of(initial, pageTwo, pageThree, restoredPageTwo));
+        when(sessionMapper.findSearchBackRestoredFromMessageNo(SESSION_ID_STR, 40L))
+                .thenReturn(20L);
+        when(messageMapper.selectNextSeq(SESSION_ID_STR)).thenReturn(6);
+        ArgumentCaptor<ChatMessage> messageCaptor = ArgumentCaptor.forClass(ChatMessage.class);
+
+        service.goBack(SESSION_ID, context);
+
+        verify(sessionMapper)
+                .insertSearchBackEvent(
+                        eq(SESSION_ID_STR),
+                        isNull(),
+                        any(),
+                        org.mockito.ArgumentMatchers.contains("\"restoredFromMessageNo\":10"));
+        verify(messageMapper).insert(messageCaptor.capture());
+        assertThat(messageCaptor.getValue().getPayload())
+                .contains("확정지역 최초 결과", "\"crawlDocumentNo\":101");
+    }
+
+    @Test
+    void responseCannotGoBackPastInitialSearchPageAfterBackRestore() {
+        ChatSession session = searchSession();
+        ChatMessage unrelatedEarlierSearch =
+                searchPayloadMessage(5L, 1, 77L, "이전 검색 결과", List.of(78L));
+        ChatMessage initial = searchPayloadMessage(10L, 2, 101L, "확정지역 최초 결과", List.of(102L, 103L));
+        ChatMessage restoredInitial =
+                searchPayloadMessage(40L, 5, 101L, "확정지역 최초 결과", List.of(102L, 103L));
+        when(sessionMapper.findById(SESSION_ID_STR)).thenReturn(Optional.of(session));
+        when(messageMapper.findBySessionId(SESSION_ID_STR))
+                .thenReturn(List.of(unrelatedEarlierSearch, initial, restoredInitial));
+        when(sessionMapper.findSearchBackRestoredFromMessageNo(SESSION_ID_STR, 40L))
+                .thenReturn(10L);
+
+        var response = service.get(SESSION_ID, context);
+
+        assertThat(response.canGoBack()).isFalse();
+    }
+
+    @Test
+    void responseCanGoBackInSearchSessionWhenPreviousSearchOptionsExist() {
+        ChatSession session = searchSession();
+        String searchPayload =
+                "{\"searchOptions\":[{\"crawlDocumentNo\":77,\"label\":\"Doc\","
+                        + "\"matchedField\":\"CRAWL_DOCUMENT\",\"optionType\":\"DOCUMENT\"}],"
+                        + "\"overflowOptions\":[]}";
+        ChatMessage searchOptions = botMessageWithPayload(searchPayload);
+        searchOptions.setSeq(2);
+        ChatMessage answer = botMessageWithPayload("{\"source\":\"SEARCH_RESULT\"}");
+        answer.setSeq(4);
+        when(sessionMapper.findById(SESSION_ID_STR)).thenReturn(Optional.of(session));
+        when(messageMapper.findBySessionId(SESSION_ID_STR))
+                .thenReturn(List.of(searchOptions, answer));
+
+        var response = service.get(SESSION_ID, context);
+
+        assertThat(response.canGoBack()).isTrue();
+    }
+
+    @Test
+    void goBackImmediatelyAfterScenarioSwitchRestoresSearchOptions() {
+        ChatSession session = activeSession();
+        session.setScenarioNo(55L);
+        session.setVersionNo(550L);
+        session.setCurrentNodeNo(551L);
+        String searchPayload =
+                "{\"searchOptions\":[{\"scenarioNo\":55,\"label\":\"Scenario\","
+                        + "\"matchedField\":\"SCENARIO\",\"optionType\":\"SCENARIO\"}],"
+                        + "\"overflowOptions\":[]}";
+        ChatMessage searchOptions = botMessageWithPayload(searchPayload);
+        searchOptions.setChatMessageNo(20L);
+        searchOptions.setSeq(2);
+        ChatMessage startNode = botMessage(21L, SESSION_ID_STR);
+        startNode.setSeq(4);
+        startNode.setNodeNo(551L);
+        when(sessionMapper.findById(SESSION_ID_STR)).thenReturn(Optional.of(session));
+        when(messageMapper.findBySessionId(SESSION_ID_STR))
+                .thenReturn(List.of(searchOptions, startNode), List.of(searchOptions, startNode));
+        when(sessionMapper.findLatestScenarioSwitchTriggerMessageNo(SESSION_ID_STR, 55L))
+                .thenReturn(21L);
+        when(messageMapper.selectNextSeq(SESSION_ID_STR)).thenReturn(5);
+
+        service.goBack(SESSION_ID, context);
+
+        verify(sessionMapper).restoreSearchSession(eq(SESSION_ID_STR), any());
+        verify(sessionMapper)
+                .insertSearchBackEvent(
+                        eq(SESSION_ID_STR),
+                        eq(55L),
+                        any(),
+                        org.mockito.ArgumentMatchers.contains("\"restoredFromMessageNo\":20"));
+    }
+
+    @Test
+    void goBackAfterScenarioSwitchUsesSearchPayloadBeforeLatestSwitchOnly() {
+        ChatSession session = activeSession();
+        session.setScenarioNo(55L);
+        session.setVersionNo(550L);
+        session.setCurrentNodeNo(551L);
+        ChatMessage originSearch =
+                botMessageWithPayload(
+                        "{\"searchOptions\":[{\"scenarioNo\":55,\"label\":\"Origin\"}],"
+                                + "\"overflowOptions\":[]}");
+        originSearch.setChatMessageNo(10L);
+        originSearch.setSeq(2);
+        ChatMessage startNode = botMessage(21L, SESSION_ID_STR);
+        startNode.setSeq(4);
+        startNode.setNodeNo(551L);
+        ChatMessage laterSearch =
+                botMessageWithPayload(
+                        "{\"searchOptions\":[{\"crawlDocumentNo\":99,\"label\":\"Later\"}],"
+                                + "\"overflowOptions\":[]}");
+        laterSearch.setChatMessageNo(30L);
+        laterSearch.setSeq(6);
+        when(sessionMapper.findById(SESSION_ID_STR)).thenReturn(Optional.of(session));
+        when(sessionMapper.findLatestScenarioSwitchTriggerMessageNo(SESSION_ID_STR, 55L))
+                .thenReturn(20L);
+        when(messageMapper.findBySessionId(SESSION_ID_STR))
+                .thenReturn(
+                        List.of(originSearch, startNode, laterSearch),
+                        List.of(originSearch, startNode, laterSearch));
+        when(messageMapper.selectNextSeq(SESSION_ID_STR)).thenReturn(7);
+        ArgumentCaptor<ChatMessage> messageCaptor = ArgumentCaptor.forClass(ChatMessage.class);
+
+        service.goBack(SESSION_ID, context);
+
+        verify(messageMapper).insert(messageCaptor.capture());
+        assertThat(messageCaptor.getValue().getPayload())
+                .contains("\"label\":\"Origin\"")
+                .doesNotContain("\"label\":\"Later\"");
+        verify(sessionMapper)
+                .insertSearchBackEvent(
+                        eq(SESSION_ID_STR),
+                        eq(55L),
+                        any(),
+                        org.mockito.ArgumentMatchers.contains("\"restoredFromMessageNo\":10"));
+    }
+
+    @Test
     void freeTextExpiredSessionRecordsExpiredFailure() {
         ChatSession session = activeSession();
         session.setExpiresAt(OffsetDateTime.now().minusMinutes(1));
@@ -485,7 +989,7 @@ class ChatRuntimeServiceTest {
 
         service.freeText(SESSION_ID, original, context);
 
-        verify(searchService).search(eq(masked), eq("CHAT_FALLBACK"), eq(3), isNull(), any());
+        verify(searchService).search(eq(masked), eq("CHAT_FALLBACK"), eq(10), isNull(), any());
         verify(messageMapper, org.mockito.Mockito.times(2)).insert(messageCaptor.capture());
         assertThat(messageCaptor.getAllValues().get(0).getContent()).isEqualTo("[encrypted]");
         assertThat(messageCaptor.getAllValues().get(0).getContentCiphertext()).isNotBlank();
@@ -583,6 +1087,15 @@ class ChatRuntimeServiceTest {
         return session;
     }
 
+    private ChatSession searchSession() {
+        ChatSession session = activeSession();
+        session.setScenarioNo(null);
+        session.setVersionNo(null);
+        session.setCurrentNodeNo(null);
+        session.setSessionType("SEARCH");
+        return session;
+    }
+
     private Scenario scenario(Long id, String status, String title) {
         Scenario scenario = new Scenario();
         scenario.setScenarioNo(id);
@@ -618,6 +1131,25 @@ class ChatRuntimeServiceTest {
         return option;
     }
 
+    private SearchResultItem searchResult(Long crawlDocumentNo, String title, double score) {
+        SearchResultItem item = new SearchResultItem();
+        item.setCrawlDocumentNo(crawlDocumentNo);
+        item.setScenarioTitle(title);
+        item.setMatchedField("CRAWL_DOCUMENT");
+        item.setScore(score);
+        item.setSnippet(title + " body");
+        return item;
+    }
+
+    private SearchResultItem scenarioResult(Long scenarioNo, String title, double score) {
+        SearchResultItem item = new SearchResultItem();
+        item.setScenarioNo(scenarioNo);
+        item.setScenarioTitle(title);
+        item.setMatchedField("SCENARIO");
+        item.setScore(score);
+        return item;
+    }
+
     private ChatMessage botMessage(Long id, String sessionId) {
         ChatMessage message = new ChatMessage();
         message.setChatMessageNo(id);
@@ -626,6 +1158,43 @@ class ChatRuntimeServiceTest {
         message.setDirection("BOT");
         message.setContent("답변");
         message.setFrstRegDt(OffsetDateTime.now());
+        return message;
+    }
+
+    private ChatMessage botMessageWithPayload(String payload) {
+        ChatMessage message = botMessage(50L, SESSION_ID_STR);
+        message.setPayload(payload);
+        return message;
+    }
+
+    private ChatMessage searchPayloadMessage(
+            Long messageNo,
+            int seq,
+            Long crawlDocumentNo,
+            String label,
+            List<Long> overflowDocumentNos) {
+        String overflow =
+                overflowDocumentNos.stream()
+                        .map(
+                                id ->
+                                        "{\"crawlDocumentNo\":"
+                                                + id
+                                                + ",\"label\":\"overflow "
+                                                + id
+                                                + "\",\"matchedField\":\"CRAWL_DOCUMENT\"}")
+                        .collect(java.util.stream.Collectors.joining(","));
+        String payload =
+                "{\"searchOptions\":[{\"crawlDocumentNo\":"
+                        + crawlDocumentNo
+                        + ",\"label\":\""
+                        + label
+                        + "\",\"matchedField\":\"CRAWL_DOCUMENT\"}],"
+                        + "\"overflowOptions\":["
+                        + overflow
+                        + "]}";
+        ChatMessage message = botMessage(messageNo, SESSION_ID_STR);
+        message.setSeq(seq);
+        message.setPayload(payload);
         return message;
     }
 

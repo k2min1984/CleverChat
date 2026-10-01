@@ -25,7 +25,15 @@ public final class ScenarioGraphDtos {
             @Size(max = 10000) String content,
             @Min(0) @Max(100000) int sortOrder,
             @Size(max = 5000) String metadata,
+            @Valid @Size(max = 20) List<LinkRequest> links,
             @Valid @Size(max = 50) List<OptionRequest> options) {}
+
+    public record LinkRequest(
+            @NotBlank @Size(max = 150) String label,
+            @NotBlank @Size(max = 1000) @Pattern(regexp = "https?://.+|/.+") String url,
+            @Size(max = 20) @Pattern(regexp = "EXTERNAL|INTERNAL|DOWNLOAD") String linkType,
+            @Min(0) @Max(100000) int sortOrder,
+            @Pattern(regexp = "Y|N") String useYn) {}
 
     public record OptionRequest(
             @NotBlank @Size(max = 150) String label,

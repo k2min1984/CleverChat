@@ -16,6 +16,33 @@ public class CrawlRunLog {
     private Long reviewedBy;
     private OffsetDateTime reviewedAt;
     private String reviewComment;
+    private String exportStatus;
+    private String exportPath;
+    private String exportMessage;
+
+    public String getExportStatus() {
+        return exportStatus;
+    }
+
+    public void setExportStatus(String exportStatus) {
+        this.exportStatus = exportStatus;
+    }
+
+    public String getExportPath() {
+        return exportPath;
+    }
+
+    public void setExportPath(String exportPath) {
+        this.exportPath = exportPath;
+    }
+
+    public String getExportMessage() {
+        return exportMessage;
+    }
+
+    public void setExportMessage(String exportMessage) {
+        this.exportMessage = exportMessage;
+    }
 
     public Long getCrawlRunLogNo() {
         return crawlRunLogNo;

@@ -3,6 +3,7 @@ package kr.co.cleverchat.domain.search.model;
 public class SearchResultItem {
 
     private Long scenarioNo;
+    private Long scenarioNodeNo;
     private String scenarioTitle;
     private Long crawlDocumentNo;
     private String crawlUrl;
@@ -16,6 +17,14 @@ public class SearchResultItem {
 
     public void setScenarioNo(Long scenarioNo) {
         this.scenarioNo = scenarioNo;
+    }
+
+    public Long getScenarioNodeNo() {
+        return scenarioNodeNo;
+    }
+
+    public void setScenarioNodeNo(Long scenarioNodeNo) {
+        this.scenarioNodeNo = scenarioNodeNo;
     }
 
     public String getScenarioTitle() {

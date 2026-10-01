@@ -1,5 +1,6 @@
 package kr.co.cleverchat.domain.chatbot.controller;
 
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -68,6 +69,51 @@ class ChatRuntimeApiControllerTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(
                         jsonPath("$.data.sessionId").value("00000000-0000-0000-0000-000000000001"));
+    }
+
+    @Test
+    void autoStartIssuesAnonymousIdCookieAndReturnsSession() throws Exception {
+        when(chatRuntimeService.startWithText(
+                        org.mockito.Mockito.eq("배송"), org.mockito.Mockito.any()))
+                .thenReturn(session());
+
+        mockMvc.perform(
+                        post("/chat/api/sessions/auto")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"text\":\"배송\"}"))
+                .andExpect(status().isOk())
+                .andExpect(cookie().exists("anonymous_id"))
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(
+                        jsonPath("$.data.sessionId").value("00000000-0000-0000-0000-000000000001"));
+    }
+
+    @Test
+    void searchSelectionPassesSpecificNodeIdentity() throws Exception {
+        UUID id = session().sessionId();
+        when(chatRuntimeService.selectSearchResult(
+                        org.mockito.Mockito.eq(id),
+                        org.mockito.Mockito.isNull(),
+                        org.mockito.Mockito.eq(6L),
+                        org.mockito.Mockito.eq(355L),
+                        org.mockito.Mockito.eq(42L),
+                        org.mockito.Mockito.any()))
+                .thenReturn(session());
+        mockMvc.perform(
+                        post("/chat/api/sessions/{sessionId}/select-search-result", id)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"scenarioNo\":6,\"scenarioNodeNo\":355,\"sourceMessageId\":42}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
+        verify(chatRuntimeService)
+                .selectSearchResult(
+                        org.mockito.Mockito.eq(id),
+                        org.mockito.Mockito.isNull(),
+                        org.mockito.Mockito.eq(6L),
+                        org.mockito.Mockito.eq(355L),
+                        org.mockito.Mockito.eq(42L),
+                        org.mockito.Mockito.any());
     }
 
     @Test
@@ -165,6 +211,36 @@ class ChatRuntimeApiControllerTest {
     }
 
     @Test
+    void searchMoreApiDelegatesToRuntimeService() throws Exception {
+        UUID sessionId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+        when(chatRuntimeService.searchMore(
+                        org.mockito.Mockito.eq(sessionId), org.mockito.Mockito.any()))
+                .thenReturn(session());
+
+        mockMvc.perform(post("/chat/api/sessions/{sessionId}/search-more", sessionId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.sessionId").value(sessionId.toString()));
+
+        verify(chatRuntimeService)
+                .searchMore(org.mockito.Mockito.eq(sessionId), org.mockito.Mockito.any());
+    }
+
+    @Test
+    void backApiDelegatesToRuntimeService() throws Exception {
+        UUID sessionId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+        when(chatRuntimeService.goBack(
+                        org.mockito.Mockito.eq(sessionId), org.mockito.Mockito.any()))
+                .thenReturn(session());
+
+        mockMvc.perform(post("/chat/api/sessions/{sessionId}/back", sessionId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.sessionId").value(sessionId.toString()));
+
+        verify(chatRuntimeService)
+                .goBack(org.mockito.Mockito.eq(sessionId), org.mockito.Mockito.any());
+    }
+
+    @Test
     void feedbackApiRejectsInvalidRating() throws Exception {
         mockMvc.perform(
                         post("/chat/api/messages/{messageId}/feedback", 10L)
@@ -183,6 +259,10 @@ class ChatRuntimeApiControllerTest {
                 "ACTIVE",
                 OffsetDateTime.now().plusMinutes(30),
                 List.of(),
-                List.of());
+                List.of(),
+                List.of(),
+                0,
+                false,
+                null);
     }
 }

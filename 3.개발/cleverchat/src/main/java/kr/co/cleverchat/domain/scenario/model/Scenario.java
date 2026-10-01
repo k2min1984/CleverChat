@@ -10,6 +10,7 @@ public class Scenario {
     private String title;
     private String description;
     private String status;
+    private Integer sortOrder;
     private Long activeVersionNo;
     private OffsetDateTime frstRegDt;
     private OffsetDateTime lstChgDt;
@@ -60,6 +61,14 @@ public class Scenario {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public Integer getSortOrder() {
+        return sortOrder;
+    }
+
+    public void setSortOrder(Integer sortOrder) {
+        this.sortOrder = sortOrder;
     }
 
     public Long getActiveVersionNo() {

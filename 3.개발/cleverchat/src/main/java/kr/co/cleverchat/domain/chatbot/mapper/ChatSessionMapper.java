@@ -10,6 +10,11 @@ import org.apache.ibatis.annotations.Param;
 
 @Mapper
 public interface ChatSessionMapper {
+    List<ChatSessionListItem> findHistoryByUser(
+            @Param("userNo") Long userNo,
+            @Param("cutoff") OffsetDateTime cutoff,
+            @Param("limit") int limit);
+
     Optional<ChatSession> findById(@Param("id") String id);
 
     List<ChatSessionListItem> findHistoryByAnonymousId(
@@ -30,6 +35,43 @@ public interface ChatSessionMapper {
             @Param("currentNodeId") Long currentNodeId,
             @Param("state") String state,
             @Param("expiresAt") OffsetDateTime expiresAt);
+
+    int updateScenarioContext(
+            @Param("id") String id,
+            @Param("scenarioNo") Long scenarioNo,
+            @Param("versionNo") Long versionNo,
+            @Param("currentNodeNo") Long currentNodeNo,
+            @Param("state") String state,
+            @Param("sessionType") String sessionType,
+            @Param("expiresAt") OffsetDateTime expiresAt);
+
+    int restoreSearchSession(@Param("id") String id, @Param("expiresAt") OffsetDateTime expiresAt);
+
+    void insertScenarioSwitchEvent(
+            @Param("sessionId") String sessionId,
+            @Param("fromScenarioNo") Long fromScenarioNo,
+            @Param("toScenarioNo") Long toScenarioNo,
+            @Param("triggerMessageNo") Long triggerMessageNo,
+            @Param("detail") String detail);
+
+    Long findLatestScenarioSwitchTriggerMessageNo(
+            @Param("sessionId") String sessionId, @Param("toScenarioNo") Long toScenarioNo);
+
+    Long findSearchBackRestoredFromMessageNo(
+            @Param("sessionId") String sessionId, @Param("triggerMessageNo") Long triggerMessageNo);
+
+    void insertNodeBackEvent(
+            @Param("sessionId") String sessionId,
+            @Param("fromNodeNo") Long fromNodeNo,
+            @Param("toNodeNo") Long toNodeNo,
+            @Param("triggerMessageNo") Long triggerMessageNo,
+            @Param("detail") String detail);
+
+    void insertSearchBackEvent(
+            @Param("sessionId") String sessionId,
+            @Param("fromScenarioNo") Long fromScenarioNo,
+            @Param("triggerMessageNo") Long triggerMessageNo,
+            @Param("detail") String detail);
 
     int markExpired(@Param("id") String id);
 

@@ -8,18 +8,22 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 import kr.co.cleverchat.common.audit.AuditTrailRecorder;
+import kr.co.cleverchat.domain.scenario.dto.ScenarioGraphDtos;
 import kr.co.cleverchat.domain.scenario.event.ScenarioMatchingCacheInvalidator;
 import kr.co.cleverchat.domain.scenario.mapper.ScenarioMapper;
+import kr.co.cleverchat.domain.scenario.mapper.ScenarioNodeLinkMapper;
 import kr.co.cleverchat.domain.scenario.mapper.ScenarioNodeMapper;
 import kr.co.cleverchat.domain.scenario.mapper.ScenarioNodeOptionMapper;
 import kr.co.cleverchat.domain.scenario.mapper.ScenarioVersionMapper;
 import kr.co.cleverchat.domain.scenario.model.Scenario;
 import kr.co.cleverchat.domain.scenario.model.ScenarioNode;
+import kr.co.cleverchat.domain.scenario.model.ScenarioNodeLink;
 import kr.co.cleverchat.domain.scenario.model.ScenarioNodeOption;
 import kr.co.cleverchat.domain.scenario.model.ScenarioVersion;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -33,6 +37,8 @@ class ScenarioServiceTest {
     @Mock private ScenarioNodeMapper nodeMapper;
 
     @Mock private ScenarioNodeOptionMapper optionMapper;
+
+    @Mock private ScenarioNodeLinkMapper linkMapper;
 
     @Mock private AuditTrailRecorder auditTrailRecorder;
 
@@ -48,6 +54,7 @@ class ScenarioServiceTest {
                         versionMapper,
                         nodeMapper,
                         optionMapper,
+                        linkMapper,
                         new ScenarioGraphValidator(),
                         auditTrailRecorder,
                         matchingCacheInvalidator);
@@ -101,6 +108,7 @@ class ScenarioServiceTest {
         when(versionMapper.findByScenarioId(1L)).thenReturn(List.of(published));
         when(versionMapper.nextVersionNo(1L)).thenReturn(2);
         when(nodeMapper.findByVersionId(20L)).thenReturn(List.of(sourceNode));
+        when(linkMapper.findByNodeId(100L)).thenReturn(List.of(link(500L, 100L)));
         when(optionMapper.findByNodeId(100L)).thenReturn(List.of(option(200L, 100L, null)));
         when(versionMapper.findById(30L)).thenReturn(version(30L, 1L, 2, "DRAFT"));
 
@@ -125,8 +133,54 @@ class ScenarioServiceTest {
 
         assertThat(result.getScenarioVersionNo()).isEqualTo(30L);
         verify(nodeMapper).insert(any(ScenarioNode.class));
+        verify(linkMapper).insert(any(ScenarioNodeLink.class));
         verify(optionMapper).insert(any(ScenarioNodeOption.class));
         verify(versionMapper).setStartNode(30L, 300L);
+    }
+
+    @Test
+    void saveGraphPersistsNodeLinksSeparately() {
+        ScenarioVersion draft = version(10L, 1L, 1, "DRAFT");
+        when(versionMapper.findById(10L)).thenReturn(draft);
+        org.mockito.Mockito.doAnswer(
+                        invocation -> {
+                            ScenarioNode node = invocation.getArgument(0);
+                            node.setScenarioNodeNo(100L);
+                            return null;
+                        })
+                .when(nodeMapper)
+                .insert(any(ScenarioNode.class));
+        ScenarioGraphDtos.SaveRequest request =
+                new ScenarioGraphDtos.SaveRequest(
+                        "start",
+                        List.of(
+                                new ScenarioGraphDtos.NodeRequest(
+                                        "start",
+                                        "ANSWER",
+                                        "송전사업",
+                                        "송전사업 안내",
+                                        1,
+                                        "{}",
+                                        List.of(
+                                                new ScenarioGraphDtos.LinkRequest(
+                                                        "송전사업 바로가기",
+                                                        "https://www.kepco.co.kr/transmission",
+                                                        "EXTERNAL",
+                                                        1,
+                                                        "Y")),
+                                        List.of())));
+
+        scenarioService.saveGraph(10L, request);
+
+        ArgumentCaptor<ScenarioNodeLink> linkCaptor =
+                ArgumentCaptor.forClass(ScenarioNodeLink.class);
+        verify(linkMapper).deleteByVersionId(10L);
+        verify(linkMapper).insert(linkCaptor.capture());
+        assertThat(linkCaptor.getValue().getNodeNo()).isEqualTo(100L);
+        assertThat(linkCaptor.getValue().getLabel()).isEqualTo("송전사업 바로가기");
+        assertThat(linkCaptor.getValue().getUrl())
+                .isEqualTo("https://www.kepco.co.kr/transmission");
+        assertThat(linkCaptor.getValue().getLinkType()).isEqualTo("EXTERNAL");
     }
 
     @Test
@@ -168,6 +222,7 @@ class ScenarioServiceTest {
         when(nodeMapper.findByVersionId(30L)).thenReturn(List.of());
         when(versionMapper.findByScenarioId(1L)).thenReturn(List.of(draft, published));
         when(nodeMapper.findByVersionId(20L)).thenReturn(List.of(node(100L)));
+        when(linkMapper.findByNodeId(100L)).thenReturn(List.of());
         when(optionMapper.findByNodeId(100L)).thenReturn(List.of());
 
         var graph = scenarioService.graph(30L);
@@ -213,5 +268,17 @@ class ScenarioServiceTest {
         option.setSortOrder(1);
         option.setUseYn("Y");
         return option;
+    }
+
+    private ScenarioNodeLink link(Long id, Long nodeId) {
+        ScenarioNodeLink link = new ScenarioNodeLink();
+        link.setScenarioNodeLinkNo(id);
+        link.setNodeNo(nodeId);
+        link.setLabel("송전사업 바로가기");
+        link.setUrl("https://www.kepco.co.kr/transmission");
+        link.setLinkType("EXTERNAL");
+        link.setSortOrder(1);
+        link.setUseYn("Y");
+        return link;
     }
 }

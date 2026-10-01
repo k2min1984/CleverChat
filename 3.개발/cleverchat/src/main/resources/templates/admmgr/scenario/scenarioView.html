@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{admmgr/common/head :: adminHead('Scenario detail | CleverChat')}"></head>
 <body>
@@ -11,10 +11,6 @@
             <div class="page-wrap">
                 <section th:if="${successMessage != null}" class="msg" role="status" aria-live="polite">
                     <p th:text="${successMessage}">저장되었습니다.</p>
-                </section>
-                <section th:if="${infoMessage != null}" class="msg" role="status" aria-live="polite">
-                    <p th:text="${infoMessage}">안내 메시지</p>
-                    <a th:if="${draftEditUrl != null}" class="btn btn-sm btn-secondary" th:href="${draftEditUrl}">초안 편집</a>
                 </section>
                 <section th:if="${errorMessage != null}" class="msg is-error" role="alert">
                     <p th:text="${errorMessage}">오류 메시지</p>
@@ -31,13 +27,20 @@
                         <div class="view-meta">
                             <span>카테고리 <strong th:text="${scenario.categoryName}">민원</strong></span>
                             <span class="view-meta-sep">/</span>
-                            <span>ID <strong th:text="${scenario.scenarioNo}">1</strong></span>
-                            <span class="view-meta-sep">/</span>
                             <span>수정일 <strong th:text="${#temporals.format(scenario.lstChgDt, 'yyyy-MM-dd HH:mm')}">2026-05-11</strong></span>
                         </div>
                     </div>
                     <div class="view-body" th:text="${scenario.description != null and !scenario.description.isBlank() ? scenario.description : '등록된 설명이 없습니다.'}">
                         등록된 설명이 없습니다.
+                    </div>
+                    <div class="view-keywords">
+                        <span class="view-keywords-label">키워드 <span class="view-keywords-cnt" th:text="${#lists.size(keywords)} + '건'">0건</span></span>
+                        <ul class="keyword-chip-list">
+                            <li th:each="keyword : ${keywords}">
+                                <span class="badge badge-default" th:text="${keyword.keyword + ' (' + keyword.weight + ')'}">키워드</span>
+                            </li>
+                            <li th:if="${#lists.isEmpty(keywords)}" class="help-text">등록된 키워드가 없습니다.</li>
+                        </ul>
                     </div>
                     <div class="view-footer">
                         <a class="btn btn-md btn-secondary" th:href="@{/admin/scenarios}">목록</a>
@@ -61,6 +64,7 @@
                         </form>
                     </div>
                 </div>
+                <p class="list-hint">게시 또는 보관 버전은 직접 수정할 수 없습니다. 수정하려면 새 초안을 만들어 편집하세요.</p>
 
                 <div class="table-card">
                     <div class="table-wrap">
@@ -70,14 +74,12 @@
                                 <colgroup>
                                     <col style="width:90px">
                                     <col style="width:130px">
-                                    <col style="width:120px">
                                     <col>
                                 </colgroup>
                                 <thead>
                                 <tr>
                                     <th scope="col">버전</th>
                                     <th scope="col">상태</th>
-                                    <th scope="col">시작 노드</th>
                                     <th scope="col">관리</th>
                                 </tr>
                                 </thead>
@@ -89,16 +91,20 @@
                                         <span th:if="${version.status == 'PUBLISHED'}" class="badge badge-success">게시</span>
                                         <span th:if="${version.status == 'ARCHIVED'}" class="badge badge-default">보관</span>
                                     </td>
-                                    <td th:text="${version.startNodeNo != null ? version.startNodeNo : '-'}">-</td>
                                     <td>
                                         <div class="row-actions">
                                             <a th:if="${version.status == 'DRAFT'}" class="btn btn-xs btn-secondary"
-                                               th:href="@{/admin/scenarios/{scenarioId}/versions/{versionId}/graph(scenarioId=${scenario.scenarioNo},versionId=${version.scenarioVersionNo})}">편집</a>
+                                                th:href="@{/admin/scenarios/{scenarioId}/versions/{versionId}/graph(scenarioId=${scenario.scenarioNo},versionId=${version.scenarioVersionNo})}">편집</a>
                                             <a class="btn btn-xs btn-secondary"
                                                href="#"
                                                th:href="@{/admin/scenarios/versions/{id}/preview(id=${version.scenarioVersionNo})}"
                                                th:data-preview-url="@{/admin/scenarios/versions/{id}/preview(id=${version.scenarioVersionNo})}">미리보기</a>
-                                            <span th:if="${version.status != 'DRAFT'}" class="help-text">게시/보관 버전은 새 초안에서 수정</span>
+                                            <a class="btn btn-xs btn-secondary"
+                                               th:href="@{/admin/scenarios/versions/{id}/detail(id=${version.scenarioVersionNo})}">상세</a>
+                                            <form th:action="@{/admin/scenarios/{scenarioId}/versions/{versionId}/copy(scenarioId=${scenario.scenarioNo},versionId=${version.scenarioVersionNo})}" method="post">
+                                                <th:block th:replace="~{admmgr/common/_csrfHidden :: csrfHidden}"></th:block>
+                                                <button class="btn btn-xs btn-secondary" type="submit">새 초안으로 복사</button>
+                                            </form>
                                             <form th:if="${version.status == 'DRAFT'}"
                                                   th:with="publishability=${publishabilityByVersionId[version.scenarioVersionNo]}"
                                                   th:action="@{/admin/scenarios/versions/{id}/publish(id=${version.scenarioVersionNo})}" method="post">
@@ -111,9 +117,9 @@
                                                 <span th:if="${publishability == null or !publishability.publishable()}"
                                                       th:id="${'publishHelp-' + version.scenarioVersionNo}"
                                                       class="help-text"
-                                                      th:text="${publishability == null ? '게시 조건을 확인하세요.' : publishability.reason()}">그래프 저장 후 게시할 수 있습니다.</span>
+                                                      th:text="${publishability == null ? '게시 조건을 확인하세요.' : publishability.reason()}">그래프를 저장한 뒤 게시할 수 있습니다.</span>
                                             </form>
-                                            <form th:if="${version.status == 'PUBLISHED' and scenario.status != 'ACTIVE'}" th:action="@{/admin/scenarios/{id}/activate(id=${scenario.scenarioNo})}" method="post">
+                                            <form th:if="${(version.status == 'PUBLISHED' or version.status == 'ARCHIVED') and scenario.activeVersionNo != version.scenarioVersionNo}" th:action="@{/admin/scenarios/{id}/activate(id=${scenario.scenarioNo})}" method="post">
                                                 <th:block th:replace="~{admmgr/common/_csrfHidden :: csrfHidden}"></th:block>
                                                 <input type="hidden" name="versionId" th:value="${version.scenarioVersionNo}">
                                                 <button class="btn btn-xs btn-solid btn-emerald" type="submit">활성화</button>
@@ -122,7 +128,7 @@
                                     </td>
                                 </tr>
                                 <tr th:if="${#lists.isEmpty(versions)}" class="td-empty">
-                                    <td colspan="4">등록된 버전이 없습니다.</td>
+                                    <td colspan="3">등록된 버전이 없습니다.</td>
                                 </tr>
                                 </tbody>
                             </table>
@@ -130,19 +136,6 @@
                     </div>
                 </div>
 
-                <div class="view-card">
-                    <div class="view-hist-header">
-                        <strong class="view-hist-title">키워드 <span class="view-hist-cnt" th:text="${#lists.size(keywords)} + '건'">0건</span></strong>
-                    </div>
-                    <div class="view-body compact-body">
-                        <ul class="keyword-chip-list">
-                            <li th:each="keyword : ${keywords}">
-                                <span class="badge badge-default" th:text="${keyword.keyword + ' (' + keyword.weight + ')'}">키워드</span>
-                            </li>
-                            <li th:if="${#lists.isEmpty(keywords)}" class="help-text">등록된 키워드가 없습니다.</li>
-                        </ul>
-                    </div>
-                </div>
             </div>
         </main>
         <div th:replace="~{admmgr/common/footer :: adminFooter}"></div>

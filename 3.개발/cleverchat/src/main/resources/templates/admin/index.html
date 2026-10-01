@@ -7,32 +7,36 @@
     <div class="main-area">
         <div th:replace="~{admmgr/common/header :: adminHeader}"></div>
         <div th:replace="~{admmgr/common/navigation :: adminNavigation}"></div>
-        <main class="content-area">
-            <header>
-                <h1>CleverChat 관리자</h1>
-                <nav class="actions">
-                    <form th:action="@{/logout}" method="post">
-                        <input type="hidden" name="csrfToken" th:value="${session.csrfToken}">
-                        <input type="hidden" name="csrfFormId" th:value="${session.csrfFormId}">
-                        <button type="submit">로그아웃</button>
-                    </form>
-                </nav>
-            </header>
-            <section class="grid"
-                     th:if="${session.CLEVERCHAT_ADMIN_SESSION != null and session.CLEVERCHAT_ADMIN_SESSION.hasAnyRole('ADMIN','OPERATOR')}">
-                <article class="card">
-                    <h2>인증 기반</h2>
-                    <p>로그인, 세션, 감사 로그 기반이 구성되었습니다.</p>
-                </article>
-                <article class="card">
-                    <h2>시나리오</h2>
-                    <p><a th:href="@{/admin/scenarios}">시나리오 관리로 이동</a></p>
-                </article>
-                <article class="card">
-                    <h2>운영 로그</h2>
-                    <p>로그인 성공/실패 이력이 DB에 저장됩니다.</p>
-                </article>
-            </section>
+        <main class="content-area board-page">
+            <div class="page-wrap">
+                <div th:replace="~{admmgr/common/board :: heading('운영 대시보드', '시나리오부터 대화, 검색, 수집까지 필요한 업무로 이동합니다.')}"></div>
+                <div class="board-shortcuts" th:if="${session.CLEVERCHAT_ADMIN_SESSION != null and session.CLEVERCHAT_ADMIN_SESSION.hasAnyRole('ADMIN','OPERATOR')}">
+                    <a class="board-shortcut" th:href="@{/admin/scenarios}">
+                        <span class="shortcut-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></span>
+                        <h2>시나리오 관리</h2><p>답변 시나리오와 질문 흐름을 구성합니다.</p><span class="shortcut-link">바로가기 →</span>
+                    </a>
+                    <a class="board-shortcut" th:href="@{/admin/chat/sessions}">
+                        <span class="shortcut-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9H13a8.48 8.48 0 0 1 8 8v.5Z"/></svg></span>
+                        <h2>대화 운영</h2><p>대화 이력과 사용자 응답을 확인합니다.</p><span class="shortcut-link">바로가기 →</span>
+                    </a>
+                    <a class="board-shortcut" th:href="@{/admin/crawl-targets}">
+                        <span class="shortcut-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m-4-4 4 4 4-4M5 17v4h14v-4"/></svg></span>
+                        <h2>크롤링 관리</h2><p>수집 대상과 진행 상태를 관리합니다.</p><span class="shortcut-link">바로가기 →</span>
+                    </a>
+                    <a class="board-shortcut" th:href="@{/admin/search/logs}">
+                        <span class="shortcut-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 21l-5-5M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z"/></svg></span>
+                        <h2>검색 이력</h2><p>검색 결과와 검색어별 응답을 확인합니다.</p><span class="shortcut-link">바로가기 →</span>
+                    </a>
+                    <a class="board-shortcut" th:href="@{/admin/statistics}">
+                        <span class="shortcut-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18M8 16v-5m5 5V7m5 9V4"/></svg></span>
+                        <h2>운영 통계</h2><p>서비스 이용 현황과 운영 지표를 확인합니다.</p><span class="shortcut-link">바로가기 →</span>
+                    </a>
+                    <a class="board-shortcut" th:href="@{/admin/notices}">
+                        <span class="shortcut-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4zM8 8h8M8 12h8M8 16h4"/></svg></span>
+                        <h2>공지 관리</h2><p>챗봇에 표시할 공지를 등록하고 관리합니다.</p><span class="shortcut-link">바로가기 →</span>
+                    </a>
+                </div>
+            </div>
         </main>
         <div th:replace="~{admmgr/common/footer :: adminFooter}"></div>
     </div>

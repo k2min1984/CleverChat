@@ -1,80 +1,93 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{admmgr/common/head :: adminHead('Search logs | CleverChat')}"></head>
+<head th:replace="~{admmgr/common/head :: adminHead('검색 이력 | CleverChat')}"></head>
 <body>
 <div class="admin-wrap">
     <div th:replace="~{admmgr/common/sidebar :: adminSidebar}"></div>
     <div class="main-area">
         <div th:replace="~{admmgr/common/header :: adminHeader}"></div>
         <div th:replace="~{admmgr/common/navigation :: adminNavigation}"></div>
-        <main class="content-area" data-search-root>
-            <header>
-                <h1>Search logs</h1>
-                <nav class="actions" aria-label="Search operations">
-                    <a class="button" th:href="@{/admin/search/blocks}">Blocked</a>
-                    <a class="button" th:href="@{/admin/search/popular}">Popular</a>
-                </nav>
-            </header>
-            <form method="get" th:action="@{/admin/search/logs}" aria-label="Search log filters">
-                <label>
-                    Query
-                    <input type="search" name="query" maxlength="200" th:value="${query}">
-                </label>
-                <label>
-                    Source
-                    <select name="source">
-                        <option value="" th:selected="${source == null or source == ''}">All</option>
-                        <option value="CHAT_FALLBACK" th:selected="${source == 'CHAT_FALLBACK'}">CHAT_FALLBACK</option>
-                        <option value="ADMIN_TEST" th:selected="${source == 'ADMIN_TEST'}">ADMIN_TEST</option>
-                        <option value="API" th:selected="${source == 'API'}">API</option>
-                    </select>
-                </label>
-                <button type="submit">Filter</button>
-            </form>
-            <section aria-label="Search test" data-search-test>
-                <h2>Search test</h2>
-                <form id="searchTestForm">
-                    <label>
-                        Query
-                        <input type="search" name="query" maxlength="200" required>
-                    </label>
-                    <label>
-                        Limit
-                        <input type="number" name="limit" min="1" max="20" value="5">
-                    </label>
-                    <button type="submit">Run test</button>
+        <main class="content-area board-page" data-search-root>
+            <div class="page-wrap">
+                <div th:replace="~{admmgr/common/board :: heading('검색 이력', '검색어, 검색 출처와 결과를 확인합니다.')}"></div>
+                <p id="searchStatus" role="status" aria-live="polite" class="help-text"></p>
+                <form method="get" th:action="@{/admin/search/logs}" class="search-card search-card-horizontal" aria-label="Search log filters">
+                    <div class="box-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                        검색 조건
+                    </div>
+                    <div class="search-row">
+                        <div class="search-field">
+                            <label for="query" class="search-label">검색어</label>
+                            <input id="query" type="search" name="query" class="search-input" maxlength="200" th:value="${query}" placeholder="검색어 입력">
+                        </div>
+                        <div class="search-field">
+                            <label for="source" class="search-label">출처</label>
+                            <select id="source" name="source" class="search-select">
+                                <option value="" th:selected="${source == null or source == ''}">전체</option>
+                                <option th:each="code : ${adminCommonCodes['SEARCH_SOURCE']}"
+                                        th:value="${code.value}" th:selected="${source == code.value}"
+                                        th:text="${code.name + ' (' + code.value + ')'}">검색 출처</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="search-actions">
+                        <a class="btn-reset" th:href="@{/admin/search/logs}">초기화</a>
+                        <button type="submit" class="btn-search">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                            검색
+                        </button>
+                    </div>
                 </form>
-                <p id="searchStatus" role="status" aria-live="polite"></p>
-                <ol id="searchResults" role="list" aria-label="Search test results"></ol>
-            </section>
-            <table aria-label="Search log list">
-                <caption>Search log list</caption>
-                <thead>
-                <tr>
-                    <th scope="col">ID</th>
-                    <th scope="col">Query</th>
-                    <th scope="col">Source</th>
-                    <th scope="col">Results</th>
-                    <th scope="col">Top scenario</th>
-                    <th scope="col">Latency</th>
-                    <th scope="col">Created</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="log : ${logs}">
-                    <td th:text="${log.searchLogNo}">1</td>
-                    <td th:text="${log.normalizedQuery}">shipping</td>
-                    <td th:text="${log.source}">ADMIN_TEST</td>
-                    <td th:text="${log.resultCount}">1</td>
-                    <td th:text="${log.topScenarioNo ?: '-'}">10</td>
-                    <td th:text="${log.latencyMs + 'ms'}">5ms</td>
-                    <td th:text="${#temporals.format(log.frstRegDt, 'yyyy-MM-dd HH:mm')}">2026-05-27 13:00</td>
-                </tr>
-                <tr th:if="${#lists.isEmpty(logs)}">
-                    <td colspan="7">No search logs found.</td>
-                </tr>
-                </tbody>
-            </table>
+
+                <div class="result-header">
+                    <div class="result-count">검색 로그 조회 <strong th:text="${#lists.size(logs)} + '건'">0건</strong></div>
+                </div>
+
+                <div class="table-card">
+                    <div class="table-wrap">
+                        <div class="admin-table-wrap">
+                            <table class="admin-table" data-board-pagination aria-label="Search log list">
+                                <caption>Search log list</caption>
+                                <colgroup>
+                                    <col style="width:60px">
+                                    <col>
+                                    <col style="width:140px">
+                                    <col style="width:80px">
+                                    <col style="width:140px">
+                                    <col style="width:90px">
+                                    <col style="width:160px">
+                                </colgroup>
+                                <thead>
+                                <tr>
+                                    <th scope="col">번호</th>
+                                    <th scope="col">검색어</th>
+                                    <th scope="col">출처</th>
+                                    <th scope="col">결과수</th>
+                                    <th scope="col">매칭 시나리오</th>
+                                    <th scope="col">지연</th>
+                                    <th scope="col">등록일</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="log, stat : ${logs}">
+                                    <td class="board-number" th:text="${stat.count}">1</td>
+                                    <td class="td-left" th:text="${log.normalizedQuery}">shipping</td>
+                                    <td><span class="badge badge-default" th:text="${log.source}">ADMIN_TEST</span></td>
+                                    <td th:text="${log.resultCount}">1</td>
+                                    <td th:text="${log.topScenarioNo ?: '-'}">10</td>
+                                    <td th:text="${log.latencyMs + 'ms'}">5ms</td>
+                                    <td class="board-date" th:text="${#temporals.format(log.frstRegDt, 'yyyy-MM-dd HH:mm')}">2026-05-27 13:00</td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(logs)}" class="td-empty">
+                                    <td colspan="7"><span class="board-empty-message">검색 로그가 없습니다.</span></td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </main>
         <div th:replace="~{admmgr/common/footer :: adminFooter}"></div>
     </div>

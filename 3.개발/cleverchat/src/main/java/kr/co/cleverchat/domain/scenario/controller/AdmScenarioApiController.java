@@ -48,6 +48,13 @@ public class AdmScenarioApiController {
         return ApiResponse.ok(scenarioService.update(id, request));
     }
 
+    @PostMapping("/order")
+    public ApiResponse<Void> scenarioOrderModifyProc(
+            @Valid @RequestBody ScenarioDtos.ReorderRequest request) {
+        scenarioService.reorderActiveScenarios(request.scenarioIds());
+        return ApiResponse.ok();
+    }
+
     @DeleteMapping("/{id}")
     public ApiResponse<Void> scenarioDeleteProc(@PathVariable Long id) {
         scenarioService.delete(id);
@@ -57,6 +64,12 @@ public class AdmScenarioApiController {
     @PostMapping("/{id}/versions")
     public ApiResponse<ScenarioVersion> scenarioVersionRegistProc(@PathVariable Long id) {
         return ApiResponse.ok(scenarioService.createVersion(id));
+    }
+
+    @PostMapping("/{id}/versions/{sourceVersionId}/copy")
+    public ApiResponse<ScenarioVersion> scenarioVersionCopyProc(
+            @PathVariable Long id, @PathVariable Long sourceVersionId) {
+        return ApiResponse.ok(scenarioService.createVersionFromSource(id, sourceVersionId));
     }
 
     @GetMapping("/versions/{versionId}/graph")

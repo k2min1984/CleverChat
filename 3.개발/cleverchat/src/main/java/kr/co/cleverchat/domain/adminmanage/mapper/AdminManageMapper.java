@@ -6,13 +6,17 @@ import java.util.Map;
 import kr.co.cleverchat.domain.adminmanage.model.AdminCode;
 import kr.co.cleverchat.domain.adminmanage.model.AdminMenu;
 import kr.co.cleverchat.domain.adminmanage.model.RoleInfo;
+import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+@Mapper
 public interface AdminManageMapper {
 
     List<AdminCode> findCodes();
 
     List<AdminCode> findCodesByParent(@Param("parentId") Long parentId);
+
+    List<Map<String, Object>> findActiveCodeOptions();
 
     AdminCode findCodeById(@Param("id") Long id);
 

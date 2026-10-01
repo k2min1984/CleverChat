@@ -1,79 +1,124 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{admmgr/common/head :: adminHead('Popular searches | CleverChat')}"></head>
+<head th:replace="~{admmgr/common/head :: adminHead('인기 검색어 | CleverChat')}"></head>
 <body>
 <div class="admin-wrap">
     <div th:replace="~{admmgr/common/sidebar :: adminSidebar}"></div>
     <div class="main-area">
         <div th:replace="~{admmgr/common/header :: adminHeader}"></div>
         <div th:replace="~{admmgr/common/navigation :: adminNavigation}"></div>
-        <main class="content-area" data-search-root>
-            <header>
-                <h1>Popular searches</h1>
-                <nav class="actions" aria-label="Popular search navigation">
-                    <a class="button" th:href="@{/admin/search/logs}">Logs</a>
-                    <a class="button" th:href="@{/admin/search/blocks}">Blocked</a>
-                </nav>
-            </header>
-            <form method="get" th:action="@{/admin/search/popular}" aria-label="Popular search filters">
-                <label>
-                    From
-                    <input type="date" name="from" th:value="${from}">
-                </label>
-                <label>
-                    To
-                    <input type="date" name="to" th:value="${to}">
-                </label>
-                <button type="submit">Filter</button>
-            </form>
-            <section aria-label="Search maintenance">
-                <h2>Maintenance</h2>
-                <form id="popularRebuildForm">
-                    <label>
-                        Date
-                        <input type="date" name="statDate" required>
-                    </label>
-                    <button type="submit">Rebuild</button>
+        <main class="content-area board-page" data-search-root>
+            <div class="page-wrap">
+                <div th:replace="~{admmgr/common/board :: heading('인기 검색어', '조회 기간에 집계된 검색어와 검색 횟수를 확인합니다.')}"></div>
+                <form method="get" th:action="@{/admin/search/popular}" class="search-card search-card-horizontal" aria-label="Popular search filters">
+                    <div class="box-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                        검색 조건
+                    </div>
+                    <div class="search-row">
+                        <div class="search-field">
+                            <label for="from" class="search-label">시작일</label>
+                            <input id="from" type="date" name="from" class="search-input" th:value="${from}">
+                        </div>
+                        <div class="search-field">
+                            <label for="to" class="search-label">종료일</label>
+                            <input id="to" type="date" name="to" class="search-input" th:value="${to}">
+                        </div>
+                    </div>
+                    <div class="search-actions">
+                        <a class="btn-reset" th:href="@{/admin/search/popular}">초기화</a>
+                        <button type="submit" class="btn-search">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                            검색
+                        </button>
+                    </div>
                 </form>
-                <form id="expiredDeleteForm">
-                    <label>
-                        Retention days
-                        <input type="number" name="retentionDays" min="30" value="90">
-                    </label>
-                    <label>
-                        <input type="checkbox" name="dryRun" checked>
-                        Dry run
-                    </label>
-                    <button type="submit">Delete expired</button>
-                </form>
-                <p id="searchStatus" role="status" aria-live="polite"></p>
-            </section>
-            <table aria-label="Popular search list">
-                <caption>Popular search list</caption>
-                <thead>
-                <tr>
-                    <th scope="col">Date</th>
-                    <th scope="col">Query</th>
-                    <th scope="col">Count</th>
-                    <th scope="col">No result</th>
-                    <th scope="col">Top scenario</th>
-                    <th scope="col">Updated</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="item : ${popularQueries}">
-                    <td th:text="${item.statDate}">2026-05-27</td>
-                    <td th:text="${item.normalizedQuery}">shipping</td>
-                    <td th:text="${item.searchCount}">10</td>
-                    <td th:text="${item.noResultCount}">1</td>
-                    <td th:text="${item.topResultScenarioNo ?: '-'}">10</td>
-                    <td th:text="${#temporals.format(item.lstChgDt, 'yyyy-MM-dd HH:mm')}">2026-05-27 13:00</td>
-                </tr>
-                <tr th:if="${#lists.isEmpty(popularQueries)}">
-                    <td colspan="6">No popular searches found.</td>
-                </tr>
-                </tbody>
-            </table>
+
+
+
+                <div class="result-header">
+                    <div class="result-count">인기 검색어 조회 <strong th:text="${#lists.size(popularQueries)} + '건'">0건</strong></div>
+                </div>
+
+                <div class="table-card">
+                    <div class="table-wrap">
+                        <div class="admin-table-wrap">
+                            <table class="admin-table" data-board-pagination aria-label="Popular search list">
+                                <caption>Popular search list</caption>
+                                <colgroup>
+                                    <col style="width:60px">
+                                    <col style="width:120px">
+                                    <col>
+                                    <col style="width:90px">
+                                    <col style="width:90px">
+                                    <col style="width:140px">
+                                    <col style="width:160px">
+                                </colgroup>
+                                <thead>
+                                <tr>
+                                    <th scope="col">번호</th>
+                                    <th scope="col">일자</th>
+                                    <th scope="col">검색어</th>
+                                    <th scope="col">검색수</th>
+                                    <th scope="col">무결과</th>
+                                    <th scope="col">매칭 시나리오</th>
+                                    <th scope="col">수정일</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="item, stat : ${popularQueries}">
+                                    <td class="board-number" th:text="${stat.count}">1</td>
+                                    <td th:text="${item.statDate}">2026-05-27</td>
+                                    <td class="td-left" th:text="${item.normalizedQuery}">shipping</td>
+                                    <td th:text="${item.searchCount}">10</td>
+                                    <td th:text="${item.noResultCount}">1</td>
+                                    <td th:text="${item.topResultScenarioNo ?: '-'}">10</td>
+                                    <td class="board-date" th:text="${#temporals.format(item.lstChgDt, 'yyyy-MM-dd HH:mm')}">2026-05-27 13:00</td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(popularQueries)}" class="td-empty">
+                                    <td colspan="7"><span class="board-empty-message">인기 검색어가 없습니다.</span></td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <details class="board-disclosure"><summary>검색 통계·보관 관리<small>필요할 때 펼쳐서 실행</small></summary>
+<section class="search-card" aria-label="Search maintenance">
+                    <div class="box-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                        유지보수
+                    </div>
+                    <form id="popularRebuildForm">
+                        <div class="search-row">
+                            <div class="search-field">
+                                <label for="statDate" class="search-label">통계 일자</label>
+                                <input id="statDate" type="date" name="statDate" class="search-input" required>
+                            </div>
+                        </div>
+                        <div class="search-actions">
+                            <button type="submit" class="btn-search">재집계</button>
+                        </div>
+                    </form>
+                    <form id="expiredDeleteForm">
+                        <div class="search-row">
+                            <div class="search-field">
+                                <label for="retentionDays" class="search-label">보존 일수</label>
+                                <input id="retentionDays" type="number" name="retentionDays" class="search-input" min="30" th:value="${retentionDays}">
+                            </div>
+                            <div class="search-field">
+                                <label for="dryRun" class="search-label">시험 실행</label>
+                                <input id="dryRun" type="checkbox" name="dryRun" checked>
+                            </div>
+                        </div>
+                        <div class="search-actions">
+                            <button type="submit" class="btn-search">만료 삭제</button>
+                        </div>
+                    </form>
+                    <p id="searchStatus" role="status" aria-live="polite"></p>
+                </section>
+                </details>
+            </div>
         </main>
         <div th:replace="~{admmgr/common/footer :: adminFooter}"></div>
     </div>

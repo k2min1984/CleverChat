@@ -45,7 +45,7 @@
         createForm.addEventListener('submit', function (event) {
             event.preventDefault();
             setStatus('Creating notification channel...');
-            fetch('/admin/api/notifications/channels', {
+            CleverChat.fetch('/admin/api/notifications/channels', {
                 method: 'POST',
                 credentials: 'same-origin',
                 headers: csrfHeaders({
@@ -67,7 +67,7 @@
             var id = button.getAttribute('data-save-channel-id');
             var row = button.closest('tr');
             setStatus('Saving notification channel #' + id + '...');
-            fetch('/admin/api/notifications/channels/' + encodeURIComponent(id), {
+            CleverChat.fetch('/admin/api/notifications/channels/' + encodeURIComponent(id), {
                 method: 'PUT',
                 credentials: 'same-origin',
                 headers: csrfHeaders({
@@ -88,7 +88,7 @@
         button.addEventListener('click', function () {
             var id = button.getAttribute('data-test-channel-id');
             setStatus('Sending test notification for channel #' + id + '...');
-            fetch('/admin/api/notifications/channels/' + encodeURIComponent(id) + '/test', {
+            CleverChat.fetch('/admin/api/notifications/channels/' + encodeURIComponent(id) + '/test', {
                 method: 'POST',
                 credentials: 'same-origin',
                 headers: csrfHeaders({ 'Accept': 'application/json' })
@@ -105,7 +105,7 @@
         button.addEventListener('click', function () {
             var id = button.getAttribute('data-review-event-id');
             setStatus('Reviewing notification event #' + id + '...');
-            fetch('/admin/api/notifications/events/' + encodeURIComponent(id) + '/review', {
+            CleverChat.fetch('/admin/api/notifications/events/' + encodeURIComponent(id) + '/review', {
                 method: 'PUT',
                 credentials: 'same-origin',
                 headers: csrfHeaders({ 'Accept': 'application/json' })

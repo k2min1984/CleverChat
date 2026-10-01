@@ -8,8 +8,6 @@
         busy: false
     };
 
-    var statusLine = document.getElementById('statusLine');
-    var errorLine = document.getElementById('errorLine');
     var scenarioList = document.getElementById('scenarioList');
     var scenarioCount = document.getElementById('scenarioCount');
     var selectedScenarioName = document.getElementById('selectedScenarioName');
@@ -19,27 +17,40 @@
     var optionList = document.getElementById('optionList');
     var form = document.getElementById('chatForm');
     var input = document.getElementById('freeText');
+    var chatStatus = document.getElementById('statusLine');
+    var chatError = document.getElementById('errorLine');
 
     function setStatus(text) {
-        statusLine.textContent = text || '';
-        if (errorLine) {
-            errorLine.hidden = true;
-            errorLine.textContent = '';
+        if (chatStatus) {
+            chatStatus.textContent = text || '';
         }
+        if (chatError) {
+            chatError.textContent = '';
+        }
+        return text;
     }
 
     function setError(text) {
-        if (errorLine) {
-            errorLine.textContent = text || 'The request could not be processed.';
-            errorLine.hidden = false;
+        var message = text || '요청을 처리할 수 없습니다.';
+        if (chatStatus) {
+            chatStatus.textContent = '';
         }
-        statusLine.textContent = '';
+        if (chatError) {
+            chatError.textContent = message;
+        } else if (chatStatus) {
+            chatStatus.textContent = message;
+        }
+        if (window.console && text) {
+            console.warn(text);
+        }
     }
-
     function setBusy(busy) {
         state.busy = busy;
-        input.disabled = busy || !state.sessionId;
-        form.querySelector('button[type="submit"]').disabled = busy || !state.sessionId;
+        input.disabled = busy;
+        form.querySelector('button[type="submit"]').disabled = busy;
+        messageList.querySelectorAll('.inline-option-list button').forEach(function (button) {
+            button.disabled = busy;
+        });
     }
 
     function setSessionState(text) {
@@ -49,6 +60,9 @@
     }
 
     function selectedScenarioTitle(scenarioId) {
+        if (!scenarioId) {
+            return '\uAC80\uC0C9 \uACB0\uACFC';
+        }
         var selected = scenarioList.querySelector('[data-scenario-id="' + scenarioId + '"] .scenario-title');
         return selected ? selected.textContent : '선택한 상담';
     }
@@ -69,7 +83,7 @@
             options.headers['Content-Type'] = 'application/json';
         }
         options.credentials = 'same-origin';
-        return fetch(path, options).then(function (response) {
+        return CleverChat.fetch(path, options).then(function (response) {
             return response.json().catch(function () {
                 return null;
             }).then(function (body) {
@@ -82,7 +96,242 @@
         });
     }
 
-    function renderMessages(messages) {
+    function getLastBotMessageId(messages) {
+        var lastId = null;
+        (messages || []).forEach(function (message) {
+            if (message.direction === 'BOT' && message.id) {
+                lastId = message.id;
+            }
+        });
+        return lastId;
+    }
+
+    function splitMessageContent(content) {
+        var links = [];
+        var lines = String(content || '').split('\n');
+        var text = lines.map(function (line, index) {
+            var lineWithoutUrl = line.replace(/https?:\/\/[^\s)]+/g, function (url) {
+                links.push({
+                    url: url.replace(/[.,;:]+$/, ''),
+                    label: linkLabelFromLines(lines, index)
+                });
+                return '';
+            });
+            return lineWithoutUrl;
+        }).join('\n');
+        text = text
+            .split('\n')
+            .map(function (line) { return line.trimEnd(); })
+            .join('\n')
+            .replace(/\n{3,}/g, '\n\n')
+            .trim();
+        return {
+            text: text,
+            links: links
+        };
+    }
+
+    function linkLabelFromLines(lines, urlLineIndex) {
+        for (var index = urlLineIndex - 1; index >= 0; index--) {
+            var line = (lines[index] || '').trim();
+            if (!line) {
+                continue;
+            }
+            line = line.replace(/^확인\s*경로\s*:\s*/i, '').trim();
+            if (line) {
+                return line + ' 바로가기';
+            }
+        }
+        return '바로가기';
+    }
+
+    function structuredLinks(message) {
+        return (message.links || []).map(function (link) {
+            return {
+                url: link.url,
+                label: link.label || '바로가기'
+            };
+        }).filter(function (link) {
+            return !!link.url;
+        });
+    }
+
+    function messageBubble(message) {
+        var content = splitMessageContent(message.content);
+        var links = structuredLinks(message);
+        if (links.length === 0) {
+            links = content.links;
+        }
+        var bubble = document.createElement('div');
+        bubble.className = 'message ' + (message.direction === 'USER' ? 'user' : 'bot');
+        bubble.setAttribute('aria-label', (message.direction === 'USER' ? 'User message: ' : 'Chat message: ') + (message.content || ''));
+
+        var text = document.createElement('p');
+        text.className = 'message-text';
+        text.textContent = content.text || '';
+        bubble.appendChild(text);
+
+        if (message.direction === 'BOT' && links.length > 0) {
+            bubble.classList.add('has-links');
+            var actions = document.createElement('div');
+            actions.className = 'message-actions';
+            links.forEach(function (linkInfo, index) {
+                var link = document.createElement('a');
+                link.className = 'chat-link-button';
+                link.href = linkInfo.url;
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                link.title = linkInfo.label || '해당 페이지로 이동';
+                link.setAttribute('aria-label', link.title + ' (새 창)');
+                link.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 3h7v7"/><path d="M10 14 21 3"/><path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"/></svg>';
+                actions.appendChild(link);
+            });
+            bubble.appendChild(actions);
+        }
+
+        return bubble;
+    }
+
+    function optionButton(option, sourceNodeId, sourceMessageId) {
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'secondary';
+        button.textContent = option.label;
+        button.setAttribute('role', 'listitem');
+        button.setAttribute('aria-label', 'Choose answer: ' + option.label);
+        button.disabled = state.busy;
+        button.addEventListener('click', function () {
+            selectOption(option.id, sourceNodeId, sourceMessageId);
+        });
+        return button;
+    }
+
+    function visibleScenarioOptions(options) {
+        return (options || []).filter(function (option) {
+            return !/^(상위\s*메뉴|처음으로|이전)$/.test((option.label || '').trim());
+        });
+    }
+
+    function inlineOptions(options) {
+        var wrapper = document.createElement('div');
+        wrapper.className = 'inline-option-list';
+        wrapper.setAttribute('role', 'list');
+        wrapper.setAttribute('aria-label', 'Available answers');
+        visibleScenarioOptions(options).forEach(function (option) {
+            wrapper.appendChild(optionButton(option));
+        });
+        return wrapper;
+    }
+
+    function searchOptionButton(option, sourceMessageId) {
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'secondary';
+        var isDocument = option.optionType === 'DOCUMENT';
+        var icon = document.createElement('span');
+        icon.className = 'search-option-icon';
+        icon.setAttribute('aria-hidden', 'true');
+        icon.innerHTML = isDocument
+            ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h9l5 5v15H6z"/><path d="M14 2v6h6"/><path d="M9 13h8M9 17h8"/></svg>'
+            : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>';
+        var label = document.createElement('span');
+        label.textContent = option.label;
+        button.appendChild(icon);
+        button.appendChild(label);
+        button.classList.add(isDocument ? 'is-document' : 'is-scenario');
+        button.setAttribute('role', 'listitem');
+        button.setAttribute('aria-label', 'Choose result: ' + option.label);
+        button.disabled = state.busy;
+        button.addEventListener('click', function () {
+            selectSearchResult(option.crawlDocumentNo, option.scenarioNo, option.scenarioNodeNo, sourceMessageId);
+        });
+        return button;
+    }
+
+    function inlineSearchOptions(searchOptions) {
+        var wrapper = document.createElement('div');
+        wrapper.className = 'inline-option-list';
+        wrapper.setAttribute('role', 'list');
+        wrapper.setAttribute('aria-label', 'Search results');
+        (searchOptions || []).forEach(function (option) {
+            wrapper.appendChild(searchOptionButton(option));
+        });
+        return wrapper;
+    }
+
+    function appendSearchGroup(wrapper, title, options, sourceMessageId) {
+        if (!options || options.length === 0) return;
+        var group = document.createElement('div');
+        group.className = 'inline-search-group';
+        group.setAttribute('role', 'group');
+        group.setAttribute('aria-label', title);
+        var heading = document.createElement('strong');
+        heading.className = 'inline-search-heading';
+        heading.textContent = title;
+        group.appendChild(heading);
+        options.forEach(function (option) {
+            group.appendChild(searchOptionButton(option, sourceMessageId));
+        });
+        wrapper.appendChild(group);
+    }
+
+    function backButton() {
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'secondary';
+        button.textContent = '이전';
+        button.setAttribute('role', 'listitem');
+        button.setAttribute('aria-label', 'Go back to previous step');
+        button.disabled = state.busy;
+        button.addEventListener('click', goBack);
+        return button;
+    }
+
+    function searchMoreButton(count) {
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'secondary';
+        button.textContent = '검색 결과 더 보기 (' + count + '건)';
+        button.setAttribute('role', 'listitem');
+        button.setAttribute('aria-label', 'Show more search results');
+        button.disabled = state.busy;
+        button.addEventListener('click', searchMore);
+        return button;
+    }
+
+    function inlineSessionActions(options, searchOptions, canGoBack, searchMoreCount, sourceNodeId, backTargetType, sourceMessageId) {
+        var wrapper = document.createElement('div');
+        wrapper.className = 'inline-option-list';
+        wrapper.setAttribute('role', 'list');
+        wrapper.setAttribute('aria-label', 'Available actions');
+        var choices = visibleScenarioOptions(options);
+        var endOptions = choices.filter(function (option) {
+            return (option.label || '').trim() === '안내 종료';
+        });
+        choices.filter(function (option) {
+            return (option.label || '').trim() !== '안내 종료';
+        }).forEach(function (option) {
+            wrapper.appendChild(optionButton(option, sourceNodeId, sourceMessageId));
+        });
+        appendSearchGroup(wrapper, '상담 안내', (searchOptions || []).filter(function (option) {
+            return option.optionType !== 'DOCUMENT';
+        }), sourceMessageId);
+        appendSearchGroup(wrapper, '관련 자료', (searchOptions || []).filter(function (option) {
+            return option.optionType === 'DOCUMENT';
+        }), sourceMessageId);
+        if (searchMoreCount > 0) {
+            wrapper.appendChild(searchMoreButton(searchMoreCount));
+        }
+        if (canGoBack) {
+            wrapper.appendChild(backButton());
+        }
+        endOptions.forEach(function (option) {
+            wrapper.appendChild(optionButton(option, sourceNodeId, sourceMessageId));
+        });
+        return wrapper;
+    }
+
+    function renderMessages(messages, options, searchOptions, canGoBack, searchMoreCount, backTargetType) {
         messageList.innerHTML = '';
         if (!messages || messages.length === 0) {
             var empty = document.createElement('div');
@@ -97,15 +346,34 @@
             messageList.appendChild(empty);
             return;
         }
+        var lastBotMessageId = getLastBotMessageId(messages);
         messages.forEach(function (message) {
             var row = document.createElement('div');
             row.className = 'message-row ' + (message.direction === 'USER' ? 'user' : 'bot');
-            var bubble = document.createElement('p');
-            bubble.className = 'message ' + (message.direction === 'USER' ? 'user' : 'bot');
-            bubble.textContent = message.content || '';
-            bubble.setAttribute('aria-label', (message.direction === 'USER' ? 'User message: ' : 'Chat message: ') + (message.content || ''));
-            row.appendChild(bubble);
+            row.appendChild(messageBubble(message));
             messageList.appendChild(row);
+            if (message.direction === 'BOT') {
+                var isLatest = message.id === lastBotMessageId;
+                var messageOptions = message.options || (isLatest ? options : []);
+                var messageSearchOptions = message.searchOptions || (isLatest ? searchOptions : []);
+                var messageSearchMoreCount = isLatest ? searchMoreCount : 0;
+                var messageCanGoBack = isLatest && canGoBack;
+                var hasActions = messageOptions.length > 0
+                    || messageSearchOptions.length > 0
+                    || messageSearchMoreCount > 0
+                    || messageCanGoBack;
+                if (hasActions) {
+                    messageList.appendChild(inlineSessionActions(
+                        messageOptions,
+                        messageSearchOptions,
+                        messageCanGoBack,
+                        messageSearchMoreCount,
+                        message.nodeId,
+                        isLatest ? backTargetType : null,
+                        message.id
+                    ));
+                }
+            }
             if (message.direction === 'BOT' && message.id) {
                 messageList.appendChild(feedbackControls(message.id));
             }
@@ -137,23 +405,19 @@
 
     function renderOptions(options) {
         optionList.innerHTML = '';
-        (options || []).forEach(function (option) {
-            var button = document.createElement('button');
-            button.type = 'button';
-            button.className = 'secondary';
-            button.textContent = option.label;
-            button.setAttribute('role', 'listitem');
-            button.setAttribute('aria-label', 'Choose answer: ' + option.label);
-            button.addEventListener('click', function () {
-                selectOption(option.id);
-            });
-            optionList.appendChild(button);
-        });
+        optionList.hidden = true;
     }
 
     function renderSession(session) {
         state.sessionId = session.sessionId;
-        renderMessages(session.messages);
+        renderMessages(
+            session.messages,
+            session.options,
+            session.searchOptions,
+            session.canGoBack,
+            session.searchMoreCount || 0,
+            session.backTargetType
+        );
         renderOptions(session.options);
         setSessionState(session.state === 'ACTIVE' ? '진행 중' : '완료');
         setStatus(session.state === 'ACTIVE' ? '상담이 진행 중입니다.' : '상담이 완료되었습니다.');
@@ -231,26 +495,97 @@
         api('/chat/api/sessions', {
             method: 'POST',
             body: JSON.stringify({ scenarioId: scenarioId })
+        }).then(function (session) {
+            renderSession(session);
+            return session;
+        }).catch(function (error) {
+            setError(error.message);
+            setBusy(false);
+        });
+    }
+
+    function selectOption(optionId, sourceNodeId, sourceMessageId) {
+        if (!state.sessionId || state.busy) return;
+        setBusy(true);
+        api('/chat/api/sessions/' + state.sessionId + '/select-option', {
+            method: 'POST',
+            body: JSON.stringify({ optionId: optionId, sourceNodeId: sourceNodeId || null })
         }).then(renderSession).catch(function (error) {
             setError(error.message);
             setBusy(false);
         });
     }
 
-    function selectOption(optionId) {
+    function selectSearchResult(crawlDocumentNo, scenarioNo, scenarioNodeNo, sourceMessageId) {
         if (!state.sessionId || state.busy) return;
         setBusy(true);
-        api('/chat/api/sessions/' + state.sessionId + '/select-option', {
+        api('/chat/api/sessions/' + state.sessionId + '/select-search-result', {
             method: 'POST',
-            body: JSON.stringify({ optionId: optionId })
+            body: JSON.stringify({ crawlDocumentNo: crawlDocumentNo, scenarioNo: scenarioNo, scenarioNodeNo: scenarioNodeNo, sourceMessageId: sourceMessageId })
+        }).then(function (session) {
+            state.selectedScenarioId = session.scenarioId;
+            markScenarioActive(session.scenarioId);
+            if (selectedScenarioName) {
+                selectedScenarioName.textContent = selectedScenarioTitle(session.scenarioId);
+            }
+            renderSession(session);
+        }).catch(function (error) {
+            setError(error.message);
+            setBusy(false);
+        });
+    }
+
+    function searchMore() {
+        if (!state.sessionId || state.busy) return;
+        setBusy(true);
+        api('/chat/api/sessions/' + state.sessionId + '/search-more', {
+            method: 'POST'
         }).then(renderSession).catch(function (error) {
+            setError(error.message);
+            setBusy(false);
+        });
+    }
+
+    function goBack() {
+        if (!state.sessionId || state.busy) return;
+        setBusy(true);
+        api('/chat/api/sessions/' + state.sessionId + '/back', {
+            method: 'POST'
+        }).then(function (session) {
+            state.selectedScenarioId = session.scenarioId;
+            markScenarioActive(session.scenarioId);
+            if (selectedScenarioName) {
+                selectedScenarioName.textContent = selectedScenarioTitle(session.scenarioId);
+            }
+            renderSession(session);
+        }).catch(function (error) {
             setError(error.message);
             setBusy(false);
         });
     }
 
     function sendFreeText(text) {
-        if (!state.sessionId || state.busy) return;
+        if (state.busy) return;
+        if (!state.sessionId) {
+            setBusy(true);
+            setStatus('질문과 맞는 상담 주제를 찾는 중입니다.');
+            api('/chat/api/sessions/auto', {
+                method: 'POST',
+                body: JSON.stringify({ text: text })
+            }).then(function (session) {
+                state.selectedScenarioId = session.scenarioId;
+                markScenarioActive(session.scenarioId);
+                if (selectedScenarioName) {
+                    selectedScenarioName.textContent = selectedScenarioTitle(session.scenarioId);
+                }
+                input.value = '';
+                renderSession(session);
+            }).catch(function (error) {
+                setError(error.message);
+                setBusy(false);
+            });
+            return;
+        }
         setBusy(true);
         api('/chat/api/sessions/' + state.sessionId + '/free-text', {
             method: 'POST',

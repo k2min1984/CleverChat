@@ -25,6 +25,14 @@
             <div class="preview-node-type" th:text="${current.nodeType}">MESSAGE</div>
             <h2 th:text="${current.title}">노드 제목</h2>
             <p th:text="${current.content}">본문</p>
+            <div class="preview-links" th:if="${!#lists.isEmpty(links)}" aria-label="바로가기 링크">
+                <a class="preview-link-button"
+                   th:each="link : ${links}"
+                   th:href="${link.url}"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   th:text="${link.label}">바로가기</a>
+            </div>
             <div class="preview-options" th:if="${!#lists.isEmpty(options)}">
                 <a class="btn btn-sm btn-secondary"
                    th:each="option : ${options}"

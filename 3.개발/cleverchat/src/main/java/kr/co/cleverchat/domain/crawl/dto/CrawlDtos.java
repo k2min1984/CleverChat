@@ -7,7 +7,9 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import java.time.OffsetDateTime;
 import java.util.List;
+import kr.co.cleverchat.domain.crawl.model.CrawlCoverage;
 import kr.co.cleverchat.domain.crawl.model.CrawlDocument;
+import kr.co.cleverchat.domain.crawl.model.CrawlJob;
 import kr.co.cleverchat.domain.crawl.model.CrawlRunLog;
 import kr.co.cleverchat.domain.crawl.model.CrawlTarget;
 
@@ -22,7 +24,9 @@ public final class CrawlDtos {
             Boolean scheduleEnabled,
             @Min(5) @Max(10080) Integer scheduleIntervalMinutes,
             @Pattern(regexp = "INTERVAL|CRON") String scheduleMode,
-            @Size(max = 120) String scheduleCron) {}
+            @Size(max = 120) String scheduleCron,
+            Boolean jsonExportEnabled,
+            @Size(max = 1000) String jsonExportDirectory) {}
 
     public record ScheduleRequest(
             Boolean scheduleEnabled,
@@ -37,7 +41,11 @@ public final class CrawlDtos {
 
     public record RunResponse(CrawlRunLog run, CrawlDocument document) {}
 
+    public record JobResponse(CrawlJob job, boolean enqueued) {}
+
     public record ReviewRequest(@Size(max = 1000) String comment) {}
+
+    public record CoverageResponse(List<CrawlCoverage> coverages) {}
 
     public record RetentionResponse(
             int runRetentionDays,

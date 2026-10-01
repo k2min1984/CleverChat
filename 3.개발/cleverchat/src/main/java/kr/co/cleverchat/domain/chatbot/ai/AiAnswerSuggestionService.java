@@ -3,12 +3,16 @@ package kr.co.cleverchat.domain.chatbot.ai;
 import java.util.List;
 import java.util.Optional;
 import kr.co.cleverchat.domain.search.model.SearchResultItem;
+import kr.co.cleverchat.domain.settings.RuntimeSetting;
+import kr.co.cleverchat.domain.settings.RuntimeSettingsService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 @Service
 public class AiAnswerSuggestionService {
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private RuntimeSettingsService runtimeSettings;
 
     private final boolean enabled;
     private final AiAnswerProvider provider;
@@ -22,7 +26,9 @@ public class AiAnswerSuggestionService {
 
     public Optional<AiAnswerSuggestionResponse> suggest(
             String query, List<SearchResultItem> searchResults, AiAnswerContext context) {
-        if (!enabled
+        if (!(runtimeSettings == null
+                        ? enabled
+                        : runtimeSettings.current().bool(RuntimeSetting.AI_ENABLED))
                 || !StringUtils.hasText(query)
                 || searchResults == null
                 || searchResults.isEmpty()) {

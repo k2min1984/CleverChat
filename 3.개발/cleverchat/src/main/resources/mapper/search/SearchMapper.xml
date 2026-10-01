@@ -4,231 +4,118 @@
 <mapper namespace="kr.co.cleverchat.domain.search.mapper.SearchMapper">
     <select id="searchScenarios" resultType="kr.co.cleverchat.domain.search.model.SearchResultItem">
         WITH q AS (
-            SELECT
-                websearch_to_tsquery('simple', #{query}) AS tsq,
-                #{query}::text AS raw,
-                lower(unaccent(#{query})) AS raw_lc,
+            SELECT regexp_replace(lower(unaccent(#{query})), '\s+', '', 'g') AS raw_lc,
+                websearch_to_tsquery('simple', #{tokenQuery}) AS token_tsq,
                 ARRAY[
                     <foreach collection="terms" item="term" separator=",">
                         lower(unaccent(#{term}))
                     </foreach>
                 ]::text[] AS terms
         ),
-        scenario_matches AS (
-            SELECT
-                'S:' || s.scenario_no::text AS result_key,
-                s.scenario_no AS scenario_no,
-                s.title AS scenario_title,
-                NULL::bigint AS crawl_document_no,
-                NULL::text AS crawl_url,
-                'SCENARIO' AS matched_field,
-                2 AS field_priority,
-                (
-                    CASE
-                        WHEN lower(unaccent(s.title)) = q.raw_lc THEN 30
-                        WHEN lower(unaccent(s.title)) LIKE q.raw_lc || '%' THEN 18
-                        ELSE 0
-                    END
-                    + (
-                        SELECT count(*)::numeric * 2
-                        FROM unnest(q.terms) AS t(term)
-                        WHERE lower(unaccent(s.title)) LIKE t.term || '%'
-                           OR lower(unaccent(coalesce(s.description, ''))) LIKE t.term || '%'
-                    )
-                    + ts_rank(to_tsvector('simple', coalesce(s.title, '') || ' ' || coalesce(s.description, '')), q.tsq) * 4
-                    + greatest(similarity(s.title, q.raw), similarity(coalesce(s.description, ''), q.raw))
-                ) AS score,
-                regexp_replace(coalesce(s.description, s.title), '\s+', ' ', 'g') AS snippet
-            FROM tb_scenario s
-            JOIN tb_scenario_category c ON c.scenario_category_no = s.category_no
-            CROSS JOIN q
-            WHERE s.status = 'ACTIVE'
-              AND s.active_version_no IS NOT NULL
-              AND c.use_yn = 'Y'
-              AND (
-                  to_tsvector('simple', coalesce(s.title, '') || ' ' || coalesce(s.description, '')) @@ q.tsq
-                  OR s.title % q.raw
-                  OR coalesce(s.description, '') % q.raw
-                  OR lower(unaccent(s.title)) = q.raw_lc
-                  OR lower(unaccent(s.title)) LIKE q.raw_lc || '%'
-                  OR EXISTS (
-                      SELECT 1
-                      FROM unnest(q.terms) AS t(term)
-                      WHERE lower(unaccent(s.title)) LIKE t.term || '%'
-                         OR lower(unaccent(coalesce(s.description, ''))) LIKE t.term || '%'
-                  )
-              )
-        ),
-        keyword_matches AS (
-            SELECT
-                'S:' || s.scenario_no::text AS result_key,
-                s.scenario_no AS scenario_no,
-                s.title AS scenario_title,
-                NULL::bigint AS crawl_document_no,
-                NULL::text AS crawl_url,
-                'KEYWORD' AS matched_field,
-                1 AS field_priority,
-                (
-                    CASE
-                        WHEN lower(unaccent(k.keyword)) = q.raw_lc THEN 45
-                        WHEN lower(unaccent(coalesce(sy.synonym, ''))) = q.raw_lc THEN 38
-                        WHEN lower(unaccent(k.keyword)) LIKE q.raw_lc || '%' THEN 26
-                        WHEN lower(unaccent(coalesce(sy.synonym, ''))) LIKE q.raw_lc || '%' THEN 22
-                        ELSE 0
-                    END
-                    + (
-                        SELECT count(*)::numeric * 4
-                        FROM unnest(q.terms) AS t(term)
-                        WHERE lower(unaccent(k.keyword)) LIKE t.term || '%'
-                           OR lower(unaccent(coalesce(sy.synonym, ''))) LIKE t.term || '%'
-                    )
-                    + greatest(similarity(k.keyword, q.raw), similarity(coalesce(sy.synonym, ''), q.raw))
-                    + ((k.weight + coalesce(sy.weight, 0))::numeric / 100)
-                ) AS score,
-                regexp_replace(coalesce(sy.synonym, k.keyword), '\s+', ' ', 'g') AS snippet
-            FROM tb_scenario s
-            JOIN tb_scenario_category c ON c.scenario_category_no = s.category_no
-            JOIN tb_scenario_keyword k ON k.scenario_no = s.scenario_no AND k.use_yn = 'Y'
-            LEFT JOIN tb_scenario_synonym sy ON sy.keyword_no = k.scenario_keyword_no AND sy.use_yn = 'Y'
-            CROSS JOIN q
-            WHERE s.status = 'ACTIVE'
-              AND s.active_version_no IS NOT NULL
-              AND c.use_yn = 'Y'
-              AND (
-                  k.keyword % q.raw
-                  OR coalesce(sy.synonym, '') % q.raw
-                  OR lower(unaccent(k.keyword)) = q.raw_lc
-                  OR lower(unaccent(coalesce(sy.synonym, ''))) = q.raw_lc
-                  OR lower(unaccent(k.keyword)) LIKE q.raw_lc || '%'
-                  OR lower(unaccent(coalesce(sy.synonym, ''))) LIKE q.raw_lc || '%'
-                  OR EXISTS (
-                      SELECT 1
-                      FROM unnest(q.terms) AS t(term)
-                      WHERE lower(unaccent(k.keyword)) LIKE t.term || '%'
-                         OR lower(unaccent(coalesce(sy.synonym, ''))) LIKE t.term || '%'
-                  )
-              )
-        ),
-        node_matches AS (
-            SELECT
-                'S:' || s.scenario_no::text AS result_key,
-                s.scenario_no AS scenario_no,
-                s.title AS scenario_title,
-                NULL::bigint AS crawl_document_no,
-                NULL::text AS crawl_url,
-                'NODE' AS matched_field,
-                3 AS field_priority,
-                (
-                    CASE
-                        WHEN lower(unaccent(n.title)) = q.raw_lc THEN 24
-                        WHEN lower(unaccent(n.title)) LIKE q.raw_lc || '%' THEN 14
-                        ELSE 0
-                    END
-                    + (
-                        SELECT count(*)::numeric * 1.5
-                        FROM unnest(q.terms) AS t(term)
-                        WHERE lower(unaccent(n.title)) LIKE t.term || '%'
-                           OR lower(unaccent(coalesce(n.content, ''))) LIKE t.term || '%'
-                    )
-                    + ts_rank(to_tsvector('simple', coalesce(n.title, '') || ' ' || coalesce(n.content, '')), q.tsq) * 3
-                    + greatest(similarity(n.title, q.raw), similarity(coalesce(n.content, ''), q.raw))
-                ) AS score,
-                regexp_replace(coalesce(n.content, n.title), '\s+', ' ', 'g') AS snippet
+        active_scenarios AS (
+            SELECT s.*, v.start_node_no
             FROM tb_scenario s
             JOIN tb_scenario_category c ON c.scenario_category_no = s.category_no
             JOIN tb_scenario_version v ON v.scenario_version_no = s.active_version_no
-            JOIN tb_scenario_node n ON n.version_no = v.scenario_version_no
+                AND v.scenario_no = s.scenario_no AND v.status = 'PUBLISHED'
+            WHERE s.status = 'ACTIVE' AND c.use_yn = 'Y'
+        ),
+        node_matches AS (
+            SELECT 'N:' || n.scenario_node_no AS result_key,
+                s.scenario_no, n.scenario_node_no, n.title AS scenario_title,
+                NULL::bigint AS crawl_document_no, NULL::text AS crawl_url,
+                'NODE' AS matched_field, 1 AS field_priority,
+                (CASE WHEN txt.title = q.raw_lc THEN 80
+                    WHEN n.node_type = 'ANSWER' THEN 45 ELSE 30 END
+                    + 40.0 * hits.title_count / cardinality(q.terms)) AS score,
+                regexp_replace(coalesce(n.content, n.title), '\s+', ' ', 'g') AS snippet
+            FROM active_scenarios s
+            JOIN tb_scenario_node n ON n.version_no = s.active_version_no
             CROSS JOIN q
-            WHERE s.status = 'ACTIVE'
-              AND c.use_yn = 'Y'
-              AND (
-                  to_tsvector('simple', coalesce(n.title, '') || ' ' || coalesce(n.content, '')) @@ q.tsq
-                  OR n.title % q.raw
-                  OR coalesce(n.content, '') % q.raw
-                  OR lower(unaccent(n.title)) = q.raw_lc
-                  OR lower(unaccent(n.title)) LIKE q.raw_lc || '%'
-                  OR EXISTS (
-                      SELECT 1
-                      FROM unnest(q.terms) AS t(term)
-                      WHERE lower(unaccent(n.title)) LIKE t.term || '%'
-                         OR lower(unaccent(coalesce(n.content, ''))) LIKE t.term || '%'
-                  )
-              )
+            CROSS JOIN LATERAL (
+                SELECT regexp_replace(lower(unaccent(n.title)), '\s+', '', 'g') AS title,
+                    regexp_replace(lower(unaccent(coalesce(n.content, ''))), '\s+', '', 'g') AS body
+            ) txt
+            CROSS JOIN LATERAL (
+                SELECT count(*) FILTER (WHERE strpos(txt.title, term) > 0) AS title_count,
+                    bool_and(strpos(txt.title || ' ' || txt.body, term) > 0) AS all_terms
+                FROM unnest(q.terms) AS t(term)
+            ) hits
+            WHERE n.node_type IN ('QUESTION', 'ANSWER')
+                AND n.scenario_node_no != s.start_node_no
+                <!-- A passing mention in a long answer must not advertise its parent menu. -->
+                AND hits.all_terms AND hits.title_count > 0
+        ),
+        scenario_matches AS (
+            SELECT 'S:' || s.scenario_no AS result_key,
+                s.scenario_no, NULL::bigint AS scenario_node_no, s.title AS scenario_title,
+                NULL::bigint AS crawl_document_no, NULL::text AS crawl_url,
+                'SCENARIO' AS matched_field, 2 AS field_priority,
+                CASE WHEN txt.title = q.raw_lc THEN 100 ELSE 60 END::numeric AS score,
+                regexp_replace(coalesce(s.description, s.title), '\s+', ' ', 'g') AS snippet
+            FROM active_scenarios s CROSS JOIN q
+            CROSS JOIN LATERAL (
+                SELECT regexp_replace(lower(unaccent(s.title)), '\s+', '', 'g') AS title
+            ) txt
+            WHERE cardinality(q.terms) > 0 AND NOT EXISTS (
+                SELECT 1 FROM unnest(q.terms) AS t(term) WHERE strpos(txt.title, term) = 0
+            )
         ),
         crawl_document_matches AS (
-            SELECT
-                'C:' || d.crawl_document_no::text AS result_key,
-                NULL::bigint AS scenario_no,
+            SELECT 'C:' || d.crawl_document_no AS result_key,
+                NULL::bigint AS scenario_no, NULL::bigint AS scenario_node_no,
                 coalesce(d.title, d.url) AS scenario_title,
-                d.crawl_document_no AS crawl_document_no,
-                d.url AS crawl_url,
-                'CRAWL_DOCUMENT' AS matched_field,
-                4 AS field_priority,
-                (
-                    CASE
-                        WHEN lower(unaccent(coalesce(d.title, ''))) = q.raw_lc THEN 18
-                        WHEN lower(unaccent(coalesce(d.title, ''))) LIKE q.raw_lc || '%' THEN 10
-                        ELSE 0
-                    END
-                    + (
-                        SELECT count(*)::numeric
-                        FROM unnest(q.terms) AS t(term)
-                        WHERE lower(unaccent(coalesce(d.title, ''))) LIKE t.term || '%'
-                           OR lower(unaccent(coalesce(d.content, ''))) LIKE t.term || '%'
-                    )
-                    + ts_rank(to_tsvector('simple', coalesce(d.title, '') || ' ' || coalesce(d.content, '')), q.tsq) * 2
-                    + greatest(similarity(coalesce(d.title, ''), q.raw), similarity(coalesce(d.content, ''), q.raw))
-                ) AS score,
+                d.crawl_document_no, d.url AS crawl_url,
+                'CRAWL_DOCUMENT' AS matched_field, 3 AS field_priority,
+                (CASE WHEN txt.title = q.raw_lc THEN 80
+                    WHEN hits.title_count > 0 THEN 20 ELSE 8 END
+                    + 40.0 * hits.title_count / cardinality(q.terms)
+                    + least(ts_rank(to_tsvector('simple', coalesce(d.content_tokens, '')), q.token_tsq), 1)) AS score,
                 regexp_replace(coalesce(d.content, d.title, d.url), '\s+', ' ', 'g') AS snippet
-            FROM tb_crawl_document d
+            FROM tb_crawl_document d CROSS JOIN q
+            CROSS JOIN LATERAL (
+                SELECT regexp_replace(lower(unaccent(coalesce(d.title, ''))), '\s+', '', 'g') AS title,
+                    regexp_replace(lower(unaccent(coalesce(d.content, ''))), '\s+', '', 'g') AS body
+            ) txt
+            CROSS JOIN LATERAL (
+                SELECT count(*) FILTER (WHERE strpos(txt.title, term) > 0) AS title_count,
+                    bool_and(strpos(txt.title || ' ' || txt.body, term) > 0) AS all_terms
+                FROM unnest(q.terms) AS t(term)
+            ) hits
+            WHERE d.status = 'SUCCESS' AND hits.all_terms
+        ),
+        keyword_matches AS (
+            SELECT 'S:' || s.scenario_no AS result_key,
+                s.scenario_no, NULL::bigint AS scenario_node_no, s.title AS scenario_title,
+                NULL::bigint AS crawl_document_no, NULL::text AS crawl_url,
+                'KEYWORD' AS matched_field, 4 AS field_priority, 35::numeric AS score,
+                regexp_replace(coalesce(s.description, s.title), '\s+', ' ', 'g') AS snippet
+            FROM active_scenarios s
+            JOIN tb_scenario_keyword k ON k.scenario_no = s.scenario_no AND k.use_yn = 'Y'
+            LEFT JOIN tb_scenario_synonym sy ON sy.keyword_no = k.scenario_keyword_no AND sy.use_yn = 'Y'
             CROSS JOIN q
-            WHERE d.status = 'SUCCESS'
-              AND (
-                  to_tsvector('simple', coalesce(d.title, '') || ' ' || coalesce(d.content, '')) @@ q.tsq
-                  OR coalesce(d.title, '') % q.raw
-                  OR coalesce(d.content, '') % q.raw
-                  OR lower(unaccent(coalesce(d.title, ''))) = q.raw_lc
-                  OR lower(unaccent(coalesce(d.title, ''))) LIKE q.raw_lc || '%'
-                  OR EXISTS (
-                      SELECT 1
-                      FROM unnest(q.terms) AS t(term)
-                      WHERE lower(unaccent(coalesce(d.title, ''))) LIKE t.term || '%'
-                         OR lower(unaccent(coalesce(d.content, ''))) LIKE t.term || '%'
-                  )
-              )
+            WHERE (regexp_replace(lower(unaccent(k.keyword)), '\s+', '', 'g') = q.raw_lc
+                OR regexp_replace(lower(unaccent(coalesce(sy.synonym, ''))), '\s+', '', 'g') = q.raw_lc)
+                <!-- Keywords can suggest a topic only when no specific relevant content exists. -->
+                AND NOT EXISTS (SELECT 1 FROM node_matches)
+                AND NOT EXISTS (SELECT 1 FROM crawl_document_matches WHERE score >= 20)
         ),
         best_matches AS (
-            SELECT DISTINCT ON (result_key)
-                result_key,
-                scenario_no,
-                scenario_title,
-                crawl_document_no,
-                crawl_url,
-                matched_field,
-                field_priority,
-                score,
-                left(snippet, 220) AS snippet
+            SELECT DISTINCT ON (result_key) result_key, scenario_no, scenario_node_no,
+                scenario_title, crawl_document_no, crawl_url, matched_field, field_priority,
+                score, left(snippet, 220) AS snippet
             FROM (
                 SELECT * FROM scenario_matches
-                UNION ALL
-                SELECT * FROM keyword_matches
-                UNION ALL
-                SELECT * FROM node_matches
-                UNION ALL
-                SELECT * FROM crawl_document_matches
+                UNION ALL SELECT * FROM keyword_matches
+                UNION ALL SELECT * FROM node_matches
+                UNION ALL SELECT * FROM crawl_document_matches
             ) all_matches
             ORDER BY result_key, score DESC, field_priority
         )
-        SELECT
-            scenario_no,
-            scenario_title,
-            crawl_document_no,
-            crawl_url,
-            matched_field,
-            score,
-            snippet
+        SELECT scenario_no, scenario_node_no, scenario_title, crawl_document_no, crawl_url,
+            matched_field, score, snippet
         FROM best_matches
-        ORDER BY score DESC, field_priority, matched_field
+        ORDER BY score DESC, field_priority, result_key
         LIMIT #{limit}
     </select>
 

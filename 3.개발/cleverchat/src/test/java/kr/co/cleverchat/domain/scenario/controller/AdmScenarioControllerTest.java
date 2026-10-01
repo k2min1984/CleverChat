@@ -101,7 +101,8 @@ class AdmScenarioControllerTest {
         mockMvc.perform(get("/admin/scenarios"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("admmgr/scenario/scenarioList"))
-                .andExpect(model().attribute("previewVersionByScenarioId", Map.of(1L, 10L, 2L, 20L)));
+                .andExpect(
+                        model().attribute("previewVersionByScenarioId", Map.of(1L, 10L, 2L, 20L)));
     }
 
     @Test

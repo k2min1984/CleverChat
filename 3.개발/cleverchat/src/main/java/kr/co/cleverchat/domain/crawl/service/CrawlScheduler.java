@@ -31,14 +31,16 @@ public class CrawlScheduler {
                         e.getErrorCode(),
                         e.getMessage());
             } catch (RuntimeException e) {
-                log.warn("Scheduled crawl failed unexpectedly: targetId={}", target.getCrawlTargetNo(), e);
+                log.warn(
+                        "Scheduled crawl failed unexpectedly: targetId={}",
+                        target.getCrawlTargetNo(),
+                        e);
             }
         }
     }
 
-    @Scheduled(cron = "0 45 3 * * *")
     public void deleteExpiredOperationalData() {
-        var response = crawlService.deleteExpired(null, null, false);
+        var response = crawlService.deleteExpiredScheduled();
         log.info(
                 "Deleted expired crawl operational data: runLogs={}, documents={}, runRetentionDays={}, documentRetentionDays={}",
                 response.deletedRunLogs(),

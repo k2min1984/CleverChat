@@ -12,6 +12,18 @@ import org.springframework.web.bind.annotation.RequestParam;
 @Controller
 @RequestMapping("/admin/search")
 public class AdmSearchController {
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private kr.co.cleverchat.domain.settings.RuntimeSettingsService runtime;
+
+    @org.springframework.web.bind.annotation.ModelAttribute("retentionDays")
+    public int retentionDays() {
+        return runtime == null
+                ? 90
+                : runtime.current()
+                        .integer(
+                                kr.co.cleverchat.domain.settings.RuntimeSetting
+                                        .SEARCH_RETENTION_DAYS);
+    }
 
     private final SearchService searchService;
 

@@ -63,6 +63,9 @@ public class LoginController {
             loginAuditService.recordFailure(username, "Account is disabled.", request);
             return "redirect:/login?error";
         }
+        if (account.getPasswordHash() == null) {
+            return "redirect:/login?error";
+        }
         if (account.getLockedUntil() != null
                 && account.getLockedUntil().isAfter(OffsetDateTime.now())) {
             opsEventLogger.securityEvent(
@@ -102,6 +105,7 @@ public class LoginController {
         if (session != null) {
             session.invalidate();
         }
-        return "redirect:/login?logout";
+        Object gatewayUrl = request.getAttribute("gatewayLogoutUrl");
+        return gatewayUrl instanceof String url ? "redirect:" + url : "redirect:/login?logout";
     }
 }

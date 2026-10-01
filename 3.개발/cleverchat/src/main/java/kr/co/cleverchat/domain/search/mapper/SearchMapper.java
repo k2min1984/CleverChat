@@ -15,6 +15,7 @@ public interface SearchMapper {
     List<SearchResultItem> searchScenarios(
             @Param("query") String query,
             @Param("terms") List<String> terms,
+            @Param("tokenQuery") String tokenQuery,
             @Param("limit") int limit);
 
     void insertLog(SearchLog log);

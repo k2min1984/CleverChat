@@ -21,7 +21,18 @@
             <tbody>
             <tr>
                 <th scope="row">관리번호</th>
-                <td><span class="code-no-val" th:text="${rMap.codeNo}">0</span></td>
+                <td>
+                    <span class="code-no-val" th:text="${rMap.codeNo}">0</span>
+                    <span class="sub-text" th:text="' / ' + ${rMap.codeDepth} + '뎁스'"> / 3뎁스</span>
+                </td>
+            </tr>
+            <tr th:if="${rMap.parentCodeNo > 0}">
+                <th scope="row">상위 코드</th>
+                <td>
+                    <span th:text="${rMap.parentCodeNm}">상위 코드명</span>
+                    <span class="sub-text" th:if="${!#strings.isEmpty(rMap.parentCodeGroup)}"
+                          th:text="' (' + ${rMap.parentCodeGroup} + ')'">(상위 코드그룹)</span>
+                </td>
             </tr>
             <tr>
                 <th scope="row"><em class="required">*</em> 코드명</th>
@@ -32,15 +43,18 @@
             </tr>
             <tr>
                 <th scope="row">코드값</th>
-                <td><input type="text" name="codeVal" class="form-input" maxlength="100" th:value="${rMap.codeVal}"></td>
+                <td><input type="text" name="codeVal" class="form-input" maxlength="200" th:value="${rMap.codeVal}"></td>
             </tr>
             <tr>
                 <th scope="row">코드그룹</th>
-                <td><input type="text" name="codeGroup" class="form-input" maxlength="100" th:value="${rMap.codeGroup}"></td>
+                <td>
+                    <input type="text" name="codeGroup" class="form-input" maxlength="64" th:value="${rMap.codeGroup}">
+                    <p class="sub-text" th:if="${rMap.codeDepth == 3}">3뎁스는 같은 상위 코드 안에서 코드그룹 값을 함께 사용할 수 있습니다.</p>
+                </td>
             </tr>
             <tr>
                 <th scope="row">설명</th>
-                <td><textarea name="codeDc" class="form-textarea" maxlength="1000" th:text="${rMap.codeDc}"></textarea></td>
+                <td><textarea name="codeDc" class="form-textarea" maxlength="500" th:text="${rMap.codeDc}"></textarea></td>
             </tr>
             </tbody>
         </table>

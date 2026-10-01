@@ -10,6 +10,7 @@ public class ChatSession {
     private Long scenarioNo;
     private Long versionNo;
     private Long currentNodeNo;
+    private String sessionType;
     private String state;
     private OffsetDateTime startedAt;
     private OffsetDateTime lastActivityAt;
@@ -64,6 +65,14 @@ public class ChatSession {
 
     public void setCurrentNodeNo(Long currentNodeNo) {
         this.currentNodeNo = currentNodeNo;
+    }
+
+    public String getSessionType() {
+        return sessionType;
+    }
+
+    public void setSessionType(String sessionType) {
+        this.sessionType = sessionType;
     }
 
     public String getState() {

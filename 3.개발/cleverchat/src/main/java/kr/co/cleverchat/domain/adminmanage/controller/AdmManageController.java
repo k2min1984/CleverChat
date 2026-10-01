@@ -35,8 +35,7 @@ public class AdmManageController {
     }
 
     @GetMapping("/admin/manage/permissions")
-    public String permissions(
-            @RequestParam(defaultValue = "ADMIN") String roleCode, Model model) {
+    public String permissions(@RequestParam(defaultValue = "ADMIN") String roleCode, Model model) {
         model.addAttribute("roles", adminManageService.roles());
         model.addAttribute("menus", adminManageService.menus());
         model.addAttribute("permission", adminManageService.permission(roleCode));
@@ -58,39 +57,51 @@ public class AdmManageController {
         return "redirect:/admin/manage/permissions";
     }
 
-    @PostMapping(value = "/admmgr/manage/codeSelectAjax.do", produces = "application/json;charset=UTF-8")
+    @PostMapping(
+            value = "/admmgr/manage/codeSelectAjax.do",
+            produces = "application/json;charset=UTF-8")
     @ResponseBody
     public Object legacyCodeSelect(@RequestParam(defaultValue = "0") Long pCodeNo) {
         return adminManageService.codesByParent(pCodeNo).stream()
-                .map(code -> {
-                    Map<String, Object> row = new LinkedHashMap<>();
-                    row.put("codeNo", code.getId());
-                    row.put("pCodeNo", code.getParentId() == null ? 0L : code.getParentId());
-                    row.put("codeNm", code.getName());
-                    row.put("codeDepth", code.getDepth());
-                    return row;
-                })
+                .map(
+                        code -> {
+                            Map<String, Object> row = new LinkedHashMap<>();
+                            row.put("codeNo", code.getId());
+                            row.put(
+                                    "pCodeNo",
+                                    code.getParentId() == null ? 0L : code.getParentId());
+                            row.put("codeNm", code.getName());
+                            row.put("codeDepth", code.getDepth());
+                            return row;
+                        })
                 .toList();
     }
 
-    @PostMapping(value = "/admmgr/manage/codeRegistAjaxProc.do", produces = "application/json;charset=UTF-8")
+    @PostMapping(
+            value = "/admmgr/manage/codeRegistAjaxProc.do",
+            produces = "application/json;charset=UTF-8")
     @ResponseBody
     public boolean legacyCodeCreate(
             @RequestParam(defaultValue = "0") Long pCodeNo,
             @RequestParam String codeNm,
             @RequestParam(defaultValue = "1") Integer codeDepth,
             @CurrentUser AdminSession adminSession) {
-        return adminManageService.createLegacyCode(pCodeNo, codeNm, codeDepth, userId(adminSession));
+        return adminManageService.createLegacyCode(
+                pCodeNo, codeNm, codeDepth, userId(adminSession));
     }
 
-    @PostMapping(value = "/admmgr/manage/codeDeleteAjaxProc.do", produces = "application/json;charset=UTF-8")
+    @PostMapping(
+            value = "/admmgr/manage/codeDeleteAjaxProc.do",
+            produces = "application/json;charset=UTF-8")
     @ResponseBody
     public boolean legacyCodeDelete(
             @RequestParam Long codeNo, @CurrentUser AdminSession adminSession) {
         return adminManageService.disableCode(codeNo, userId(adminSession)) != null;
     }
 
-    @PostMapping(value = "/admmgr/manage/codeUpdateCodeNmAjaxProc.do", produces = "application/json;charset=UTF-8")
+    @PostMapping(
+            value = "/admmgr/manage/codeUpdateCodeNmAjaxProc.do",
+            produces = "application/json;charset=UTF-8")
     @ResponseBody
     public boolean legacyCodeNameUpdate(
             @RequestParam Long codeNo,
@@ -99,7 +110,9 @@ public class AdmManageController {
         return adminManageService.updateCodeName(codeNo, codeNm, userId(adminSession));
     }
 
-    @PostMapping(value = "/admmgr/manage/codeUpdateSortAjaxProc.do", produces = "application/json;charset=UTF-8")
+    @PostMapping(
+            value = "/admmgr/manage/codeUpdateSortAjaxProc.do",
+            produces = "application/json;charset=UTF-8")
     @ResponseBody
     public boolean legacyCodeSortUpdate(
             @RequestParam(name = "codeNo", required = false) List<Long> codeNos,
@@ -107,45 +120,59 @@ public class AdmManageController {
         return adminManageService.updateCodeSort(codeNos, userId(adminSession));
     }
 
-    @PostMapping(value = "/admmgr/manage/codeRefreshAjaxProc.do", produces = "application/json;charset=UTF-8")
+    @PostMapping(
+            value = "/admmgr/manage/codeRefreshAjaxProc.do",
+            produces = "application/json;charset=UTF-8")
     @ResponseBody
     public boolean legacyCodeRefresh() {
         return true;
     }
 
-    @PostMapping(value = "/admmgr/manage/menuSelectAjax.do", produces = "application/json;charset=UTF-8")
+    @PostMapping(
+            value = "/admmgr/manage/menuSelectAjax.do",
+            produces = "application/json;charset=UTF-8")
     @ResponseBody
     public Object legacyMenuSelect(@RequestParam(defaultValue = "0") Long pMenuNo) {
         return adminManageService.menusByParent(pMenuNo).stream()
-                .map(menu -> {
-                    Map<String, Object> row = new LinkedHashMap<>();
-                    row.put("menuNo", menu.getId());
-                    row.put("pMenuNo", menu.getParentId() == null ? 0L : menu.getParentId());
-                    row.put("menuNm", menu.getTitle());
-                    row.put("menuDepth", menu.getDepth());
-                    return row;
-                })
+                .map(
+                        menu -> {
+                            Map<String, Object> row = new LinkedHashMap<>();
+                            row.put("menuNo", menu.getId());
+                            row.put(
+                                    "pMenuNo",
+                                    menu.getParentId() == null ? 0L : menu.getParentId());
+                            row.put("menuNm", menu.getTitle());
+                            row.put("menuDepth", menu.getDepth());
+                            return row;
+                        })
                 .toList();
     }
 
-    @PostMapping(value = "/admmgr/manage/menuRegistAjaxProc.do", produces = "application/json;charset=UTF-8")
+    @PostMapping(
+            value = "/admmgr/manage/menuRegistAjaxProc.do",
+            produces = "application/json;charset=UTF-8")
     @ResponseBody
     public boolean legacyMenuCreate(
             @RequestParam(defaultValue = "0") Long pMenuNo,
             @RequestParam String menuNm,
             @RequestParam(defaultValue = "1") Integer menuDepth,
             @CurrentUser AdminSession adminSession) {
-        return adminManageService.createLegacyMenu(pMenuNo, menuNm, menuDepth, userId(adminSession));
+        return adminManageService.createLegacyMenu(
+                pMenuNo, menuNm, menuDepth, userId(adminSession));
     }
 
-    @PostMapping(value = "/admmgr/manage/menuDeleteAjaxProc.do", produces = "application/json;charset=UTF-8")
+    @PostMapping(
+            value = "/admmgr/manage/menuDeleteAjaxProc.do",
+            produces = "application/json;charset=UTF-8")
     @ResponseBody
     public boolean legacyMenuDelete(
             @RequestParam Long menuNo, @CurrentUser AdminSession adminSession) {
         return adminManageService.disableMenu(menuNo, userId(adminSession)) != null;
     }
 
-    @PostMapping(value = "/admmgr/manage/menuNmUpdateAjaxProc.do", produces = "application/json;charset=UTF-8")
+    @PostMapping(
+            value = "/admmgr/manage/menuNmUpdateAjaxProc.do",
+            produces = "application/json;charset=UTF-8")
     @ResponseBody
     public boolean legacyMenuNameUpdate(
             @RequestParam Long menuNo,
@@ -154,7 +181,9 @@ public class AdmManageController {
         return adminManageService.updateMenuName(menuNo, menuNm, userId(adminSession));
     }
 
-    @PostMapping(value = "/admmgr/manage/menuSortUpdateAjaxProc.do", produces = "application/json;charset=UTF-8")
+    @PostMapping(
+            value = "/admmgr/manage/menuSortUpdateAjaxProc.do",
+            produces = "application/json;charset=UTF-8")
     @ResponseBody
     public boolean legacyMenuSortUpdate(
             @RequestParam(name = "menuNo", required = false) List<Long> menuNos,
@@ -162,47 +191,60 @@ public class AdmManageController {
         return adminManageService.updateMenuSort(menuNos, userId(adminSession));
     }
 
-    @PostMapping(value = "/admmgr/manage/menuRefreshAjaxProc.do", produces = "application/json;charset=UTF-8")
+    @PostMapping(
+            value = "/admmgr/manage/menuRefreshAjaxProc.do",
+            produces = "application/json;charset=UTF-8")
     @ResponseBody
     public boolean legacyMenuRefresh() {
         return true;
     }
 
-    @PostMapping(value = "/admmgr/manage/authAdminSelectAjax.do", produces = "application/json;charset=UTF-8")
+    @PostMapping(
+            value = "/admmgr/manage/authAdminSelectAjax.do",
+            produces = "application/json;charset=UTF-8")
     @ResponseBody
     public Object legacyAuthSelect() {
         return adminManageService.roles().stream()
-                .map(role -> {
-                    Map<String, Object> row = new LinkedHashMap<>();
-                    row.put("authNo", role.getId());
-                    row.put("authNm", role.getCode());
-                    row.put("authDc", role.getDescription());
-                    return row;
-                })
+                .map(
+                        role -> {
+                            Map<String, Object> row = new LinkedHashMap<>();
+                            row.put("authNo", role.getId());
+                            row.put("authNm", role.getCode());
+                            row.put("authDc", role.getDescription());
+                            return row;
+                        })
                 .toList();
     }
 
-    @PostMapping(value = "/admmgr/manage/authAdminRegistAjaxProc.do", produces = "application/json;charset=UTF-8")
+    @PostMapping(
+            value = "/admmgr/manage/authAdminRegistAjaxProc.do",
+            produces = "application/json;charset=UTF-8")
     @ResponseBody
     public boolean legacyAuthCreate(
             @RequestParam String authNm, @CurrentUser AdminSession adminSession) {
         return adminManageService.createRole(authNm, userId(adminSession));
     }
 
-    @PostMapping(value = "/admmgr/manage/authAdminDeleteAjaxProc.do", produces = "application/json;charset=UTF-8")
+    @PostMapping(
+            value = "/admmgr/manage/authAdminDeleteAjaxProc.do",
+            produces = "application/json;charset=UTF-8")
     @ResponseBody
     public boolean legacyAuthDelete(
             @RequestParam Long authNo, @CurrentUser AdminSession adminSession) {
         return adminManageService.disableRole(authNo, userId(adminSession));
     }
 
-    @PostMapping(value = "/admmgr/manage/authAdminMenuSelectAjax.do", produces = "application/json;charset=UTF-8")
+    @PostMapping(
+            value = "/admmgr/manage/authAdminMenuSelectAjax.do",
+            produces = "application/json;charset=UTF-8")
     @ResponseBody
     public Object legacyAuthMenuSelect(@RequestParam Long authNo) {
         return adminManageService.adminAuthMenuRows(authNo);
     }
 
-    @PostMapping(value = "/admmgr/manage/authAdminMenuRegistAjaxProc.do", produces = "application/json;charset=UTF-8")
+    @PostMapping(
+            value = "/admmgr/manage/authAdminMenuRegistAjaxProc.do",
+            produces = "application/json;charset=UTF-8")
     @ResponseBody
     public boolean legacyAuthMenuSave(
             @RequestParam Long authNo,
@@ -214,7 +256,14 @@ public class AdmManageController {
             @RequestParam(name = "arrDeleteYn", required = false) List<String> deleteYns,
             @RequestParam(name = "arrProcYn", required = false) List<String> procYns) {
         return adminManageService.updateAdminAuthMenus(
-                authNo, menuNos, parentMenuNos, selectYns, insertYns, updateYns, deleteYns, procYns);
+                authNo,
+                menuNos,
+                parentMenuNos,
+                selectYns,
+                insertYns,
+                updateYns,
+                deleteYns,
+                procYns);
     }
 
     @GetMapping("/admmgr/manage/codeLayer.do")
@@ -229,7 +278,9 @@ public class AdmManageController {
         return "admmgr/manage/menuLayer";
     }
 
-    @PostMapping(value = "/admmgr/manage/codeLayerRegistProc.do", produces = "text/html;charset=UTF-8")
+    @PostMapping(
+            value = "/admmgr/manage/codeLayerRegistProc.do",
+            produces = "text/html;charset=UTF-8")
     @ResponseBody
     public String legacyCodeLayerSave(
             @RequestParam Long codeNo,
@@ -243,7 +294,9 @@ public class AdmManageController {
         return "<script>alert('저장되었습니다.');</script>";
     }
 
-    @PostMapping(value = "/admmgr/manage/menuLayerRegistProc.do", produces = "text/html;charset=UTF-8")
+    @PostMapping(
+            value = "/admmgr/manage/menuLayerRegistProc.do",
+            produces = "text/html;charset=UTF-8")
     @ResponseBody
     public String legacyMenuLayerSave(
             @RequestParam Long menuNo,

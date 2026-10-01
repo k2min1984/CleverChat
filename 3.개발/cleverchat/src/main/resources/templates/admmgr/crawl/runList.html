@@ -8,102 +8,133 @@
         <div th:replace="~{admmgr/common/header :: adminHeader}"></div>
         <div th:replace="~{admmgr/common/navigation :: adminNavigation}"></div>
         <main class="content-area" data-crawl-runs-root>
-            <header>
-                <h1>Crawl runs</h1>
-                <nav class="actions" aria-label="Crawl run operations">
-                    <a class="button" th:href="@{/admin/crawl-targets}">Targets</a>
-                    <a class="button" th:href="@{/admin/crawl-documents}">Documents</a>
-                </nav>
-            </header>
-            <form method="get" th:action="@{/admin/crawl-runs}" aria-label="Crawl run filters">
-                <label>
-                    Target ID
-                    <input type="number" name="targetId" min="1" th:value="${targetId}">
-                </label>
-                <label>
-                    Status
-                    <select name="status">
-                        <option value="" th:selected="${status == null or status == ''}">All</option>
-                        <option value="SUCCESS" th:selected="${status == 'SUCCESS'}">SUCCESS</option>
-                        <option value="DUPLICATE" th:selected="${status == 'DUPLICATE'}">DUPLICATE</option>
-                        <option value="FAILED" th:selected="${status == 'FAILED'}">FAILED</option>
-                    </select>
-                </label>
-                <label>
-                    Failure code
-                    <select name="failureCode">
-                        <option value="" th:selected="${failureCode == null or failureCode == ''}">All</option>
-                        <option value="ROBOTS_BLOCKED" th:selected="${failureCode == 'ROBOTS_BLOCKED'}">ROBOTS_BLOCKED</option>
-                        <option value="HTTP_ERROR" th:selected="${failureCode == 'HTTP_ERROR'}">HTTP_ERROR</option>
-                        <option value="TIMEOUT" th:selected="${failureCode == 'TIMEOUT'}">TIMEOUT</option>
-                        <option value="PARSE_ERROR" th:selected="${failureCode == 'PARSE_ERROR'}">PARSE_ERROR</option>
-                        <option value="DUP_HASH" th:selected="${failureCode == 'DUP_HASH'}">DUP_HASH</option>
-                        <option value="FETCH_ERROR" th:selected="${failureCode == 'FETCH_ERROR'}">FETCH_ERROR</option>
-                        <option value="NOT_HTML" th:selected="${failureCode == 'NOT_HTML'}">NOT_HTML</option>
-                        <option value="URL_BLOCKED" th:selected="${failureCode == 'URL_BLOCKED'}">URL_BLOCKED</option>
-                        <option value="SCHEDULE_INVALID" th:selected="${failureCode == 'SCHEDULE_INVALID'}">SCHEDULE_INVALID</option>
-                        <option value="SYSTEM_ERROR" th:selected="${failureCode == 'SYSTEM_ERROR'}">SYSTEM_ERROR</option>
-                    </select>
-                </label>
-                <button type="submit">Filter</button>
-            </form>
-            <section aria-label="Crawl retention operations">
-                <h2>Retention</h2>
-                <form id="crawlRetentionForm">
-                    <label>
-                        Run log days
-                        <input type="number" name="runRetentionDays" min="30" value="365">
-                    </label>
-                    <label>
-                        Failed/duplicate document days
-                        <input type="number" name="documentRetentionDays" min="30" value="90">
-                    </label>
-                    <label>
-                        <input type="checkbox" name="dryRun" checked>
-                        Dry run
-                    </label>
-                    <button type="submit">Clean expired</button>
+            <div class="page-wrap">
+                <form method="get" th:action="@{/admin/crawl-runs}" class="search-card search-card-horizontal" aria-label="Crawl run filters">
+                    <div class="box-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                        검색 조건
+                    </div>
+                    <div class="search-row">
+                        <div class="search-field">
+                            <label for="targetId" class="search-label">대상 ID</label>
+                            <input id="targetId" name="targetId" class="search-input" type="number" min="1" th:value="${targetId}" placeholder="대상 ID 입력">
+                        </div>
+                        <div class="search-field">
+                            <label for="status" class="search-label">상태</label>
+                            <select id="status" name="status" class="search-select">
+                                <option value="" th:selected="${status == null or status == ''}">전체</option>
+                                <option th:each="code : ${adminCommonCodes['CRAWL_STATUS']}"
+                                        th:value="${code.value}" th:selected="${status == code.value}"
+                                        th:text="${code.name + ' (' + code.value + ')'}">크롤링 상태</option>
+                            </select>
+                        </div>
+                        <div class="search-field">
+                            <label for="failureCode" class="search-label">실패 코드</label>
+                            <select id="failureCode" name="failureCode" class="search-select">
+                                <option value="" th:selected="${failureCode == null or failureCode == ''}">전체</option>
+                                <option th:each="code : ${adminCommonCodes['CRAWL_FAILURE_CODE']}"
+                                        th:value="${code.value}" th:selected="${failureCode == code.value}"
+                                        th:text="${code.name + ' (' + code.value + ')'}">실패 코드</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="search-actions">
+                        <a class="btn-reset" th:href="@{/admin/crawl-runs}">초기화</a>
+                        <button type="submit" class="btn-search">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                            검색
+                        </button>
+                    </div>
                 </form>
-                <p id="crawlRunStatus" role="status" aria-live="polite"></p>
-            </section>
-            <table aria-label="Crawl run list">
-                <caption>Crawl run list</caption>
-                <thead>
-                <tr>
-                    <th scope="col">ID</th>
-                    <th scope="col">Target</th>
-                    <th scope="col">Document</th>
-                    <th scope="col">Status</th>
-                    <th scope="col">Failure code</th>
-                    <th scope="col">HTTP</th>
-                    <th scope="col">Duration</th>
-                    <th scope="col">Message</th>
-                    <th scope="col">Created</th>
-                    <th scope="col">Review</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="run : ${runs}">
-                    <td th:text="${run.crawlRunLogNo}">1</td>
-                    <td th:text="${run.targetNo}">10</td>
-                    <td th:text="${run.documentNo ?: '-'}">20</td>
-                    <td th:text="${run.status}">SUCCESS</td>
-                    <td th:text="${run.failureCode ?: '-'}">-</td>
-                    <td th:text="${run.httpStatus ?: '-'}">200</td>
-                    <td th:text="${run.durationMs == null ? '-' : run.durationMs + 'ms'}">5ms</td>
-                    <td th:text="${run.message ?: '-'}">Fetched.</td>
-                    <td th:text="${#temporals.format(run.frstRegDt, 'yyyy-MM-dd HH:mm')}">2026-05-27 13:00</td>
-                    <td>
-                        <span th:if="${run.status != 'FAILED'}">-</span>
-                        <span th:if="${run.status == 'FAILED' and run.reviewed}">Reviewed</span>
-                        <button th:if="${run.status == 'FAILED' and !run.reviewed}" type="button" class="button" th:attr="data-review-run-id=${run.crawlRunLogNo},aria-label=${'Review failed crawl run ' + run.crawlRunLogNo}">Review</button>
-                    </td>
-                </tr>
-                <tr th:if="${#lists.isEmpty(runs)}">
-                    <td colspan="10">No crawl runs found.</td>
-                </tr>
-                </tbody>
-            </table>
+
+                <section class="search-card" aria-label="Crawl retention operations">
+                    <div class="box-title">보관 정책 정리</div>
+                    <form id="crawlRetentionForm" class="search-row">
+                        <div class="search-field">
+                            <label for="runRetentionDays" class="search-label">실행 로그 보관일</label>
+                            <input id="runRetentionDays" class="search-input" type="number" name="runRetentionDays" min="30" th:value="${runRetentionDays}">
+                        </div>
+                        <div class="search-field">
+                            <label for="documentRetentionDays" class="search-label">실패/중복 문서 보관일</label>
+                            <input id="documentRetentionDays" class="search-input" type="number" name="documentRetentionDays" min="30" th:value="${documentRetentionDays}">
+                        </div>
+                        <div class="search-field">
+                            <label class="search-label" for="dryRun">모의 실행</label>
+                            <label class="check-inline">
+                                <input id="dryRun" type="checkbox" name="dryRun" checked>
+                                Dry run
+                            </label>
+                        </div>
+                        <div class="search-actions">
+                            <button type="submit" class="btn btn-sm btn-secondary">만료 데이터 정리</button>
+                        </div>
+                    </form>
+                    <p id="crawlRunStatus" role="status" aria-live="polite" class="help-text"></p>
+                </section>
+
+                <div class="result-header">
+                    <div class="result-count">실행 이력 총 <strong th:text="${#lists.size(runs)} + '건'">0건</strong></div>
+                </div>
+
+                <div class="table-card">
+                    <div class="table-wrap">
+                        <div class="admin-table-wrap">
+                            <table class="admin-table" aria-label="Crawl run list">
+                                <caption>Crawl run list</caption>
+                                <colgroup>
+                                    <col style="width:60px">
+                                    <col style="width:80px">
+                                    <col style="width:90px">
+                                    <col style="width:100px">
+                                    <col style="width:140px">
+                                    <col style="width:70px">
+                                    <col style="width:90px">
+                                    <col>
+                                    <col style="width:150px">
+                                    <col style="width:100px">
+                                </colgroup>
+                                <thead>
+                                <tr>
+                                    <th scope="col">번호</th>
+                                    <th scope="col">대상</th>
+                                    <th scope="col">문서</th>
+                                    <th scope="col">상태</th>
+                                    <th scope="col">실패 코드</th>
+                                    <th scope="col">HTTP</th>
+                                    <th scope="col">소요시간</th>
+                                    <th scope="col">메시지</th>
+                                    <th scope="col">등록일</th>
+                                    <th scope="col">검토</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="run, stat : ${runs}">
+                                    <td th:text="${stat.count}">1</td>
+                                    <td th:text="${run.targetNo}">10</td>
+                                    <td th:text="${run.documentNo ?: '-'}">20</td>
+                                    <td><span class="badge" th:classappend="${run.status == 'SUCCESS'} ? ' badge-success' : ' badge-default'" th:text="${run.status}">SUCCESS</span></td>
+                                    <td th:text="${run.failureCode ?: '-'}">-</td>
+                                    <td th:text="${run.httpStatus ?: '-'}">200</td>
+                                    <td th:text="${run.durationMs == null ? '-' : run.durationMs + 'ms'}">5ms</td>
+                                    <td class="td-left" th:text="${run.message ?: '-'}">Fetched.</td>
+                                    <td th:text="${#temporals.format(run.frstRegDt, 'yyyy-MM-dd HH:mm')}">2026-05-27 13:00</td>
+                                    <td>
+                                        <div class="row-actions">
+                                            <span th:if="${run.status != 'FAILED'}">-</span>
+                                            <span th:if="${run.status == 'FAILED' and run.reviewed}">검토됨</span>
+                                            <button th:if="${run.status == 'FAILED' and !run.reviewed}" type="button" class="btn btn-xs btn-secondary" th:attr="data-review-run-id=${run.crawlRunLogNo},aria-label=${'Review failed crawl run ' + run.crawlRunLogNo}">검토</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(runs)}" class="td-empty">
+                                    <td colspan="10">실행 이력이 없습니다.</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </main>
         <div th:replace="~{admmgr/common/footer :: adminFooter}"></div>
     </div>

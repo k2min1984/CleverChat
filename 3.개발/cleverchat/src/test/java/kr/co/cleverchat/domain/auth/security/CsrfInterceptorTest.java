@@ -6,6 +6,8 @@ import java.time.LocalDateTime;
 import java.util.Set;
 import kr.co.cleverchat.common.ops.OpsEventLogger;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -197,6 +199,35 @@ class CsrfInterceptorTest {
         assertThat(response.getStatus()).isEqualTo(403);
         assertThat(response.getContentType()).contains("application/json");
         assertThat(response.getContentAsString()).contains("CSRF_INVALID");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"PUT", "PATCH", "DELETE"})
+    void rejectsUnsafeMethodsWithoutCsrf(String method) throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest(method, "/admin/api/scenarios/1");
+        request.setSession(authenticatedSession());
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        assertThat(interceptor.preHandle(request, response, new Object())).isFalse();
+        assertThat(response.getStatus()).isEqualTo(403);
+        assertThat(response.getContentAsString()).contains("CSRF_INVALID");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"PUT", "PATCH", "DELETE"})
+    void allowsUnsafeMethodsWithTokenAndRejectsReplay(String method) throws Exception {
+        MockHttpSession session = authenticatedSession();
+        MockHttpServletRequest request = new MockHttpServletRequest(method, "/admin/api/scenarios/1");
+        request.setSession(session);
+        request.addHeader("X-CSRF-Token", session.getAttribute(CsrfTokenIssuer.CSRF_TOKEN_SESSION_ATTRIBUTE));
+        request.addHeader("X-CSRF-FormId", session.getAttribute(CsrfTokenIssuer.CSRF_FORM_ID_SESSION_ATTRIBUTE));
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        assertThat(interceptor.preHandle(request, response, new Object())).isTrue();
+        assertThat(response.getHeader("X-CSRF-Token")).isNotBlank();
+        MockHttpServletResponse replay = new MockHttpServletResponse();
+        assertThat(interceptor.preHandle(request, replay, new Object())).isFalse();
+        assertThat(replay.getStatus()).isEqualTo(403);
     }
 
     private MockHttpServletRequest postRequest(MockHttpSession session) {

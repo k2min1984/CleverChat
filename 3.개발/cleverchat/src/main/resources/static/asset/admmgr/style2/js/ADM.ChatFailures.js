@@ -25,7 +25,7 @@
             var button = form.querySelector('button[type="submit"]');
             button.disabled = true;
             setStatus('Saving review...');
-            fetch('/admin/api/chat/failures/' + encodeURIComponent(id) + '/review', {
+            CleverChat.fetch('/admin/api/chat/failures/' + encodeURIComponent(id) + '/review', {
                 method: 'POST',
                 credentials: 'same-origin',
                 headers: csrfHeaders({

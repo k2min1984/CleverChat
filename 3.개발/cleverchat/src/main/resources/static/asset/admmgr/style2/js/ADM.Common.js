@@ -165,7 +165,7 @@ ADM.Form = {
             headers['X-CSRF-FormId'] = formIdMeta.content;
             if( !formData.has('csrfFormId') ) formData.append('csrfFormId', formIdMeta.content);
         }
-        fetch(frm.action, { method:'POST', body:formData, headers:headers, credentials:'same-origin' })
+        CleverChat.fetch(frm.action, { method:'POST', body:formData, headers:headers, credentials:'same-origin' })
         .then(function(res){
             ADM.updateCsrfMetaValue(res.headers.get('X-CSRF-Token'), res.headers.get('X-CSRF-FormId'));
             if( res.status === 401 ){
@@ -417,6 +417,10 @@ ADM.Modal = ADM.Modal || {
                 alert('잘못된 접근입니다.(CSRF값이 유효하지 않습니다.)');
                 return;
             }
+            if( xhr.status < 200 || xhr.status >= 300 ){
+                alert('저장 중 오류가 발생했습니다. (' + xhr.status + ')');
+                return;
+            }
             var html = xhr.responseText;
             var alertMatch = html.match(/alert\('([^']+)'\)/);
             if( alertMatch ){
@@ -441,22 +445,32 @@ ADM.initCmsLayout = function(){
     var sidebar = document.querySelector('.sidebar');
     if( !sidebar ) return;
 
-    var currentPath = window.location.pathname.replace(/\/$/, '');
+    var currentPath = window.location.pathname.replace(/\/+$/, '');
+    var adminPath = new URL(ADM.url('admin'), window.location.origin).pathname.replace(/\/+$/, '');
     var pageLabel = document.querySelector('[data-current-admin-page]');
-    var activeLabel = '';
+    var activeLink = null;
+    var activePathLength = -1;
 
-    sidebar.querySelectorAll('a[href]').forEach(function(link){
-        var href = new URL(link.getAttribute('href'), window.location.origin).pathname.replace(/\/$/, '');
-        if( href && (currentPath === href || (href !== '/admin' && currentPath.indexOf(href + '/') === 0)) ){
-            link.classList.add('active');
-            var group = link.closest('.nav-group');
-            if( group ) group.classList.add('open');
-            activeLabel = (link.textContent || '').trim();
+    sidebar.querySelectorAll('.sidebar-nav a[href]').forEach(function(link){
+        link.classList.remove('active');
+        link.removeAttribute('aria-current');
+        var url = new URL(link.getAttribute('href'), window.location.href);
+        var href = url.pathname.replace(/\/+$/, '');
+        if( url.origin !== window.location.origin ) return;
+        // 목록과 하위 메뉴가 함께 일치하면 가장 구체적인 경로 하나만 선택한다.
+        if( href && href.length > activePathLength
+                && (currentPath === href || (href !== adminPath && currentPath.indexOf(href + '/') === 0)) ){
+            activeLink = link;
+            activePathLength = href.length;
         }
     });
 
-    if( pageLabel && activeLabel ){
-        pageLabel.textContent = activeLabel;
+    if( activeLink ){
+        activeLink.classList.add('active');
+        activeLink.setAttribute('aria-current', 'page');
+        var group = activeLink.closest('.nav-group');
+        if( group ) group.classList.add('open');
+        if( pageLabel ) pageLabel.textContent = (activeLink.textContent || '').trim();
     }
 
     sidebar.querySelectorAll('.nav-group-header').forEach(function(button){

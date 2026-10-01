@@ -75,7 +75,7 @@ public class AdmScenarioController {
                                                 || status.isBlank()
                                                 || status.equals(scenario.getStatus()))
                         .toList();
-        int pageSize = Math.max(1, Math.min(size, 100));
+        int pageSize = Math.max(10, Math.min(size, 100));
         int totalCount = filteredScenarios.size();
         int totalPages = Math.max(1, (int) Math.ceil(totalCount / (double) pageSize));
         int currentPage = Math.max(1, Math.min(page, totalPages));
@@ -122,7 +122,8 @@ public class AdmScenarioController {
                                 new ScenarioDtos.SaveRequest(
                                         form.getCategoryNo(),
                                         form.getTitle(),
-                                        form.getDescription()))
+                                        form.getDescription(),
+                                        null))
                         .getScenarioNo();
         return "redirect:/admin/scenarios/" + id;
     }
@@ -166,8 +167,14 @@ public class AdmScenarioController {
         scenarioService.update(
                 id,
                 new ScenarioDtos.SaveRequest(
-                        form.getCategoryNo(), form.getTitle(), form.getDescription()));
+                        form.getCategoryNo(), form.getTitle(), form.getDescription(), null));
         return "redirect:/admin/scenarios/" + id;
+    }
+
+    @GetMapping("/order")
+    public String scenarioOrder(Model model) {
+        model.addAttribute("scenarios", scenarioService.activeForOrdering());
+        return "admmgr/scenario/scenarioOrder";
     }
 
     @PostMapping("/{id}/versions")
@@ -200,6 +207,27 @@ public class AdmScenarioController {
                     "errorMessage", formFailureMessage(e, "새 초안을 만들 수 없습니다."));
         }
         return "redirect:/admin/scenarios/" + id;
+    }
+
+    @PostMapping("/{id}/versions/{sourceVersionId}/copy")
+    public String scenarioVersionCopyProc(
+            @PathVariable Long id,
+            @PathVariable Long sourceVersionId,
+            RedirectAttributes redirectAttributes) {
+        try {
+            ScenarioVersion version = scenarioService.createVersionFromSource(id, sourceVersionId);
+            redirectAttributes.addFlashAttribute(
+                    "successMessage", "선택한 버전을 기반으로 새 초안 v" + version.getVersionNo() + "을 만들었습니다.");
+            return "redirect:/admin/scenarios/"
+                    + id
+                    + "/versions/"
+                    + version.getScenarioVersionNo()
+                    + "/graph";
+        } catch (BusinessException e) {
+            redirectAttributes.addFlashAttribute(
+                    "errorMessage", formFailureMessage(e, "새 초안을 만들 수 없습니다."));
+            return "redirect:/admin/scenarios/" + id;
+        }
     }
 
     @PostMapping("/versions/{versionId}/publish")
@@ -266,6 +294,18 @@ public class AdmScenarioController {
         return "admmgr/scenario/scenarioGraphEdit";
     }
 
+    @GetMapping("/versions/{versionId}/detail")
+    public String scenarioVersionDetail(@PathVariable Long versionId, Model model) {
+        ScenarioVersion version = scenarioService.version(versionId);
+        var scenario = scenarioService.get(version.getScenarioNo());
+        model.addAttribute("scenario", scenario);
+        model.addAttribute("version", version);
+        model.addAttribute("backUrl", "/admin/scenarios/" + scenario.getScenarioNo());
+        model.addAttribute("previewUrl", "/admin/scenarios/versions/" + versionId + "/preview");
+        model.addAttribute("graphLoadUrl", "/admin/api/scenarios/versions/" + versionId + "/graph");
+        return "admmgr/scenario/scenarioVersionDetail";
+    }
+
     @GetMapping("/versions/{versionId}/preview")
     public String scenarioPreviewLayer(
             @PathVariable Long versionId,
@@ -276,7 +316,10 @@ public class AdmScenarioController {
         ScenarioNode current =
                 nodeId == null && version.getStartNodeNo() != null
                         ? nodes.stream()
-                                .filter(node -> node.getScenarioNodeNo().equals(version.getStartNodeNo()))
+                                .filter(
+                                        node ->
+                                                node.getScenarioNodeNo()
+                                                        .equals(version.getStartNodeNo()))
                                 .findFirst()
                                 .orElse(null)
                         : nodes.stream()
@@ -290,6 +333,11 @@ public class AdmScenarioController {
                 current == null
                         ? java.util.List.<ScenarioNodeOption>of()
                         : scenarioService.options(current.getScenarioNodeNo()));
+        model.addAttribute(
+                "links",
+                current == null
+                        ? java.util.List.of()
+                        : scenarioService.links(current.getScenarioNodeNo()));
         model.addAttribute(
                 "previewTitle", "DRAFT".equals(version.getStatus()) ? "초안 미리보기" : "게시본 미리보기");
         return "admmgr/scenario/scenarioPreviewLayer";

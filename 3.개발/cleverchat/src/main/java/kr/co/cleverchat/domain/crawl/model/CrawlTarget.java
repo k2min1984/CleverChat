@@ -20,6 +20,24 @@ public class CrawlTarget {
     private OffsetDateTime nextRunAt;
     private Boolean robotsAllowed;
     private OffsetDateTime robotsCheckedAt;
+    private boolean jsonExportEnabled;
+    private String jsonExportDirectory;
+
+    public boolean isJsonExportEnabled() {
+        return jsonExportEnabled;
+    }
+
+    public void setJsonExportEnabled(boolean jsonExportEnabled) {
+        this.jsonExportEnabled = jsonExportEnabled;
+    }
+
+    public String getJsonExportDirectory() {
+        return jsonExportDirectory;
+    }
+
+    public void setJsonExportDirectory(String jsonExportDirectory) {
+        this.jsonExportDirectory = jsonExportDirectory;
+    }
 
     public Long getCrawlTargetNo() {
         return crawlTargetNo;

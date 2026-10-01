@@ -1,7 +1,7 @@
 services:
   postgres:
     image: postgres:16
-    container_name: cleverchat-postgres
+    container_name: ${CLEVERCHAT_LOCAL_DB_CONTAINER_NAME:-cleverchat-postgres}
     restart: unless-stopped
     environment:
       POSTGRES_DB: cleverchat
@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: cleverchat
       TZ: Asia/Seoul
     ports:
-      - "5433:5432"
+      - "127.0.0.1:${CLEVERCHAT_LOCAL_DB_PORT:-5433}:5432"
     volumes:
       - cleverchat-pgdata:/var/lib/postgresql/data
     healthcheck:

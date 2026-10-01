@@ -174,6 +174,7 @@ class AdmScenarioApiControllerTest {
                                 "무엇을 도와드릴까요?",
                                 1,
                                 "{}",
+                                List.of(),
                                 List.of())));
     }
 

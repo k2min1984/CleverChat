@@ -174,6 +174,30 @@ class ScenarioMatchingServiceTest {
     }
 
     @Test
+    void initialScenarioMatchAllowsKeywordContainedInQuestion() {
+        when(keywordMapper.findEnabledForActiveScenarios())
+                .thenReturn(List.of(keyword(200L, "요금", 100)));
+        when(synonymMapper.findEnabledForActiveScenarios()).thenReturn(List.of());
+
+        Optional<MatchResult> result = service.matchInitialScenario("요금 알려줘");
+
+        assertThat(result).isPresent();
+        assertThat(result.get().scenarioId()).isEqualTo(200L);
+        assertThat(result.get().matchType()).isEqualTo(MatchType.KEYWORD);
+    }
+
+    @Test
+    void initialScenarioMatchIgnoresEmbeddedShortKeywordInsideName() {
+        when(keywordMapper.findEnabledForActiveScenarios())
+                .thenReturn(List.of(keyword(200L, "상호", 100)));
+        when(synonymMapper.findEnabledForActiveScenarios()).thenReturn(List.of());
+
+        Optional<MatchResult> result = service.matchInitialScenario("김상호");
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
     void blankAndNullInputNeverMatch() {
         assertThat(service.match(100L, 10L, "")).isEmpty();
         assertThat(service.match(100L, 10L, "   ")).isEmpty();

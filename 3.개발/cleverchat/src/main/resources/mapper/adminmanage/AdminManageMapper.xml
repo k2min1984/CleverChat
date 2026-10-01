@@ -65,6 +65,23 @@
         ORDER BY sort_order ASC, code_no ASC
     </select>
 
+    <select id="findActiveCodeOptions" resultType="map">
+        SELECT code_group.code_group AS "groupCode",
+               code_value.code_group AS "codeKey",
+               code_value.code_nm AS "name",
+               code_value.code_val AS "value",
+               code_value.sort_order AS "sortOrder"
+        FROM tb_code code_group
+        JOIN tb_code code_value
+          ON code_value.p_code_no = code_group.code_no
+         AND code_value.code_depth = 3
+         AND code_value.use_yn = 'Y'
+        WHERE code_group.code_depth = 2
+          AND code_group.use_yn = 'Y'
+        ORDER BY code_group.sort_order, code_group.code_no,
+                 code_value.sort_order, code_value.code_no
+    </select>
+
     <select id="findCodeById" resultType="kr.co.cleverchat.domain.adminmanage.model.AdminCode">
         SELECT <include refid="codeColumns"/>
         FROM tb_code
@@ -72,13 +89,18 @@
     </select>
 
     <select id="findCodeLayerById" resultType="map">
-        SELECT code_no AS "codeNo",
-               code_nm AS "codeNm",
-               code_val AS "codeVal",
-               code_group AS "codeGroup",
-               code_dc AS "codeDc"
-        FROM tb_code
-        WHERE code_no = #{id}
+        SELECT code.code_no AS "codeNo",
+               code.code_nm AS "codeNm",
+               COALESCE(code.code_val, '') AS "codeVal",
+               COALESCE(code.code_group, '') AS "codeGroup",
+               COALESCE(code.code_dc, '') AS "codeDc",
+               code.code_depth AS "codeDepth",
+               COALESCE(parent.code_no, 0) AS "parentCodeNo",
+               COALESCE(parent.code_nm, '') AS "parentCodeNm",
+               COALESCE(parent.code_group, '') AS "parentCodeGroup"
+        FROM tb_code code
+        LEFT JOIN tb_code parent ON parent.code_no = code.p_code_no
+        WHERE code.code_no = #{id}
     </select>
 
     <insert id="insertCode" parameterType="kr.co.cleverchat.domain.adminmanage.model.AdminCode" useGeneratedKeys="true" keyProperty="id" keyColumn="code_no">
@@ -92,7 +114,7 @@
             #{name},
             #{value},
             #{description},
-            CASE WHEN #{parentId} IS NULL THEN 1 ELSE 2 END,
+            #{depth},
             #{sortOrder},
             CASE WHEN #{enabled} THEN 'Y' ELSE 'N' END,
             #{updatedBy},
@@ -128,7 +150,7 @@
             code_nm = #{name},
             code_val = #{value},
             code_dc = #{description},
-            code_depth = CASE WHEN #{parentId} IS NULL THEN 1 ELSE 2 END,
+            code_depth = #{depth},
             sort_order = #{sortOrder},
             use_yn = CASE WHEN #{enabled} THEN 'Y' ELSE 'N' END,
             lst_chgr_empno = #{updatedBy},

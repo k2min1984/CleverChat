@@ -92,3 +92,8 @@ docker info
 - 운영 비밀번호나 고객사 DB 접속 정보를 이 디렉토리에 저장하지 않는다.
 - stage/prod 프로파일은 물리 PostgreSQL과 외부 시크릿 주입을 사용한다.
 - 컨테이너 기반 운영은 `1.기획/결정사항.md`의 재검토 트리거가 충족될 때 별도 결정으로만 다룬다.
+## 최초 실행 자동화 (2026-09-29)
+
+Windows 첫 설치는 [README.md](../../../README.md)의 `start-local.cmd`를 사용합니다. 실행 스크립트가 JDK/Docker/DB 검사와 기동을 진행합니다.
+
+Compose의 기본 컨테이너명 `cleverchat-postgres`, 포트 `5433`, 기존 named volume 설정은 유지합니다. 별도 설치 검증 시에만 `CLEVERCHAT_LOCAL_DB_CONTAINER_NAME`, `CLEVERCHAT_LOCAL_DB_PORT`와 다른 Compose 프로젝트명을 함께 사용합니다. 이름만 바꾸고 같은 프로젝트/볼륨을 공유하지 마세요.

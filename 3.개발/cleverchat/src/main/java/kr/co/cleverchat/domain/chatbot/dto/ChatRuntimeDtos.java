@@ -15,9 +15,20 @@ public final class ChatRuntimeDtos {
 
     public record StartRequest(@NotNull @Positive Long scenarioId) {}
 
+    public record AutoStartRequest(@NotBlank @Size(max = 500) String text) {}
+
     public record ScenarioSummaryResponse(Long id, String title, String description) {}
 
-    public record SelectOptionRequest(@NotNull @Positive Long optionId) {}
+    public record SelectOptionRequest(
+            @NotNull @Positive Long optionId,
+            @Positive Long sourceNodeId,
+            @Positive Long sourceMessageId) {}
+
+    public record SelectSearchResultRequest(
+            @Positive Long crawlDocumentNo,
+            @Positive Long scenarioNo,
+            @Positive Long scenarioNodeNo,
+            @Positive Long sourceMessageId) {}
 
     public record FreeTextRequest(@NotBlank @Size(max = 500) String text) {}
 
@@ -33,7 +44,25 @@ public final class ChatRuntimeDtos {
             String state,
             OffsetDateTime expiresAt,
             List<MessageResponse> messages,
-            List<OptionResponse> options) {}
+            List<OptionResponse> options,
+            List<SearchOptionResponse> searchOptions,
+            int searchMoreCount,
+            boolean canGoBack,
+            String backTargetType) {}
+
+    /**
+     * A dynamic, search-derived choice shown as a button when free-text matching falls back to
+     * search and returns several candidates. Unlike {@link OptionResponse} these are not scenario
+     * node options — documents use {@code crawlDocumentNo}, topics use {@code scenarioNo}, and
+     * specific answers additionally carry {@code scenarioNodeNo}.
+     */
+    public record SearchOptionResponse(
+            Long crawlDocumentNo,
+            Long scenarioNo,
+            Long scenarioNodeNo,
+            String label,
+            String matchedField,
+            String optionType) {}
 
     public record MessageResponse(
             Long id,
@@ -41,7 +70,13 @@ public final class ChatRuntimeDtos {
             String direction,
             Long nodeId,
             String content,
-            OffsetDateTime createdAt) {}
+            OffsetDateTime createdAt,
+            List<MessageLinkResponse> links,
+            List<OptionResponse> options,
+            List<SearchOptionResponse> searchOptions) {}
+
+    public record MessageLinkResponse(
+            Long id, String label, String url, String linkType, int sortOrder) {}
 
     public record OptionResponse(Long id, String label, int sortOrder) {}
 

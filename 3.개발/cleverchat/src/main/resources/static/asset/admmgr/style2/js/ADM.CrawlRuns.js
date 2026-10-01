@@ -32,9 +32,9 @@
     root.querySelectorAll('[data-review-run-id]').forEach(function (button) {
         button.addEventListener('click', function () {
             var id = button.getAttribute('data-review-run-id');
-            setStatus('Reviewing failed run #' + id + '...');
+            setStatus('실패 실행 이력 #' + id + ' 검토 처리 중입니다...');
             button.disabled = true;
-            fetch('/admin/api/crawl-runs/' + encodeURIComponent(id) + '/review', {
+            CleverChat.fetch('/admin/api/crawl-runs/' + encodeURIComponent(id) + '/review', {
                 method: 'PUT',
                 credentials: 'same-origin',
                 headers: csrfHeaders({
@@ -43,7 +43,7 @@
                 }),
                 body: JSON.stringify({ comment: 'Reviewed from crawl run list.' })
             }).then(parseJson).then(function () {
-                setStatus('Failed run reviewed.');
+                setStatus('실패 실행 이력을 검토 처리했습니다.');
                 window.location.reload();
             }).catch(function (error) {
                 setStatus(error.message);
@@ -60,14 +60,14 @@
             params.set('runRetentionDays', retentionForm.querySelector('[name="runRetentionDays"]').value || '365');
             params.set('documentRetentionDays', retentionForm.querySelector('[name="documentRetentionDays"]').value || '90');
             params.set('dryRun', String(retentionForm.querySelector('[name="dryRun"]').checked));
-            setStatus('Checking expired crawl operational data...');
-            fetch('/admin/api/crawl-runs/expired?' + params.toString(), {
+            setStatus('만료된 크롤링 운영 데이터를 확인하는 중입니다...');
+            CleverChat.fetch('/admin/api/crawl-runs/expired?' + params.toString(), {
                 method: 'DELETE',
                 credentials: 'same-origin',
                 headers: csrfHeaders({ 'Accept': 'application/json' })
             }).then(parseJson).then(function (data) {
-                setStatus('Run logs: ' + data.deletedRunLogs + '/' + data.wouldDeleteRunLogs
-                    + ', documents: ' + data.deletedDocuments + '/' + data.wouldDeleteDocuments + '.');
+                setStatus('실행 로그: ' + data.deletedRunLogs + '/' + data.wouldDeleteRunLogs
+                    + ', 수집 결과: ' + data.deletedDocuments + '/' + data.wouldDeleteDocuments + '.');
             }).catch(function (error) {
                 setStatus(error.message);
             });
